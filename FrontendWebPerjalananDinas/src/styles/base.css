@@ -1,0 +1,26 @@
+/* ==========================================================================
+   Base — design token, reset, dan tipografi dasar
+   ========================================================================== */
+
+:root {
+  --ink: #111827;
+  --muted: #6b7280;
+  --line: #e7e9ee;
+  --soft: #f7f8fa;
+  --orange: #ff7a1a;
+  --blue: #1683e5;
+  --red: #e11d48;
+  --green: #16825b;
+  --sidebar: #111827;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f6f7f9;
+  color: var(--ink);
+  font-family: "DM Sans", sans-serif;
+}

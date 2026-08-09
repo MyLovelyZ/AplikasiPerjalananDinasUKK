@@ -1,0 +1,383 @@
+/* ==========================================================================
+   Components — elemen yang dipakai ulang di banyak halaman
+   ========================================================================== */
+
+/* --- Avatar ------------------------------------------------------------- */
+
+.avatar {
+  width: 31px;
+  height: 31px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ff8b37, #ef3147);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 10px;
+}
+.avatar.small {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+/* --- Kolom pencarian ---------------------------------------------------- */
+
+.search,
+.filter-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f7f8fa;
+  border: 1px solid #edf0f3;
+  border-radius: 10px;
+  padding: 0 12px;
+  color: #98a0ad;
+}
+.search input,
+.filter-search input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  height: 36px;
+  width: 190px;
+  font: 500 11px "DM Sans";
+  color: var(--ink);
+}
+
+/* --- Tombol ------------------------------------------------------------- */
+
+.primary {
+  border: 0;
+  background: #ff7a1a;
+  color: white;
+  border-radius: 9px;
+  padding: 11px 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 700 11px "DM Sans";
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(255, 122, 26, 0.18);
+}
+.primary:hover {
+  filter: brightness(0.96);
+}
+.outline {
+  background: white;
+  border: 1px solid #dfe3e8;
+  border-radius: 9px;
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 700 10px "DM Sans";
+  cursor: pointer;
+  color: #27303c;
+}
+.text-btn {
+  border: 0;
+  background: transparent;
+  color: #e96612;
+  font: 700 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+.dots {
+  border: 0;
+  background: transparent;
+  color: #a0a7b2;
+  cursor: pointer;
+}
+
+/* --- Panel -------------------------------------------------------------- */
+
+.panel {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 21px;
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 17px;
+}
+.panel h2 {
+  font: 800 14px Manrope;
+  margin: 0;
+}
+.panel-head p {
+  font-size: 10px;
+  color: #9299a5;
+  margin: 5px 0 0;
+}
+
+/* --- Tabel -------------------------------------------------------------- */
+
+.table-wrap {
+  overflow: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+th {
+  text-align: left;
+  color: #8a929e;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 10px 9px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+td {
+  padding: 13px 9px;
+  border-bottom: 1px solid #f0f1f3;
+  white-space: nowrap;
+  color: #596170;
+}
+td b {
+  color: #202633;
+  font-size: 10px;
+}
+td small {
+  display: block;
+  color: #a1a7b0;
+  font-size: 9px;
+  margin-top: 3px;
+}
+
+/* --- Lencana status ----------------------------------------------------- */
+
+.status {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 99px;
+  font-size: 9px;
+  font-weight: 700;
+}
+.status.disetujui {
+  background: #e9f8f1;
+  color: #16825b;
+}
+.status.menunggu {
+  background: #fff4df;
+  color: #ad6b00;
+}
+.status.diproses {
+  background: #eaf4ff;
+  color: #1672c7;
+}
+.status.ditolak {
+  background: #ffebef;
+  color: #c51f43;
+}
+.counter {
+  background: #fff4df;
+  color: #a86b05;
+  padding: 9px 12px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* --- Kartu statistik ---------------------------------------------------- */
+
+.stat {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 17px;
+  display: flex;
+  gap: 13px;
+  align-items: center;
+}
+.stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #f4f6f9;
+  display: grid;
+  place-items: center;
+  color: #111827;
+}
+.stat span,
+.stat small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+}
+.stat strong {
+  display: block;
+  font: 800 21px Manrope;
+  margin: 3px 0;
+}
+.stat small {
+  font-size: 9px;
+  color: #1b8b63;
+}
+
+/* --- Toolbar filter ----------------------------------------------------- */
+
+.toolbar {
+  display: flex;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+.filter-search {
+  flex: 1;
+}
+.filter-search input {
+  width: 100%;
+}
+.toolbar select,
+.toolbar .outline,
+.panel select {
+  border: 1px solid #e2e5ea;
+  background: white;
+  border-radius: 9px;
+  padding: 0 12px;
+  height: 38px;
+  font: 600 10px;
+  color: #4c5563;
+}
+
+/* --- Sakelar (toggle) --------------------------------------------------- */
+
+.switch input {
+  display: none;
+}
+.switch i {
+  display: block;
+  width: 38px;
+  height: 21px;
+  background: #dfe3e8;
+  border-radius: 99px;
+  position: relative;
+}
+.switch i:after {
+  content: "";
+  width: 15px;
+  height: 15px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  transition: 0.2s;
+}
+.switch input:checked + i {
+  background: #111827;
+}
+.switch input:checked + i:after {
+  left: 20px;
+}
+
+/* --- Modal -------------------------------------------------------------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.52);
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.modal {
+  width: min(680px, 100%);
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 24px 26px 10px;
+}
+.modal h2 {
+  font: 800 20px Manrope;
+  margin: 0;
+}
+.close {
+  border: 0;
+  background: #f3f4f6;
+  width: 31px;
+  height: 31px;
+  border-radius: 8px;
+  font-size: 20px;
+  color: #68717e;
+  cursor: pointer;
+}
+.modal form {
+  padding: 10px 26px 24px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+.form-grid label {
+  font-size: 9px;
+  font-weight: 800;
+  color: #4c5562;
+}
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  border: 1px solid #dfe3e8;
+  border-radius: 9px;
+  padding: 10px 11px;
+  font: 500 11px "DM Sans";
+  outline: none;
+  background: white;
+}
+.form-grid textarea {
+  resize: vertical;
+}
+.form-grid input:focus,
+.form-grid textarea:focus,
+.form-grid select:focus {
+  border-color: #8aa4c4;
+  box-shadow: 0 0 0 3px #eef4fb;
+}
+.full {
+  grid-column: 1/-1;
+}
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 19px;
+  padding-top: 17px;
+  border-top: 1px solid #edf0f2;
+}
+
+/* --- Toast -------------------------------------------------------------- */
+
+.toast {
+  position: fixed;
+  right: 25px;
+  bottom: 25px;
+  background: #111827;
+  color: white;
+  border-radius: 10px;
+  padding: 12px 15px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  z-index: 50;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}

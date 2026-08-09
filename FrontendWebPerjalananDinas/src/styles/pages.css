@@ -1,0 +1,464 @@
+/* ==========================================================================
+   Pages — gaya khusus tiap halaman
+   ========================================================================== */
+
+/* --- Judul halaman ------------------------------------------------------ */
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #a1a9b7;
+  margin: 0 0 8px;
+}
+.page-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+.page-title h1 {
+  font: 800 27px Manrope;
+  margin: 0 0 6px;
+  letter-spacing: -0.8px;
+}
+.page-title > div > p:last-child {
+  font-size: 11px;
+  color: #7e8693;
+  margin: 0;
+}
+
+/* --- Dashboard: hero ---------------------------------------------------- */
+
+.hero {
+  min-height: 260px;
+  border-radius: 20px;
+  padding: 34px 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(110deg, #111827 0%, #182231 63%, #253448 100%);
+  color: #fff;
+}
+.hero:after {
+  content: "";
+  position: absolute;
+  width: 430px;
+  height: 430px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 50%;
+  right: -100px;
+  top: -180px;
+}
+.hero .eyebrow {
+  color: #ff9b5a;
+}
+.hero h1 {
+  font: 800 29px Manrope;
+  margin: 0 0 9px;
+  letter-spacing: -1px;
+}
+.hero p:not(.eyebrow) {
+  color: #bdc5d2;
+  font-size: 12px;
+  max-width: 520px;
+  line-height: 1.7;
+  margin: 0 0 20px;
+}
+.hero-art {
+  width: 300px;
+  height: 190px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  z-index: 1;
+}
+.hero-art svg {
+  transform: rotate(-14deg);
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.25));
+}
+.route-line {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 98px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.28);
+  transform: rotate(-9deg);
+}
+.pin {
+  position: absolute;
+  font-size: 15px;
+}
+.pin-a {
+  left: 23px;
+  top: 80px;
+  color: #ff7a1a;
+}
+.pin-b {
+  right: 18px;
+  bottom: 38px;
+  color: #24a5ff;
+}
+
+/* --- Dashboard: statistik & akses cepat --------------------------------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 18px 0;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1.55fr 0.85fr;
+  gap: 18px;
+}
+.quick button {
+  width: 100%;
+  border: 1px solid #edf0f3;
+  background: #fff;
+  border-radius: 11px;
+  padding: 12px 11px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  margin-bottom: 9px;
+  cursor: pointer;
+}
+.quick button > div {
+  flex: 1;
+}
+.quick b {
+  display: block;
+  font-size: 10px;
+}
+.quick small {
+  display: block;
+  color: #9aa1ac;
+  font-size: 9px;
+  margin-top: 3px;
+}
+.qicon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+}
+.qicon.orange {
+  background: #fff1e7;
+  color: #f4761a;
+}
+.qicon.blue {
+  background: #eaf4ff;
+  color: #167de0;
+}
+.qicon.red {
+  background: #ffedf0;
+  color: #d72b50;
+}
+
+/* --- Pengajuan dinas ---------------------------------------------------- */
+
+.form-intro {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 18px 24px;
+  margin-bottom: 17px;
+}
+.step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #a0a7b2;
+  font-size: 10px;
+}
+.step span {
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #f0f2f5;
+  font-weight: 800;
+}
+.step.done {
+  color: #1c2836;
+}
+.step.done span {
+  background: #111827;
+  color: white;
+}
+.line {
+  height: 1px;
+  background: #e4e7eb;
+  flex: 1;
+  margin: 0 25px;
+}
+.empty-guide {
+  text-align: center;
+  padding: 45px 25px;
+  margin-bottom: 17px;
+}
+.guide-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: #fff1e7;
+  color: #f4771a;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 15px;
+}
+.empty-guide h2 {
+  font: 800 17px Manrope;
+  margin: 0 0 7px;
+}
+.empty-guide p {
+  max-width: 520px;
+  margin: 0 auto 18px;
+  color: #8a929d;
+  font-size: 10px;
+  line-height: 1.7;
+}
+.mini-list .panel-head {
+  margin-bottom: 7px;
+}
+.mini-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid #f0f1f3;
+}
+.mini-row:last-child {
+  border: 0;
+}
+.mini-row > div {
+  flex: 1;
+}
+.mini-row b {
+  font-size: 10px;
+}
+.mini-row small {
+  display: block;
+  color: #989faa;
+  font-size: 9px;
+  margin-top: 3px;
+}
+.mini-icon {
+  width: 31px;
+  height: 31px;
+  border-radius: 9px;
+  background: #f5f6f8;
+  display: grid;
+  place-items: center;
+}
+
+/* --- Persetujuan -------------------------------------------------------- */
+
+.approval-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+.approval-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 19px;
+}
+.approval-top {
+  display: flex;
+  justify-content: space-between;
+}
+.approval-id {
+  display: block;
+  font-size: 10px;
+  margin: 17px 0 8px;
+  color: #6d7480;
+}
+.approval-card h3 {
+  font: 800 14px Manrope;
+  line-height: 1.45;
+  margin: 0 0 16px;
+}
+.approval-meta {
+  display: grid;
+  gap: 9px;
+  color: #69717e;
+  font-size: 9px;
+}
+.approval-meta span {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.approval-person {
+  border-top: 1px solid #eef0f2;
+  margin-top: 17px;
+  padding-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #8b929e;
+  font-size: 9px;
+}
+.approval-person b {
+  color: #323946;
+}
+.approval-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px;
+}
+.approval-actions button {
+  flex: 1;
+  padding: 9px;
+  border-radius: 8px;
+  font: 700 10px;
+  cursor: pointer;
+}
+.reject {
+  border: 1px solid #f0d4da;
+  background: #fff;
+  color: #c51f43;
+}
+.approve {
+  border: 0;
+  background: #111827;
+  color: white;
+}
+
+/* --- Laporan ------------------------------------------------------------ */
+
+.report-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 18px;
+}
+.report-stats .stat {
+  min-height: 92px;
+}
+.chart-panel {
+  height: 330px;
+}
+.bars {
+  height: 215px;
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  padding: 15px 8px 0;
+  border-bottom: 1px solid #e7e9ed;
+}
+.bar-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+.bar-col span {
+  width: 32px;
+  background: linear-gradient(180deg, #1683e5, #72baff);
+  border-radius: 7px 7px 0 0;
+  min-height: 15px;
+}
+.bar-col small {
+  font-size: 9px;
+  color: #929aa6;
+}
+
+/* --- Pegawai ------------------------------------------------------------ */
+
+.people-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.person-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 17px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.person-avatar {
+  width: 43px;
+  height: 43px;
+  border-radius: 13px;
+  background: #f1f4f7;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 11px;
+  color: #4b5563;
+}
+.person-card > div:nth-child(2) {
+  flex: 1;
+}
+.person-card b,
+.person-card span,
+.person-card small {
+  display: block;
+}
+.person-card b {
+  font-size: 11px;
+}
+.person-card span {
+  font-size: 9px;
+  color: #69717e;
+  margin-top: 3px;
+}
+.person-card small {
+  font-size: 8px;
+  color: #9aa1ac;
+  margin-top: 5px;
+}
+
+/* --- Pengaturan --------------------------------------------------------- */
+
+.settings {
+  max-width: 780px;
+}
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0;
+  border-bottom: 1px solid #edf0f2;
+}
+.setting-row b,
+.setting-row span {
+  display: block;
+}
+.setting-row b {
+  font-size: 11px;
+}
+.setting-row span {
+  font-size: 9px;
+  color: #929aa5;
+  margin-top: 4px;
+}
+.setting-row select {
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 10px;
+}
+.settings > .primary {
+  margin-top: 20px;
+}

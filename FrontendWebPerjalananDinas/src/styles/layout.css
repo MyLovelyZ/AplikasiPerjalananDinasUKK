@@ -1,0 +1,203 @@
+/* ==========================================================================
+   Layout — kerangka aplikasi: sidebar, topbar, dan area konten
+   ========================================================================== */
+
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* --- Sidebar ------------------------------------------------------------ */
+
+.sidebar {
+  width: 256px;
+  background: var(--sidebar);
+  color: #fff;
+  padding: 22px 16px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 2px 8px 24px;
+  border-bottom: 1px solid #2b3341;
+}
+.logo-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  overflow: hidden;
+  background: #fff;
+  display: grid;
+  place-items: center;
+}
+.logo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.brand strong {
+  display: block;
+  font: 800 17px Manrope;
+  letter-spacing: -0.4px;
+}
+.brand strong span {
+  color: #ff7a1a;
+}
+.brand small,
+.workspace small {
+  display: block;
+  color: #aeb6c4;
+  font-size: 10px;
+  margin-top: 2px;
+}
+.workspace {
+  margin: 18px 0 15px;
+  padding: 10px;
+  border: 1px solid #303847;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.workspace b {
+  font-size: 12px;
+}
+.workspace > span {
+  margin-left: auto;
+  color: #8c95a5;
+}
+
+/* --- Menu navigasi ------------------------------------------------------ */
+
+nav,
+.nav-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+nav button,
+.nav-bottom button {
+  border: 0;
+  background: transparent;
+  color: #aeb6c4;
+  height: 43px;
+  padding: 0 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: 600 12px "DM Sans";
+  cursor: pointer;
+  text-align: left;
+}
+nav button:hover,
+.nav-bottom button:hover {
+  background: #1c2432;
+  color: #fff;
+}
+nav button.active,
+.nav-bottom button.active {
+  background: #fff;
+  color: #111827;
+}
+nav button em {
+  font-style: normal;
+  font-size: 10px;
+  background: #e11d48;
+  color: white;
+  border-radius: 99px;
+  padding: 3px 7px;
+  margin-left: auto;
+}
+.nav-bottom {
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid #2b3341;
+}
+.sidebar-foot {
+  font-size: 9px;
+  color: #687286;
+  padding: 16px 12px 0;
+  line-height: 1.7;
+}
+.sidebar-foot span {
+  color: #8791a3;
+}
+
+/* --- Area utama & topbar ------------------------------------------------ */
+
+.main {
+  margin-left: 256px;
+  width: calc(100% - 256px);
+  min-height: 100vh;
+}
+.topbar {
+  height: 72px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  padding: 0 34px;
+  justify-content: space-between;
+}
+.crumb {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  font-size: 12px;
+}
+.crumb span {
+  color: #9aa1ad;
+}
+.crumb b {
+  color: #d0d4da;
+}
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.icon-btn {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+}
+.icon-btn i {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #ef3147;
+  border: 2px solid white;
+  border-radius: 50%;
+  top: 0;
+  right: 0;
+}
+.top-avatar {
+  width: 33px;
+  height: 33px;
+  border-radius: 50%;
+  background: #111827;
+  color: white;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+}
+.mobile-menu {
+  display: none;
+}
+.content {
+  padding: 30px 34px 50px;
+  max-width: 1500px;
+  margin: auto;
+}

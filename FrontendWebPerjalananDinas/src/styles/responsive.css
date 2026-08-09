@@ -1,0 +1,113 @@
+/* ==========================================================================
+   Responsive — penyesuaian tablet (≤1050px) dan mobile (≤760px)
+   Wajib dimuat paling akhir agar menimpa aturan sebelumnya.
+   ========================================================================== */
+
+@media (max-width: 1050px) {
+  .sidebar {
+    width: 220px;
+  }
+  .main {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+  }
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .approval-grid,
+  .people-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .hero-art {
+    width: 230px;
+  }
+}
+
+@media (max-width: 760px) {
+  .sidebar {
+    display: none;
+  }
+  .main {
+    margin-left: 0;
+    width: 100%;
+  }
+  .topbar {
+    padding: 0 18px;
+  }
+  .mobile-menu {
+    display: block;
+    border: 0;
+    background: transparent;
+  }
+  .crumb {
+    margin-right: auto;
+    margin-left: 10px;
+  }
+  .search {
+    display: none;
+  }
+  .content {
+    padding: 22px 16px;
+  }
+  .hero {
+    padding: 25px;
+    min-height: 290px;
+  }
+  .hero-art {
+    position: absolute;
+    right: -50px;
+    bottom: -20px;
+    opacity: 0.35;
+  }
+  .stats,
+  .approval-grid,
+  .people-grid,
+  .report-stats {
+    grid-template-columns: 1fr;
+  }
+  .page-title {
+    align-items: flex-start;
+    gap: 14px;
+    flex-direction: column;
+  }
+  .form-intro {
+    overflow: auto;
+  }
+  .line {
+    min-width: 35px;
+    margin: 0 10px;
+  }
+  .step b {
+    white-space: nowrap;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .full {
+    grid-column: auto;
+  }
+  .modal-head {
+    padding: 20px 20px 8px;
+  }
+  .modal form {
+    padding: 10px 20px 20px;
+  }
+  .toolbar {
+    flex-wrap: wrap;
+  }
+  .toolbar .filter-search {
+    flex-basis: 100%;
+  }
+  .chart-panel {
+    height: 300px;
+  }
+  .bars {
+    gap: 8px;
+  }
+  .bar-col span {
+    width: 22px;
+  }
+}
