@@ -1,0 +1,68 @@
+# Berlaku untuk semua sub-project (backend / frontend / mobile)
+
+# --- OS files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Thumbs.db:encryptable
+desktop.ini
+$RECYCLE.BIN/
+
+# --- Editor & IDE ---
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.idea/
+*.iml
+*.ipr
+*.iws
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+.history/
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+serviceAccountKey.json
+credentials.json
+
+# --- Dependencies (jaga-jaga kalau ada folder baru) ---
+node_modules/
+
+# --- Build output umum ---
+dist/
+build/
+out/
+coverage/
+tmp/
+temp/
+
+# --- File arsip / dump ---
+*.zip
+*.rar
+*.7z
+*.sql.bak
+*.dump

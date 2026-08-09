@@ -1,0 +1,72 @@
+# ==========================================================
+# Backend — Node.js / Express
+# ==========================================================
+
+# --- Dependencies ---
+node_modules/
+jspm_packages/
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+config/local.json
+serviceAccountKey.json
+credentials.json
+*.pem
+*.key
+
+# --- Build / output ---
+dist/
+build/
+out/
+
+# --- Testing & coverage ---
+coverage/
+.nyc_output/
+*.lcov
+
+# --- Cache ---
+.cache/
+.npm/
+.eslintcache
+.node_repl_history
+
+# --- Upload / file dari user (jangan di-commit) ---
+uploads/
+public/uploads/
+storage/
+!uploads/.gitkeep
+
+# --- Database lokal ---
+*.sqlite
+*.sqlite3
+*.db
+data/
+
+# --- Process manager ---
+.pm2/
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# --- OS & editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
