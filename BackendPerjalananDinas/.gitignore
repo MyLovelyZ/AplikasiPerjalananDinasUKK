@@ -70,3 +70,12 @@ pids/
 Thumbs.db
 .vscode/
 .idea/
+
+# --- AI agent skills (dipasang otomatis oleh `npx prisma init`) ---
+# Cuma dokumentasi lokal buat AI assistant, tidak dipakai aplikasi.
+.agents/
+.claude/skills/
+.windsurf/skills/
+skills-lock.json
+
+/generated/prisma
