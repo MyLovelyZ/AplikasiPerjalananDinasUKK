@@ -3,201 +3,379 @@
    ========================================================================== */
 
 .app {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--lebar-sidebar) 1fr;
   min-height: 100vh;
 }
 
-/* --- Sidebar ------------------------------------------------------------ */
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
 
 .sidebar {
-  width: 256px;
-  background: var(--sidebar);
-  color: #fff;
-  padding: 22px 16px;
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
   display: flex;
   flex-direction: column;
-  z-index: 5;
+  gap: 18px;
+  padding: 20px 16px;
+  background: var(--putih);
+  border-right: 1px solid var(--garis);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
+
 .brand {
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 2px 8px 24px;
-  border-bottom: 1px solid #2b3341;
+  padding: 0 6px;
 }
-.logo-wrap {
+
+.brand .logo-wrap {
   width: 40px;
   height: 40px;
   border-radius: 11px;
   overflow: hidden;
-  background: #fff;
-  display: grid;
-  place-items: center;
+  flex-shrink: 0;
+  box-shadow: var(--bayang-halus);
+  border: 1px solid var(--garis);
+  background: var(--biru-pucat);
 }
-.logo-wrap img {
+
+.brand img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
+
 .brand strong {
   display: block;
-  font: 800 17px Manrope;
-  letter-spacing: -0.4px;
+  font-family: "Plus Jakarta Sans", "Manrope", sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--tinta);
+  line-height: 1.2;
 }
+
 .brand strong span {
-  color: #ff7a1a;
+  color: var(--biru);
 }
-.brand small,
-.workspace small {
+
+.brand small {
   display: block;
-  color: #aeb6c4;
-  font-size: 10px;
-  margin-top: 2px;
+  font-size: 11px;
+  color: var(--redup);
 }
+
+/* Kartu identitas pengguna di bawah logo. */
 .workspace {
-  margin: 18px 0 15px;
-  padding: 10px;
-  border: 1px solid #303847;
-  border-radius: 13px;
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--lengkung-kecil);
+  background: var(--biru-kabut);
+  border: 1px solid var(--biru-pucat);
 }
+
+/*
+ * Hanya blok teks yang boleh melar. Sebelumnya selektor ini berbunyi
+ * `.workspace > div`, sehingga ikut mengenai `.avatar` — yang juga sebuah
+ * div — dan `flex: 1` di sini mengalahkan `width: 34px` pada `.avatar`
+ * karena specificity-nya lebih tinggi. Akibatnya avatar melar jadi
+ * persegi panjang selebar separuh sidebar.
+ */
+.workspace .identitas {
+  min-width: 0;
+  flex: 1;
+}
+
 .workspace b {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace small {
+  display: block;
+  font-size: 11px;
+  color: var(--redup);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--biru);
+  color: var(--putih);
+  display: grid;
+  place-items: center;
   font-size: 12px;
-}
-.workspace > span {
-  margin-left: auto;
-  color: #8c95a5;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
 }
 
-/* --- Menu navigasi ------------------------------------------------------ */
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
 
-nav,
+.nav-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--redup);
+  padding: 12px 10px 5px;
+}
+
+.sidebar nav button,
+.nav-bottom button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: var(--lengkung-kecil);
+  background: transparent;
+  color: var(--tinta-sedang);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.sidebar nav button span,
+.nav-bottom button span {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar nav button:hover,
+.nav-bottom button:hover {
+  background: var(--latar-lembut);
+  color: var(--tinta);
+}
+
+/* Menu aktif: latar biru pucat dengan pita biru di tepi kiri. */
+.sidebar nav button.active {
+  background: var(--biru-pucat);
+  color: var(--biru-tua);
+  font-weight: 600;
+  position: relative;
+}
+
+.sidebar nav button.active::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  border-radius: 0 3px 3px 0;
+  background: var(--biru);
+}
+
+.sidebar nav button em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 99px;
+  background: var(--biru);
+  color: var(--putih);
+  display: grid;
+  place-items: center;
+}
+
+.sidebar nav button.active em {
+  background: var(--biru-tua);
+}
+
 .nav-bottom {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-nav button,
-.nav-bottom button {
-  border: 0;
-  background: transparent;
-  color: #aeb6c4;
-  height: 43px;
-  padding: 0 12px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font: 600 12px "DM Sans";
-  cursor: pointer;
-  text-align: left;
-}
-nav button:hover,
-.nav-bottom button:hover {
-  background: #1c2432;
-  color: #fff;
-}
-nav button.active,
-.nav-bottom button.active {
-  background: #fff;
-  color: #111827;
-}
-nav button em {
-  font-style: normal;
-  font-size: 10px;
-  background: #e11d48;
-  color: white;
-  border-radius: 99px;
-  padding: 3px 7px;
-  margin-left: auto;
-}
-.nav-bottom {
-  margin-top: auto;
-  padding-top: 15px;
-  border-top: 1px solid #2b3341;
-}
-.sidebar-foot {
-  font-size: 9px;
-  color: #687286;
-  padding: 16px 12px 0;
-  line-height: 1.7;
-}
-.sidebar-foot span {
-  color: #8791a3;
+  gap: 2px;
+  padding-top: 12px;
+  border-top: 1px solid var(--garis);
 }
 
-/* --- Area utama & topbar ------------------------------------------------ */
+.nav-bottom button.keluar {
+  color: var(--merah);
+}
+
+.nav-bottom button.keluar:hover {
+  background: var(--merah-pucat);
+}
+
+.sidebar-foot {
+  font-size: 10.5px;
+  color: var(--redup);
+  padding: 0 10px;
+  line-height: 1.6;
+}
+
+/* ── Area utama ──────────────────────────────────────────────────────── */
 
 .main {
-  margin-left: 256px;
-  width: calc(100% - 256px);
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
+
 .topbar {
-  height: 72px;
-  background: #fff;
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  align-items: center;
-  padding: 0 34px;
-  justify-content: space-between;
-}
-.crumb {
-  display: flex;
-  gap: 9px;
-  align-items: center;
-  font-size: 12px;
-}
-.crumb span {
-  color: #9aa1ad;
-}
-.crumb b {
-  color: #d0d4da;
-}
-.top-actions {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: var(--tinggi-topbar);
   display: flex;
   align-items: center;
   gap: 14px;
+  padding: 0 26px;
+  background: rgb(255 255 255 / 88%);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--garis);
 }
-.icon-btn {
-  position: relative;
-  border: 0;
-  background: transparent;
-  color: #6b7280;
-  cursor: pointer;
-}
-.icon-btn i {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background: #ef3147;
-  border: 2px solid white;
-  border-radius: 50%;
-  top: 0;
-  right: 0;
-}
-.top-avatar {
-  width: 33px;
-  height: 33px;
-  border-radius: 50%;
-  background: #111827;
-  color: white;
-  display: grid;
-  place-items: center;
-  font-size: 10px;
-  font-weight: 800;
-}
+
 .mobile-menu {
   display: none;
+  border: 1px solid var(--garis);
+  background: var(--putih);
+  border-radius: var(--lengkung-kecil);
+  padding: 7px;
+  color: var(--tinta-sedang);
 }
+
+.crumb {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--redup);
+  min-width: 0;
+}
+
+.crumb strong {
+  color: var(--tinta);
+  font-weight: 600;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.crumb b {
+  font-weight: 400;
+  color: var(--garis-tegas);
+}
+
+.top-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 38px;
+  width: 270px;
+  border: 1px solid var(--garis);
+  border-radius: var(--lengkung-kecil);
+  background: var(--latar-lembut);
+  color: var(--redup);
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+
+.search:focus-within {
+  border-color: var(--biru-terang);
+  background: var(--putih);
+  box-shadow: 0 0 0 3px var(--biru-pucat);
+}
+
+.search input {
+  border: 0;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 13px;
+  color: var(--tinta);
+}
+
+.search input::placeholder {
+  color: var(--redup);
+}
+
+.icon-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--garis);
+  border-radius: var(--lengkung-kecil);
+  background: var(--putih);
+  color: var(--tinta-sedang);
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.icon-btn:hover {
+  background: var(--biru-pucat);
+  color: var(--biru-tua);
+}
+
+/* Titik merah penanda notifikasi belum dibaca. */
+.icon-btn .titik {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 99px;
+  background: var(--merah);
+  color: var(--putih);
+  font-size: 9.5px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--putih);
+  font-style: normal;
+}
+
+.top-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--biru);
+  color: var(--putih);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .content {
-  padding: 30px 34px 50px;
-  max-width: 1500px;
-  margin: auto;
+  padding: 26px;
+  flex: 1;
+  min-width: 0;
+  max-width: 1420px;
+  width: 100%;
 }

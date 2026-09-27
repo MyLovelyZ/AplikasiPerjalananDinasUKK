@@ -1,15 +1,20 @@
 import { Icon } from '@/components/ui/Icon'
 
-interface ToastProps {
-  message: string
+export interface PesanToast {
+  teks: string
+  jenis: 'sukses' | 'galat'
 }
 
 /** Notifikasi ringkas di pojok kanan bawah layar. */
-export function Toast({ message }: ToastProps) {
+export function Toast({ pesan }: { pesan: PesanToast }) {
   return (
-    <div className="toast" role="status" aria-live="polite">
-      <Icon name="check" size={18} />
-      {message}
+    <div
+      className={`toast ${pesan.jenis === 'galat' ? 'galat' : ''}`}
+      role="status"
+      aria-live="polite"
+    >
+      <Icon name={pesan.jenis === 'galat' ? 'peringatan' : 'check'} size={17} />
+      {pesan.teks}
     </div>
   )
 }

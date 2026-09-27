@@ -7,6 +7,7 @@ export type PageKey =
   | 'Perjalanan Saya'
   | 'Persetujuan'
   | 'Laporan'
+  | 'Keuangan'
   | 'Pegawai'
   | 'Pengaturan'
 
@@ -14,6 +15,9 @@ export interface NavItem {
   /** Label yang tampil sekaligus dipakai sebagai kunci halaman aktif. */
   key: PageKey
   icon: IconName
-  /** Lencana jumlah (mis. antrean persetujuan) yang tampil di sisi kanan menu. */
-  badge?: string
+  /**
+   * Hak akses yang harus dimiliki agar menu ini tampil. Menu tanpa daftar
+   * ini terbuka bagi seluruh pengguna yang sudah masuk.
+   */
+  hak?: string[]
 }

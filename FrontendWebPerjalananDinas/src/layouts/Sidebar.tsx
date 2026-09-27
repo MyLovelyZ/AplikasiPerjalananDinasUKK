@@ -1,19 +1,38 @@
 import { Icon } from '@/components/ui/Icon'
 import { APP_COPYRIGHT, APP_TAGLINE, APP_VERSION } from '@/constants/app'
 import { NAV_ITEMS, SETTINGS_PAGE } from '@/constants/navigation'
-import { CURRENT_USER } from '@/data/currentUser'
+import { useAuth } from '@/auth/useAuth'
+import { inisial } from '@/utils/format'
 import type { PageKey } from '@/types/navigation'
 
 interface SidebarProps {
   activePage: PageKey
   onNavigate: (page: PageKey) => void
   onSignOut: () => void
+  /** Jumlah tugas persetujuan yang menunggu, tampil sebagai lencana. */
+  jumlahAntrean: number
+  terbuka: boolean
 }
 
-/** Navigasi utama: identitas aplikasi, ruang kerja, menu, dan aksi keluar. */
-export function Sidebar({ activePage, onNavigate, onSignOut }: SidebarProps) {
+/** Navigasi utama: identitas aplikasi, pengguna aktif, menu, dan aksi keluar. */
+export function Sidebar({
+  activePage,
+  onNavigate,
+  onSignOut,
+  jumlahAntrean,
+  terbuka,
+}: SidebarProps) {
+  const { profil, boleh } = useAuth()
+
+  // Menu yang haknya tidak dimiliki tidak ditampilkan sama sekali —
+  // lebih jujur daripada menampilkannya lalu menolak saat diklik.
+  const menuTampil = NAV_ITEMS.filter((item) => !item.hak || boleh(...item.hak))
+
+  const nama = profil?.karyawan?.nama_lengkap ?? profil?.username ?? 'Pengguna'
+  const peranUtama = profil?.peran?.[0]?.nama ?? 'Tanpa peran'
+
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${terbuka ? 'buka' : ''}`}>
       <div className="brand">
         <div className="logo-wrap">
           <img src="/logo.jpg" alt="Logo DinasGo" />
@@ -27,16 +46,16 @@ export function Sidebar({ activePage, onNavigate, onSignOut }: SidebarProps) {
       </div>
 
       <div className="workspace">
-        <div className="avatar">{CURRENT_USER.initials}</div>
-        <div>
-          <b>{CURRENT_USER.name}</b>
-          <small>{CURRENT_USER.role}</small>
+        <div className="avatar">{inisial(nama)}</div>
+        <div className="identitas">
+          <b>{nama}</b>
+          <small>{peranUtama}</small>
         </div>
-        <span aria-hidden="true">⌄</span>
       </div>
 
       <nav>
-        {NAV_ITEMS.map(({ key, icon, badge }) => (
+        <div className="nav-label">Menu</div>
+        {menuTampil.map(({ key, icon }) => (
           <button
             key={key}
             type="button"
@@ -46,7 +65,7 @@ export function Sidebar({ activePage, onNavigate, onSignOut }: SidebarProps) {
           >
             <Icon name={icon} />
             <span>{key}</span>
-            {badge && <em>{badge}</em>}
+            {key === 'Persetujuan' && jumlahAntrean > 0 && <em>{jumlahAntrean}</em>}
           </button>
         ))}
       </nav>
@@ -61,7 +80,7 @@ export function Sidebar({ activePage, onNavigate, onSignOut }: SidebarProps) {
           <Icon name="settings" />
           <span>{SETTINGS_PAGE}</span>
         </button>
-        <button type="button" onClick={onSignOut}>
+        <button type="button" className="keluar" onClick={onSignOut}>
           <Icon name="logout" />
           <span>Keluar</span>
         </button>

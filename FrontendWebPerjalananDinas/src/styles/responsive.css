@@ -1,113 +1,171 @@
 /* ==========================================================================
-   Responsive — penyesuaian tablet (≤1050px) dan mobile (≤760px)
-   Wajib dimuat paling akhir agar menimpa aturan sebelumnya.
+   Responsive — penyesuaian tata letak untuk layar sempit
+
+   Sidebar berubah menjadi laci geser di bawah 1024px; kelas `.buka`
+   dipasang dari komponen AppLayout.
    ========================================================================== */
 
-@media (max-width: 1050px) {
-  .sidebar {
-    width: 220px;
-  }
-  .main {
-    margin-left: 220px;
-    width: calc(100% - 220px);
-  }
-  .grid-2 {
-    grid-template-columns: 1fr;
-  }
-  .approval-grid,
-  .people-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .stats {
-    grid-template-columns: 1fr 1fr;
-  }
-  .hero-art {
-    width: 230px;
+@media (max-width: 1180px) {
+  /* Tetap `minmax(0, ...)`, bukan `1fr` telanjang — lihat catatan di pages.css. */
+  .grid-dua,
+  .grid-dua.rata {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1024px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
   .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 70;
+    width: var(--lebar-sidebar);
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    box-shadow: var(--bayang-naik);
+  }
+
+  .sidebar.buka {
+    transform: translateX(0);
+  }
+
+  .tirai-sidebar {
+    position: fixed;
+    inset: 0;
+    background: rgb(15 27 45 / 40%);
+    z-index: 65;
+    border: 0;
+  }
+
+  .mobile-menu {
+    display: grid;
+    place-items: center;
+  }
+
+  .search {
+    width: 190px;
+  }
+
+  .content {
+    padding: 20px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .layar-masuk {
+    grid-template-columns: 1fr;
+  }
+
+  /* Panel biru pengantar disembunyikan agar formulir mendapat layar penuh. */
+  .masuk-sisi {
     display: none;
   }
-  .main {
-    margin-left: 0;
-    width: 100%;
+
+  .baris-rincian {
+    grid-template-columns: 1fr 1fr;
   }
-  .topbar {
-    padding: 0 18px;
+
+  .baris-rincian .subtotal,
+  .baris-rincian .tombol-hapus-baris {
+    grid-column: span 1;
   }
-  .mobile-menu {
-    display: block;
-    border: 0;
-    background: transparent;
-  }
-  .crumb {
-    margin-right: auto;
-    margin-left: 10px;
-  }
+}
+
+@media (max-width: 720px) {
   .search {
     display: none;
   }
-  .content {
-    padding: 22px 16px;
+
+  .crumb span,
+  .crumb b {
+    display: none;
   }
-  .hero {
-    padding: 25px;
-    min-height: 290px;
-  }
-  .hero-art {
-    position: absolute;
-    right: -50px;
-    bottom: -20px;
-    opacity: 0.35;
-  }
-  .stats,
-  .approval-grid,
-  .people-grid,
-  .report-stats {
-    grid-template-columns: 1fr;
-  }
+
   .page-title {
-    align-items: flex-start;
-    gap: 14px;
     flex-direction: column;
+    align-items: stretch;
   }
-  .form-intro {
-    overflow: auto;
+
+  .page-title .btn {
+    width: 100%;
   }
-  .line {
-    min-width: 35px;
-    margin: 0 10px;
+
+  .hero {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  .step b {
-    white-space: nowrap;
+
+  .hero-aksi {
+    width: 100%;
   }
-  .form-grid {
+
+  .hero-aksi .btn {
+    flex: 1;
+  }
+
+  .grid-persetujuan {
     grid-template-columns: 1fr;
   }
-  .full {
-    grid-column: auto;
+
+  .baris-rincian {
+    grid-template-columns: 1fr;
   }
-  .modal-head {
-    padding: 20px 20px 8px;
-  }
-  .modal form {
-    padding: 10px 20px 20px;
-  }
-  .toolbar {
+
+  .modal-kaki {
     flex-wrap: wrap;
   }
-  .toolbar .filter-search {
-    flex-basis: 100%;
+
+  .modal-kaki .kiri {
+    width: 100%;
+    margin-bottom: 4px;
   }
-  .chart-panel {
-    height: 300px;
+
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    max-width: none;
   }
-  .bars {
-    gap: 8px;
+}
+
+@media (max-width: 520px) {
+  .grid-stat {
+    grid-template-columns: 1fr 1fr;
   }
-  .bar-col span {
-    width: 22px;
+
+  .stat {
+    padding: 13px;
+  }
+
+  .stat strong {
+    font-size: 18px;
+  }
+
+  .stat-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .content {
+    padding: 16px 12px;
+  }
+
+  .grafik {
+    height: 140px;
+    padding: 14px 12px 0;
+  }
+
+  .grafik-kolom small {
+    font-size: 9px;
   }
 }

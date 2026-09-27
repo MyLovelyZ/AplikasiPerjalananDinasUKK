@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { Sidebar } from '@/layouts/Sidebar'
@@ -10,33 +11,67 @@ interface AppLayoutProps {
   onSignOut: () => void
   searchQuery: string
   onSearchChange: (value: string) => void
+  jumlahAntrean: number
+  jumlahNotifikasi: number
+  onNotifikasiBerubah: () => void
   /** Isi halaman yang sedang aktif. */
   children: ReactNode
   /** Lapisan di atas halaman: modal dan toast. */
   overlays?: ReactNode
 }
 
-/** Kerangka aplikasi: sidebar tetap di kiri, topbar, lalu area konten. */
+/** Kerangka aplikasi: sidebar di kiri, topbar, lalu area konten. */
 export function AppLayout({
   activePage,
   onNavigate,
   onSignOut,
   searchQuery,
   onSearchChange,
+  jumlahAntrean,
+  jumlahNotifikasi,
+  onNotifikasiBerubah,
   children,
   overlays,
 }: AppLayoutProps) {
+  // Di layar sempit sidebar menjadi laci; state-nya cukup hidup di sini.
+  const [laciTerbuka, setLaciTerbuka] = useState(false)
+
+  const pindahHalaman = (halaman: PageKey) => {
+    onNavigate(halaman)
+    setLaciTerbuka(false)
+  }
+
   return (
     <div className="app">
-      <Sidebar activePage={activePage} onNavigate={onNavigate} onSignOut={onSignOut} />
+      <Sidebar
+        activePage={activePage}
+        onNavigate={pindahHalaman}
+        onSignOut={onSignOut}
+        jumlahAntrean={jumlahAntrean}
+        terbuka={laciTerbuka}
+      />
+
+      {laciTerbuka && (
+        <button
+          type="button"
+          className="tirai-sidebar"
+          aria-label="Tutup menu navigasi"
+          onClick={() => setLaciTerbuka(false)}
+        />
+      )}
+
       <main className="main">
         <Topbar
           activePage={activePage}
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
+          onBukaMenu={() => setLaciTerbuka(true)}
+          onNotifikasiBerubah={onNotifikasiBerubah}
+          jumlahBelumDibaca={jumlahNotifikasi}
         />
         <div className="content">{children}</div>
       </main>
+
       {overlays}
     </div>
   )

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import type { PesanToast } from '@/components/feedback/Toast'
 import { TOAST_DURATION_MS } from '@/constants/app'
 
 /**
@@ -7,26 +8,34 @@ import { TOAST_DURATION_MS } from '@/constants/app'
  * Timer sebelumnya selalu dibatalkan agar pesan baru mendapat durasi penuh.
  */
 export function useToast() {
-  const [message, setMessage] = useState('')
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [pesan, setPesan] = useState<PesanToast | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const clearTimer = useCallback(() => {
-    if (timeoutRef.current !== null) {
-      clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
+  const bersihkanTimer = useCallback(() => {
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
     }
   }, [])
 
-  const notify = useCallback(
-    (text: string) => {
-      clearTimer()
-      setMessage(text)
-      timeoutRef.current = setTimeout(() => setMessage(''), TOAST_DURATION_MS)
+  const tampilkan = useCallback(
+    (teks: string, jenis: PesanToast['jenis'] = 'sukses') => {
+      bersihkanTimer()
+      setPesan({ teks, jenis })
+      timerRef.current = setTimeout(() => setPesan(null), TOAST_DURATION_MS)
     },
-    [clearTimer],
+    [bersihkanTimer],
   )
 
-  useEffect(() => clearTimer, [clearTimer])
+  /** Pintasan untuk menampilkan pesan galat dari sebuah Error. */
+  const laporkanGalat = useCallback(
+    (penyebab: unknown, cadangan = 'Terjadi kesalahan') => {
+      tampilkan(penyebab instanceof Error ? penyebab.message : cadangan, 'galat')
+    },
+    [tampilkan],
+  )
 
-  return { message, notify }
+  useEffect(() => bersihkanTimer, [bersihkanTimer])
+
+  return { pesan, tampilkan, laporkanGalat }
 }

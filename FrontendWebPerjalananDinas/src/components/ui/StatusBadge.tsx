@@ -1,10 +1,11 @@
-import type { TripStatus } from '@/types/trip'
+import type { WarnaStatus } from '@/utils/format'
 
 interface StatusBadgeProps {
-  status: TripStatus
+  label: string
+  warna: WarnaStatus
 }
 
-/** Lencana status pengajuan; warna diatur lewat kelas turunan `.status`. */
-export function StatusBadge({ status }: StatusBadgeProps) {
-  return <span className={`status ${status.toLowerCase()}`}>{status}</span>
+/** Lencana status; warnanya ditentukan pemanggil lewat peta di utils/format. */
+export function StatusBadge({ label, warna }: StatusBadgeProps) {
+  return <span className={`status ${warna}`}>{label}</span>
 }

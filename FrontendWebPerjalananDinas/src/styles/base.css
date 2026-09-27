@@ -1,26 +1,142 @@
 /* ==========================================================================
-   Base — design token, reset, dan tipografi dasar
+   Base — design token, reset, tipografi dasar
+
+   Sistem warna: PUTIH sebagai warna utama (permukaan kartu, sidebar, topbar)
+   dengan BIRU sebagai warna sekunder (aksi, penanda aktif, aksen data).
+   Latar halaman memakai biru yang sangat pucat agar kartu putih di atasnya
+   punya batas yang terbaca tanpa perlu bayangan tebal.
    ========================================================================== */
 
 :root {
-  --ink: #111827;
-  --muted: #6b7280;
-  --line: #e7e9ee;
-  --soft: #f7f8fa;
-  --orange: #ff7a1a;
-  --blue: #1683e5;
-  --red: #e11d48;
-  --green: #16825b;
-  --sidebar: #111827;
+  /* Permukaan */
+  --putih: #ffffff;
+  --latar: #f4f7fc;
+  --latar-lembut: #f8fafc;
+  --garis: #e4e9f2;
+  --garis-tegas: #d3dbe8;
+
+  /* Teks */
+  --tinta: #0f1b2d;
+  --tinta-sedang: #46536b;
+  --redup: #74819a;
+
+  /* Biru — warna sekunder sistem */
+  --biru: #1b62d6;
+  --biru-tua: #12459b;
+  --biru-terang: #4a8bf0;
+  --biru-pucat: #eaf1fd;
+  --biru-kabut: #f2f7fe;
+
+  /* Warna status */
+  --hijau: #12805c;
+  --hijau-pucat: #e6f6f0;
+  --kuning: #b06a02;
+  --kuning-pucat: #fdf3e2;
+  --merah: #c62828;
+  --merah-pucat: #fdeceb;
+  --ungu: #6039c4;
+  --ungu-pucat: #f0ebfd;
+
+  /* Bentuk & kedalaman */
+  --lengkung: 14px;
+  --lengkung-kecil: 9px;
+  --bayang-halus: 0 1px 2px rgb(15 27 45 / 6%);
+  --bayang: 0 2px 8px rgb(15 27 45 / 6%), 0 1px 2px rgb(15 27 45 / 4%);
+  --bayang-naik: 0 12px 32px rgb(15 27 45 / 12%);
+  --bayang-biru: 0 4px 14px rgb(27 98 214 / 24%);
+
+  /* Tata letak */
+  --lebar-sidebar: 264px;
+  --tinggi-topbar: 66px;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
-  background: #f6f7f9;
-  color: var(--ink);
-  font-family: "DM Sans", sans-serif;
+  background: var(--latar);
+  color: var(--tinta);
+  font-family: "Inter", "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: "Plus Jakarta Sans", "Manrope", "Inter", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--tinta);
+}
+
+p {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: var(--biru);
+  text-decoration: none;
+}
+
+/* Angka pada tabel dan kartu dijajarkan agar kolom rupiah mudah dibandingkan. */
+.angka {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Fokus keyboard yang konsisten di seluruh aplikasi. */
+:focus-visible {
+  outline: 2px solid var(--biru);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--biru-pucat);
+  color: var(--biru-tua);
+}
+
+/* Batang gulir yang tidak mencuri perhatian dari isi halaman. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--garis-tegas) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--garis-tegas);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
 }

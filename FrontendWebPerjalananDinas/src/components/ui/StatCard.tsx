@@ -7,13 +7,15 @@ interface StatCardProps {
   value: string | number
   /** Keterangan tambahan di bawah angka utama. */
   note: string
+  /** Warna kotak ikon; biru bila tidak disebut. */
+  warna?: 'biru' | 'hijau' | 'kuning' | 'merah' | 'ungu'
 }
 
-/** Kartu ringkasan angka yang dipakai di dashboard dan laporan. */
-export function StatCard({ icon, title, value, note }: StatCardProps) {
+/** Kartu ringkasan angka yang dipakai di dashboard dan halaman laporan. */
+export function StatCard({ icon, title, value, note, warna = 'biru' }: StatCardProps) {
   return (
     <div className="stat">
-      <div className="stat-icon">
+      <div className={`stat-icon ${warna === 'biru' ? '' : warna}`}>
         <Icon name={icon} />
       </div>
       <div>
