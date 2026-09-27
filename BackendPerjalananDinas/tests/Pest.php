@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /*
@@ -15,7 +15,7 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
+    ->use(LazilyRefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -47,4 +47,27 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * A valid body for POST /api/employee/requests. Its cost lines total 3,350,000.
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function travelRequestPayload(array $overrides = []): array
+{
+    return array_replace([
+        'purpose' => 'Client meeting and contract negotiation',
+        'destination' => 'Surabaya',
+        'trip_type' => 'domestic',
+        'transportation' => 'plane',
+        'departure_date' => today()->addDays(7)->toDateString(),
+        'return_date' => today()->addDays(9)->toDateString(),
+        'advance_requested' => 1_000_000,
+        'costs' => [
+            ['category' => 'transportation', 'description' => 'Return flight', 'quantity' => 1, 'unit_price' => 2_000_000],
+            ['category' => 'accommodation', 'description' => 'Hotel', 'quantity' => 2, 'unit_price' => 675_000],
+        ],
+    ], $overrides);
 }

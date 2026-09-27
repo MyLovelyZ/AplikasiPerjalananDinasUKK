@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tester API Perjalanan Dinas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Tester API Perjalanan Dinas</h1>
+    <p>Cek semua endpoint backend Laravel. Nyalakan MySQL (Laragon) dan jalankan <code>php artisan serve</code> dulu.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>1. Pengaturan &amp; login</h2>
+      <label class="field">
+        <span>Base URL API</span>
+        <input id="baseUrl" type="url" placeholder="http://127.0.0.1:8000/api">
+      </label>
+
+      <div class="table-wrap">
+        <table id="accounts">
+          <thead>
+            <tr><th>Role</th><th>Email</th><th>Password</th><th></th><th>Status token</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="actions">
+        <button id="loginAll" type="button">Login semua role</button>
+        <button id="clearTokens" type="button" class="secondary">Hapus token tersimpan</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Tes otomatis semua endpoint</h2>
+      <p class="hint">
+        Menjalankan alur lengkap: login tiap role, CRUD admin, lalu satu perjalanan dinas dari pengajuan →
+        persetujuan supervisor → verifikasi anggaran → bayar uang muka → LPJ + upload struk → verifikasi LPJ →
+        pelunasan. Tes membuat pegawai uji baru setiap kali dijalankan, lalu menghapusnya di akhir.
+        Klik baris hasil untuk melihat request &amp; response-nya.
+      </p>
+      <div class="actions">
+        <button id="runAll" type="button">Jalankan semua tes</button>
+        <span id="summary"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="results">
+          <thead>
+            <tr><th>#</th><th>Grup</th><th>Sebagai</th><th>Request</th><th>Harapan</th><th>Status</th><th>Waktu</th><th>Hasil</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>3. Request manual</h2>
+      <div class="manual">
+        <aside>
+          <p class="hint">Klik endpoint untuk mengisi form. Ganti <code>{...}</code> di path dengan ID.</p>
+          <div id="catalog"></div>
+        </aside>
+
+        <form id="manualForm">
+          <div class="request-line">
+            <select id="mMethod">
+              <option>GET</option>
+              <option>POST</option>
+              <option>PUT</option>
+              <option>PATCH</option>
+              <option>DELETE</option>
+            </select>
+            <input id="mPath" placeholder="/profile" required>
+          </div>
+
+          <label class="field">
+            <span>Token</span>
+            <select id="mRole"></select>
+          </label>
+          <label class="field" id="mTokenField" hidden>
+            <span>Token manual</span>
+            <input id="mToken" placeholder="1|abcdef...">
+          </label>
+
+          <label class="field">
+            <span>Body JSON (diabaikan untuk GET)</span>
+            <textarea id="mBody" rows="10" spellcheck="false"></textarea>
+          </label>
+
+          <div class="file-row">
+            <label class="field">
+              <span>Upload file (opsional) — nama field</span>
+              <input id="mFileField" placeholder="photo  atau  expenses[0][receipt]">
+            </label>
+            <input id="mFile" type="file">
+          </div>
+          <p class="hint">Kalau ada file, body dikirim sebagai multipart/form-data (PUT otomatis jadi POST + <code>_method=PUT</code>).</p>
+
+          <button type="submit">Kirim</button>
+        </form>
+      </div>
+
+      <div id="mResult" hidden>
+        <div id="mStatus"></div>
+        <div id="mDownload"></div>
+        <pre id="mOutput"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
