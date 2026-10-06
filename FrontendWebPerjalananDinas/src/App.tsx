@@ -1,109 +1,62 @@
 import { useCallback, useState } from 'react'
 
-import { apiAntreanPersetujuan, apiJumlahNotifikasi } from '@/api/endpoint'
+import { apiAntreanAtasan, apiAntreanKeuangan } from '@/api/endpoint'
+import type { Perjalanan } from '@/api/tipe'
+import { useAuth } from '@/auth/useAuth'
 import { Toast } from '@/components/feedback/Toast'
 import { Memuat } from '@/components/ui/Keadaan'
-import { DEFAULT_PAGE } from '@/constants/navigation'
-import { useAuth } from '@/auth/useAuth'
+import { DEFAULT_PAGE, NAV_ITEMS, PROFILE_PAGE } from '@/constants/navigation'
+import { AuditLogPage } from '@/features/admin/AuditLogPage'
+import { DepartemenPage } from '@/features/admin/DepartemenPage'
+import { PenggunaPage } from '@/features/admin/PenggunaPage'
 import { ApprovalsPage } from '@/features/approvals/ApprovalsPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
-import { EmployeesPage } from '@/features/employees/EmployeesPage'
-import { FinancePage } from '@/features/finance/FinancePage'
+import { AnggaranPage } from '@/features/finance/AnggaranPage'
+import { LaporanKeuanganPage } from '@/features/finance/LaporanKeuanganPage'
+import { PencairanPage } from '@/features/finance/PencairanPage'
+import { VerifikasiPage } from '@/features/finance/VerifikasiPage'
+import { ProfilPage } from '@/features/profile/ProfilPage'
 import { ReportsPage } from '@/features/reports/ReportsPage'
 import { LaporanModal } from '@/features/reports/components/LaporanModal'
-import { SettingsPage } from '@/features/settings/SettingsPage'
-import { SubmissionPage } from '@/features/submissions/SubmissionPage'
-import { FormulirSppdModal } from '@/features/submissions/components/FormulirSppdModal'
 import { TripsPage } from '@/features/trips/TripsPage'
-import { DetailSppdModal } from '@/features/trips/components/DetailSppdModal'
+import { DetailPerjalananModal } from '@/features/trips/components/DetailPerjalananModal'
+import type { SudutPandang } from '@/features/trips/components/DetailPerjalananModal'
+import { FormulirPerjalananModal } from '@/features/trips/components/FormulirPerjalananModal'
 import { usePermintaan } from '@/hooks/usePermintaan'
 import { useToast } from '@/hooks/useToast'
 import { AppLayout } from '@/layouts/AppLayout'
 import type { PageKey } from '@/types/navigation'
-import type { Sppd } from '@/api/tipe'
 
-/**
- * Akar aplikasi.
- *
- * Menyimpan state yang benar-benar lintas halaman: halaman aktif, kata kunci
- * pencarian, modal yang sedang terbuka, toast, serta dua angka lencana
- * (antrean persetujuan dan notifikasi belum dibaca). Data isi halaman
- * diambil masing-masing halaman lewat usePermintaan, bukan diteruskan
- * dari sini — supaya satu halaman yang lambat tidak menahan yang lain.
- */
 export default function App() {
-  const { profil, memuat: memuatSesi, keluar, boleh } = useAuth()
-  const { pesan: pesanToast, tampilkan, laporkanGalat } = useToast()
+  const { pengguna, memuat: memuatSesi, keluar } = useAuth()
+  const { pesan: pesanToast, tampilkan } = useToast()
 
   const [halamanAktif, setHalamanAktif] = useState<PageKey>(DEFAULT_PAGE)
   const [pencarian, setPencarian] = useState('')
 
-  const [formTerbuka, setFormTerbuka] = useState(false)
-  const [sppdDibuka, setSppdDibuka] = useState<number | null>(null)
+  const [formPerjalanan, setFormPerjalanan] = useState<{ perjalanan?: Perjalanan } | null>(null)
+  const [perjalananDibuka, setPerjalananDibuka] = useState<number | null>(null)
   const [laporanDibuka, setLaporanDibuka] = useState<number | null>(null)
 
-  // Dinaikkan setiap kali ada aksi yang mengubah data, memaksa halaman
-  // yang sedang tampil mengambil ulang isinya.
+  // Dinaikkan setiap kali ada aksi yang mengubah data, memaksa halaman aktif mengambil ulang.
   const [penandaSegar, setPenandaSegar] = useState(0)
-  const segarkanSemua = useCallback(() => setPenandaSegar((n) => n + 1), [])
 
-  const bolehSetujui = boleh('sppd.setujui')
-
-  /**
-   * Dua angka lencana: notifikasi belum dibaca dan antrean persetujuan.
-   * Keduanya diambil bersama supaya sidebar dan topbar tidak berkedip
-   * bergantian, dan kegagalannya diabaikan — lencana yang tidak muncul
-   * tidak boleh menghalangi seluruh aplikasi.
-   */
-  const lencana = usePermintaan(
-    async () => {
-      if (!profil) return { notifikasi: 0, antrean: 0 }
-
-      const [notif, antrean] = await Promise.all([
-        apiJumlahNotifikasi().catch(() => ({ jumlah: 0 })),
-        bolehSetujui ? apiAntreanPersetujuan(1, 1).catch(() => null) : Promise.resolve(null),
-      ])
-
-      return { notifikasi: notif.jumlah, antrean: antrean?.halaman.total_data ?? 0 }
-    },
-    [profil?.id ?? 0, bolehSetujui, penandaSegar],
-  )
-
-  const muatLencana = lencana.muatUlang
-  const jumlahNotifikasi = lencana.data?.notifikasi ?? 0
-  const jumlahAntrean = lencana.data?.antrean ?? 0
+  const peran = pengguna?.role
+  const { data: jumlahAntrean } = usePermintaan(async () => {
+    if (peran === 'supervisor') return (await apiAntreanAtasan({ status: 'pending', per_page: 1 })).meta.total
+    if (peran === 'finance') return (await apiAntreanKeuangan({ per_page: 1 })).meta.total
+    return 0
+  }, [peran, penandaSegar])
 
   const sukses = useCallback(
     (teks: string) => {
       tampilkan(teks, 'sukses')
-      segarkanSemua()
+      setPenandaSegar((n) => n + 1)
     },
-    [tampilkan, segarkanSemua],
+    [tampilkan],
   )
 
-  const bukaSppd = (id: number) => setSppdDibuka(id)
-
-  const bukaLaporanDariSppd = (sppd: Sppd) => {
-    if (sppd.laporan) {
-      setSppdDibuka(null)
-      setLaporanDibuka(sppd.laporan.id)
-      return
-    }
-    // SPPD berstatus MENUNGGU_LAPORAN yang belum punya laporan diarahkan
-    // ke halaman Laporan, tempat laporan baru dibuat.
-    tampilkan('Laporan belum dibuat untuk SPPD ini. Buka halaman Laporan untuk menyusunnya.')
-  }
-
-  const setelahBuatSppd = (sppd: Sppd, pesan: string) => {
-    setFormTerbuka(false)
-    sukses(pesan)
-    setHalamanAktif('Perjalanan Saya')
-    setSppdDibuka(sppd.id)
-  }
-
-  // Sesi dipulihkan lebih dulu: tanpa ini layar login sempat berkedip
-  // muncul pada setiap muat ulang halaman meski token masih berlaku.
   if (memuatSesi) {
     return (
       <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>
@@ -114,23 +67,46 @@ export default function App() {
     )
   }
 
-  if (!profil) return <LoginPage />
+  if (!pengguna) return <LoginPage />
+
+  // Halaman terakhir bisa milik peran lain bila sesi berganti tanpa memuat ulang.
+  const bolehDibuka =
+    halamanAktif === PROFILE_PAGE ||
+    NAV_ITEMS.some((item) => item.key === halamanAktif && item.peran.includes(pengguna.role))
+  const halaman = bolehDibuka ? halamanAktif : DEFAULT_PAGE
+
+  const sudut: SudutPandang | null =
+    pengguna.role === 'employee' || pengguna.role === 'supervisor' || pengguna.role === 'finance'
+      ? pengguna.role
+      : null
+
+  const pindahHalaman = (halaman: PageKey) => {
+    setHalamanAktif(halaman)
+    setPencarian('')
+  }
+
+  const bukaFormBaru = () => setFormPerjalanan({})
+
+  const bukaLaporan = (perjalananId: number) => {
+    setPerjalananDibuka(null)
+    setLaporanDibuka(perjalananId)
+  }
+
+  const setelahSimpan = (perjalanan: Perjalanan, pesan: string) => {
+    setFormPerjalanan(null)
+    sukses(pesan)
+    setPerjalananDibuka(perjalanan.id)
+  }
 
   const renderHalaman = () => {
-    switch (halamanAktif) {
+    switch (halaman) {
       case 'Dashboard':
         return (
           <DashboardPage
-            onBuatSppd={() => setFormTerbuka(true)}
-            onNavigate={setHalamanAktif}
-            onBukaSppd={bukaSppd}
-          />
-        )
-      case 'Pengajuan Dinas':
-        return (
-          <SubmissionPage
-            onBuatSppd={() => setFormTerbuka(true)}
-            onBukaSppd={bukaSppd}
+            onNavigate={pindahHalaman}
+            onBukaPerjalanan={setPerjalananDibuka}
+            onBuatPerjalanan={bukaFormBaru}
+            onBukaLaporan={bukaLaporan}
             penandaSegar={penandaSegar}
           />
         )
@@ -138,72 +114,82 @@ export default function App() {
         return (
           <TripsPage
             pencarian={pencarian}
-            onBuatSppd={() => setFormTerbuka(true)}
-            onBukaSppd={bukaSppd}
+            onBuatPerjalanan={bukaFormBaru}
+            onBukaPerjalanan={setPerjalananDibuka}
             penandaSegar={penandaSegar}
           />
         )
+      case 'Laporan Biaya':
+        return <ReportsPage pencarian={pencarian} onBukaLaporan={bukaLaporan} penandaSegar={penandaSegar} />
       case 'Persetujuan':
         return (
           <ApprovalsPage
+            pencarian={pencarian}
             onSukses={sukses}
-            onGalat={laporkanGalat}
-            onBukaSppd={bukaSppd}
+            onBukaPerjalanan={setPerjalananDibuka}
             penandaSegar={penandaSegar}
-            onAntreanBerubah={muatLencana}
           />
         )
-      case 'Laporan':
+      case 'Verifikasi':
+        return <VerifikasiPage pencarian={pencarian} onBukaPerjalanan={setPerjalananDibuka} penandaSegar={penandaSegar} />
+      case 'Pencairan':
         return (
-          <ReportsPage onBukaLaporan={setLaporanDibuka} penandaSegar={penandaSegar} />
+          <PencairanPage
+            pencarian={pencarian}
+            onSukses={sukses}
+            onBukaPerjalanan={setPerjalananDibuka}
+            penandaSegar={penandaSegar}
+          />
         )
-      case 'Keuangan':
-        return (
-          <FinancePage onSukses={sukses} onGalat={laporkanGalat} onBukaSppd={bukaSppd} />
-        )
-      case 'Pegawai':
-        return <EmployeesPage pencarian={pencarian} />
-      case 'Pengaturan':
-        return <SettingsPage onSukses={sukses} onGalat={laporkanGalat} />
+      case 'Anggaran':
+        return <AnggaranPage onSukses={sukses} penandaSegar={penandaSegar} />
+      case 'Laporan Keuangan':
+        return <LaporanKeuanganPage />
+      case 'Pengguna':
+        return <PenggunaPage pencarian={pencarian} onSukses={sukses} penandaSegar={penandaSegar} />
+      case 'Departemen':
+        return <DepartemenPage onSukses={sukses} penandaSegar={penandaSegar} />
+      case 'Log Audit':
+        return <AuditLogPage pencarian={pencarian} />
+      case 'Profil':
+        return <ProfilPage onSukses={sukses} />
     }
   }
 
   return (
     <AppLayout
-      activePage={halamanAktif}
-      onNavigate={setHalamanAktif}
+      activePage={halaman}
+      onNavigate={pindahHalaman}
       onSignOut={keluar}
       searchQuery={pencarian}
       onSearchChange={setPencarian}
-      jumlahAntrean={jumlahAntrean}
-      jumlahNotifikasi={jumlahNotifikasi}
-      onNotifikasiBerubah={muatLencana}
+      jumlahAntrean={jumlahAntrean ?? 0}
       overlays={
         <>
-          {formTerbuka && (
-            <FormulirSppdModal
-              onTutup={() => setFormTerbuka(false)}
-              onTersimpan={setelahBuatSppd}
+          {formPerjalanan && (
+            <FormulirPerjalananModal
+              perjalanan={formPerjalanan.perjalanan}
+              onTutup={() => setFormPerjalanan(null)}
+              onTersimpan={setelahSimpan}
             />
           )}
 
-          {sppdDibuka !== null && (
-            <DetailSppdModal
-              sppdId={sppdDibuka}
-              onTutup={() => setSppdDibuka(null)}
+          {perjalananDibuka !== null && sudut && (
+            <DetailPerjalananModal
+              perjalananId={perjalananDibuka}
+              sudut={sudut}
+              onTutup={() => setPerjalananDibuka(null)}
               onBerubah={sukses}
-              onGalat={laporkanGalat}
-              onBukaLaporan={bukaLaporanDariSppd}
+              onUbah={(perjalanan) => {
+                setPerjalananDibuka(null)
+                setFormPerjalanan({ perjalanan })
+              }}
+              onBukaLaporan={(perjalanan) => bukaLaporan(perjalanan.id)}
             />
           )}
 
           {laporanDibuka !== null && (
-            <LaporanModal
-              laporanId={laporanDibuka}
-              onTutup={() => setLaporanDibuka(null)}
-              onBerubah={sukses}
-              onGalat={laporkanGalat}
-            />
+            <LaporanModal perjalananId={laporanDibuka} onTutup={() => setLaporanDibuka(null)} onBerubah={sukses} />
           )}
 
           {pesanToast && <Toast pesan={pesanToast} />}

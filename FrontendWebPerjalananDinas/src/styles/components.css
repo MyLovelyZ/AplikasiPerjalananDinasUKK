@@ -760,7 +760,8 @@ table.tabel .kanan {
   color: var(--tinta);
 }
 
-.bilah-alat select {
+.bilah-alat select,
+.bilah-alat input[type='date'] {
   height: 36px;
   padding: 0 10px;
   border: 1px solid var(--garis-tegas);
@@ -771,7 +772,8 @@ table.tabel .kanan {
   color: var(--tinta-sedang);
 }
 
-.bilah-alat select:focus {
+.bilah-alat select:focus,
+.bilah-alat input[type='date']:focus {
   border-color: var(--biru);
   box-shadow: 0 0 0 3px var(--biru-pucat);
 }

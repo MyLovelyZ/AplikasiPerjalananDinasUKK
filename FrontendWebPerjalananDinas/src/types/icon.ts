@@ -32,3 +32,4 @@ export type IconName =
   | 'kunci'
   | 'pengguna'
   | 'segarkan'
+  | 'gedung'

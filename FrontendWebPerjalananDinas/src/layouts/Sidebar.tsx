@@ -1,6 +1,7 @@
 import { Icon } from '@/components/ui/Icon'
 import { APP_COPYRIGHT, APP_TAGLINE, APP_VERSION } from '@/constants/app'
-import { NAV_ITEMS, SETTINGS_PAGE } from '@/constants/navigation'
+import { LABEL_PERAN } from '@/constants/label'
+import { HALAMAN_ANTREAN, NAV_ITEMS, PROFILE_PAGE } from '@/constants/navigation'
 import { useAuth } from '@/auth/useAuth'
 import { inisial } from '@/utils/format'
 import type { PageKey } from '@/types/navigation'
@@ -9,27 +10,15 @@ interface SidebarProps {
   activePage: PageKey
   onNavigate: (page: PageKey) => void
   onSignOut: () => void
-  /** Jumlah tugas persetujuan yang menunggu, tampil sebagai lencana. */
   jumlahAntrean: number
   terbuka: boolean
 }
 
-/** Navigasi utama: identitas aplikasi, pengguna aktif, menu, dan aksi keluar. */
-export function Sidebar({
-  activePage,
-  onNavigate,
-  onSignOut,
-  jumlahAntrean,
-  terbuka,
-}: SidebarProps) {
-  const { profil, boleh } = useAuth()
+export function Sidebar({ activePage, onNavigate, onSignOut, jumlahAntrean, terbuka }: SidebarProps) {
+  const { pengguna, berperan } = useAuth()
 
-  // Menu yang haknya tidak dimiliki tidak ditampilkan sama sekali —
-  // lebih jujur daripada menampilkannya lalu menolak saat diklik.
-  const menuTampil = NAV_ITEMS.filter((item) => !item.hak || boleh(...item.hak))
-
-  const nama = profil?.karyawan?.nama_lengkap ?? profil?.username ?? 'Pengguna'
-  const peranUtama = profil?.peran?.[0]?.nama ?? 'Tanpa peran'
+  const menuTampil = NAV_ITEMS.filter((item) => berperan(...item.peran))
+  const nama = pengguna?.name ?? 'Pengguna'
 
   return (
     <aside className={`sidebar ${terbuka ? 'buka' : ''}`}>
@@ -49,7 +38,10 @@ export function Sidebar({
         <div className="avatar">{inisial(nama)}</div>
         <div className="identitas">
           <b>{nama}</b>
-          <small>{peranUtama}</small>
+          <small>
+            {pengguna ? LABEL_PERAN[pengguna.role] : ''}
+            {pengguna?.department ? ` · ${pengguna.department.name}` : ''}
+          </small>
         </div>
       </div>
 
@@ -65,7 +57,7 @@ export function Sidebar({
           >
             <Icon name={icon} />
             <span>{key}</span>
-            {key === 'Persetujuan' && jumlahAntrean > 0 && <em>{jumlahAntrean}</em>}
+            {HALAMAN_ANTREAN.includes(key) && jumlahAntrean > 0 && <em>{jumlahAntrean}</em>}
           </button>
         ))}
       </nav>
@@ -73,12 +65,12 @@ export function Sidebar({
       <div className="nav-bottom">
         <button
           type="button"
-          className={activePage === SETTINGS_PAGE ? 'active' : ''}
-          aria-current={activePage === SETTINGS_PAGE ? 'page' : undefined}
-          onClick={() => onNavigate(SETTINGS_PAGE)}
+          className={activePage === PROFILE_PAGE ? 'active' : ''}
+          aria-current={activePage === PROFILE_PAGE ? 'page' : undefined}
+          onClick={() => onNavigate(PROFILE_PAGE)}
         >
-          <Icon name="settings" />
-          <span>{SETTINGS_PAGE}</span>
+          <Icon name="pengguna" />
+          <span>{PROFILE_PAGE}</span>
         </button>
         <button type="button" className="keluar" onClick={onSignOut}>
           <Icon name="logout" />

@@ -2,42 +2,41 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { Icon } from '@/components/ui/Icon'
+import { KotakGalat } from '@/components/ui/Modal'
 import { APP_COPYRIGHT, APP_TAGLINE } from '@/constants/app'
 import { useAuth } from '@/auth/useAuth'
+import { useKirim } from '@/hooks/useKirim'
 
-/** Ringkasan alur aplikasi, mengikuti urutan pada flowchart sistem. */
 const LANGKAH = [
-  'Ajukan SPPD digital lengkap dengan rincian biaya',
-  'Atasan menyetujui, menolak, atau meminta revisi',
-  'Uang muka cair, perjalanan berjalan',
-  'Unggah nota, Keuangan verifikasi dan menutup selisih',
+  'Pegawai mengajukan perjalanan dinas beserta estimasi biaya',
+  'Atasan menyetujui atau menolak pengajuan tim',
+  'Keuangan memverifikasi anggaran dan mencairkan uang muka',
+  'Pegawai melaporkan biaya, Keuangan memverifikasi dan menutup selisih',
 ]
 
-/** Halaman masuk. Satu-satunya layar yang bisa dibuka tanpa token. */
+/** Akun hasil `php artisan db:seed`; semuanya berkata sandi `password`. */
+const AKUN_CONTOH = [
+  { peran: 'Super Admin', email: 'admin@citramandiri.test' },
+  { peran: 'Atasan', email: 'supervisor@citramandiri.test' },
+  { peran: 'Keuangan', email: 'finance@citramandiri.test' },
+  { peran: 'Pegawai', email: 'employee@citramandiri.test' },
+]
+
 export function LoginPage() {
   const { masuk } = useAuth()
+  const { mengirim, galat, galatKolom, jalankan } = useKirim()
 
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [kataSandi, setKataSandi] = useState('')
-  const [galat, setGalat] = useState<string | null>(null)
-  const [mengirim, setMengirim] = useState(false)
 
-  const kirim = async (peristiwa: FormEvent) => {
+  const kirim = (peristiwa: FormEvent) => {
     peristiwa.preventDefault()
-    setGalat(null)
-    setMengirim(true)
+    void jalankan(() => masuk(email.trim(), kataSandi))
+  }
 
-    try {
-      await masuk(username.trim(), kataSandi)
-    } catch (penyebab: unknown) {
-      setGalat(
-        penyebab instanceof Error
-          ? penyebab.message
-          : 'Tidak dapat menghubungi server. Pastikan API berjalan di port 3000.',
-      )
-    } finally {
-      setMengirim(false)
-    }
+  const pakaiAkun = (alamat: string) => {
+    setEmail(alamat)
+    setKataSandi('password')
   }
 
   return (
@@ -56,8 +55,8 @@ export function LoginPage() {
         <div className="masuk-utama">
           <h2>Perjalanan dinas, dari pengajuan sampai pencairan.</h2>
           <p>
-            Satu portal untuk pengajuan SPPD, persetujuan berjenjang, pelaporan nota,
-            dan penyelesaian dana — tanpa berkas kertas yang berpindah meja.
+            Satu portal untuk pengajuan, persetujuan atasan, verifikasi anggaran,
+            laporan biaya, dan pencairan dana — tanpa berkas kertas yang berpindah meja.
           </p>
 
           <div className="masuk-langkah">
@@ -79,24 +78,19 @@ export function LoginPage() {
           <p>Gunakan akun yang diberikan administrator perusahaan.</p>
 
           <form className="masuk-formulir" onSubmit={kirim}>
-            {galat && (
-              <div className="kotak-galat" role="alert">
-                <Icon name="peringatan" size={16} />
-                <span>{galat}</span>
-              </div>
-            )}
+            <KotakGalat pesan={galat} />
 
             <div className="bidang">
-              <label htmlFor="username">
-                Username<span className="wajib">*</span>
+              <label htmlFor="email">
+                Email<span className="wajib">*</span>
               </label>
               <input
-                id="username"
-                name="username"
+                id="email"
+                type="email"
                 autoComplete="username"
-                placeholder="mis. user24001"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="nama@citramandiri.test"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -107,7 +101,6 @@ export function LoginPage() {
               </label>
               <input
                 id="kata-sandi"
-                name="password"
                 type="password"
                 autoComplete="current-password"
                 placeholder="••••••••"
@@ -115,21 +108,24 @@ export function LoginPage() {
                 onChange={(e) => setKataSandi(e.target.value)}
                 required
               />
+              {galatKolom.password && <span className="pesan-galat">{galatKolom.password}</span>}
             </div>
 
-            <button
-              type="submit"
-              className="btn utama blok"
-              disabled={mengirim || !username || !kataSandi}
-            >
+            <button type="submit" className="btn utama blok" disabled={mengirim || !email || !kataSandi}>
               {mengirim ? 'Memeriksa...' : 'Masuk'}
               {!mengirim && <Icon name="arrow" size={17} />}
             </button>
 
             <div className="kotak-info">
-              <strong>Akun contoh untuk pengujian</strong>
-              Super Admin <code>user24001</code>, kata sandi <code>password123</code>.
-              Akun lain mengikuti pola <code>user2400x</code> dengan kata sandi yang sama.
+              <strong>Akun contoh (kata sandi: password)</strong>
+              {AKUN_CONTOH.map((akun) => (
+                <div key={akun.email}>
+                  {akun.peran}:{' '}
+                  <button type="button" className="btn-tautan" onClick={() => pakaiAkun(akun.email)}>
+                    {akun.email}
+                  </button>
+                </div>
+              ))}
             </div>
           </form>
         </div>

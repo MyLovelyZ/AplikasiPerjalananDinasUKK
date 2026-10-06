@@ -1,24 +1,17 @@
 import { createContext } from 'react'
 
-import type { ProfilPengguna } from '@/api/tipe'
+import type { Pengguna, Peran } from '@/api/tipe'
 
 export interface NilaiAuth {
-  profil: ProfilPengguna | null
+  pengguna: Pengguna | null
   /** Sedang memeriksa token tersimpan saat aplikasi pertama dibuka. */
   memuat: boolean
-  masuk: (username: string, kataSandi: string) => Promise<void>
+  masuk: (email: string, kataSandi: string) => Promise<void>
   keluar: () => Promise<void>
-  /** Apakah pengguna memegang salah satu hak akses yang disebut. */
-  boleh: (...kode: string[]) => boolean
-  /** Apakah pengguna memegang salah satu peran yang disebut. */
-  berperan: (...kode: string[]) => boolean
+  /** Mengganti data pengguna setelah profil diubah. */
+  perbaruiPengguna: (pengguna: Pengguna) => void
+  berperan: (...peran: Peran[]) => boolean
 }
 
-/**
- * Konteks autentikasi.
- *
- * Sengaja dipisah dari AuthContext.tsx: berkas yang mengekspor komponen
- * sebaiknya hanya mengekspor komponen, agar hot reload Vite tetap bekerja
- * saat penyedianya disunting.
- */
+// Dipisah dari AuthContext.tsx agar hot reload Vite tetap bekerja.
 export const KonteksAuth = createContext<NilaiAuth | null>(null)

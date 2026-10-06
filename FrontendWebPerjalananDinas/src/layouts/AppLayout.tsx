@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 
+import { PROFILE_PAGE } from '@/constants/navigation'
 import { Sidebar } from '@/layouts/Sidebar'
 import { Topbar } from '@/layouts/Topbar'
 import type { PageKey } from '@/types/navigation'
@@ -12,15 +13,11 @@ interface AppLayoutProps {
   searchQuery: string
   onSearchChange: (value: string) => void
   jumlahAntrean: number
-  jumlahNotifikasi: number
-  onNotifikasiBerubah: () => void
-  /** Isi halaman yang sedang aktif. */
   children: ReactNode
   /** Lapisan di atas halaman: modal dan toast. */
   overlays?: ReactNode
 }
 
-/** Kerangka aplikasi: sidebar di kiri, topbar, lalu area konten. */
 export function AppLayout({
   activePage,
   onNavigate,
@@ -28,12 +25,9 @@ export function AppLayout({
   searchQuery,
   onSearchChange,
   jumlahAntrean,
-  jumlahNotifikasi,
-  onNotifikasiBerubah,
   children,
   overlays,
 }: AppLayoutProps) {
-  // Di layar sempit sidebar menjadi laci; state-nya cukup hidup di sini.
   const [laciTerbuka, setLaciTerbuka] = useState(false)
 
   const pindahHalaman = (halaman: PageKey) => {
@@ -66,8 +60,7 @@ export function AppLayout({
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
           onBukaMenu={() => setLaciTerbuka(true)}
-          onNotifikasiBerubah={onNotifikasiBerubah}
-          jumlahBelumDibaca={jumlahNotifikasi}
+          onBukaProfil={() => pindahHalaman(PROFILE_PAGE)}
         />
         <div className="content">{children}</div>
       </main>

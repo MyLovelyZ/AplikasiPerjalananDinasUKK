@@ -136,6 +136,12 @@ const ICON_PATHS: Record<IconName, ReactNode> = {
       <path d="M21 3v6h-6" />
     </>
   ),
+  gedung: (
+    <>
+      <path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" />
+      <path d="M16 9h2a2 2 0 0 1 2 2v10M2 21h20M8 7h4M8 11h4M8 15h4" />
+    </>
+  ),
 }
 
 interface IconProps {

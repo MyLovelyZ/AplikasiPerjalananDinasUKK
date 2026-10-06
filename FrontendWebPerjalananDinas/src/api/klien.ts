@@ -1,108 +1,46 @@
-import type { Respons, ResponsHalaman } from '@/api/tipe'
+import type { Respons } from '@/api/tipe'
 
-/**
- * Klien HTTP tunggal untuk seluruh aplikasi.
- *
- * Tanggung jawabnya tiga hal, dan hanya tiga:
- *   1. menempelkan access token pada setiap permintaan,
- *   2. memperbarui token yang kedaluwarsa lalu mengulang permintaan sekali,
- *   3. menerjemahkan amplop respons backend menjadi nilai atau lemparan galat.
- *
- * Komponen tidak pernah memanggil `fetch` sendiri, sehingga aturan token
- * cukup ditulis satu kali di berkas ini.
- */
-
-const ASAL_API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+const ASAL_API = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
 export const DASAR_API = `${ASAL_API}/api`
-export const DASAR_BERKAS = `${ASAL_API}/storage`
 
-const KUNCI_AKSES = 'pd.access_token'
-const KUNCI_SEGAR = 'pd.refresh_token'
+const KUNCI_TOKEN = 'pd.token'
 
-/** Galat yang membawa kode status HTTP dan rincian validasi dari backend. */
 export class GalatApi extends Error {
   status: number
-  rincian: unknown
+  galatKolom: Record<string, string[]>
 
-  constructor(pesan: string, status: number, rincian: unknown = null) {
+  constructor(pesan: string, status: number, galatKolom: Record<string, string[]> = {}) {
     super(pesan)
     this.name = 'GalatApi'
     this.status = status
-    this.rincian = rincian
+    this.galatKolom = galatKolom
   }
 
-  /** Daftar pesan per kolom, bila galat ini berasal dari validasi 422. */
-  get pesanKolom(): Array<{ kolom: string; pesan: string }> {
-    return Array.isArray(this.rincian)
-      ? (this.rincian as Array<{ kolom: string; pesan: string }>)
-      : []
+  /** Pesan pertama per kolom, mis. `{ purpose: 'The purpose field is required.' }`. */
+  get pesanKolom(): Record<string, string> {
+    return Object.fromEntries(
+      Object.entries(this.galatKolom).map(([kolom, daftar]) => [kolom, daftar[0] ?? '']),
+    )
   }
 }
 
-export const simpanToken = (akses: string, segar?: string) => {
-  localStorage.setItem(KUNCI_AKSES, akses)
-  if (segar) localStorage.setItem(KUNCI_SEGAR, segar)
-}
+export const simpanToken = (token: string) => localStorage.setItem(KUNCI_TOKEN, token)
+export const hapusToken = () => localStorage.removeItem(KUNCI_TOKEN)
+export const ambilToken = () => localStorage.getItem(KUNCI_TOKEN)
 
-export const hapusToken = () => {
-  localStorage.removeItem(KUNCI_AKSES)
-  localStorage.removeItem(KUNCI_SEGAR)
-}
-
-export const ambilTokenAkses = () => localStorage.getItem(KUNCI_AKSES)
-export const ambilTokenSegar = () => localStorage.getItem(KUNCI_SEGAR)
-
-/** Dipanggil saat sesi benar-benar habis, supaya aplikasi kembali ke login. */
 let saatSesiHabis: () => void = () => {}
 export const pasangPenanganSesiHabis = (fn: () => void) => {
   saatSesiHabis = fn
 }
 
-/**
- * Beberapa permintaan bisa kedaluwarsa berbarengan. Tanpa penjaga ini,
- * masing-masing akan memanggil /auth/segarkan dan saling menimpa token.
- * Permintaan kedua dan seterusnya cukup menunggu janji yang sama.
- */
-let penyegaranBerjalan: Promise<string | null> | null = null
+type NilaiQuery = string | number | boolean | undefined | null
 
-async function segarkanToken(): Promise<string | null> {
-  const refreshToken = ambilTokenSegar()
-  if (!refreshToken) return null
-
-  if (!penyegaranBerjalan) {
-    penyegaranBerjalan = (async () => {
-      try {
-        const res = await fetch(`${DASAR_API}/auth/segarkan`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh_token: refreshToken }),
-        })
-
-        if (!res.ok) return null
-
-        const isi = (await res.json()) as Respons<{ access_token: string }>
-        simpanToken(isi.data.access_token)
-        return isi.data.access_token
-      } catch {
-        return null
-      } finally {
-        // Dilepas pada tick berikutnya agar penunggu sempat membaca hasilnya.
-        setTimeout(() => {
-          penyegaranBerjalan = null
-        }, 0)
-      }
-    })()
-  }
-
-  return penyegaranBerjalan
-}
-
-interface OpsiPermintaan {
+export interface OpsiPermintaan {
   metode?: 'GET' | 'POST' | 'PUT' | 'DELETE'
   body?: unknown
-  /** Dipakai untuk unggah berkas; jangan gabungkan dengan `body`. */
+  /** Untuk unggah berkas; jangan digabung dengan `body`. */
   formulir?: FormData
-  query?: Record<string, string | number | boolean | undefined | null>
+  query?: Record<string, NilaiQuery>
   signal?: AbortSignal
 }
 
@@ -119,79 +57,98 @@ function susunJalur(jalur: string, query?: OpsiPermintaan['query']) {
   return teks ? `${jalur}?${teks}` : jalur
 }
 
-async function kirim(jalur: string, opsi: OpsiPermintaan, ulangi = true): Promise<Response> {
-  const headers: Record<string, string> = {}
-  const token = ambilTokenAkses()
+async function kirim(jalur: string, opsi: OpsiPermintaan): Promise<Response> {
+  // Tanpa Accept JSON, Laravel membalas galat validasi dengan redirect HTML.
+  const headers: Record<string, string> = { Accept: 'application/json' }
+  const token = ambilToken()
   if (token) headers.Authorization = `Bearer ${token}`
 
   let body: BodyInit | undefined
   if (opsi.formulir) {
-    // Content-Type sengaja tidak diisi: peramban yang menuliskannya
-    // lengkap dengan boundary multipart.
     body = opsi.formulir
   } else if (opsi.body !== undefined) {
     headers['Content-Type'] = 'application/json'
     body = JSON.stringify(opsi.body)
   }
 
-  const res = await fetch(`${DASAR_API}${susunJalur(jalur, opsi.query)}`, {
-    method: opsi.metode ?? 'GET',
-    headers,
-    body,
-    signal: opsi.signal,
-  })
+  let res: Response
+  try {
+    res = await fetch(`${DASAR_API}${susunJalur(jalur, opsi.query)}`, {
+      method: opsi.metode ?? 'GET',
+      headers,
+      body,
+      signal: opsi.signal,
+    })
+  } catch (penyebab) {
+    if (penyebab instanceof DOMException && penyebab.name === 'AbortError') throw penyebab
+    throw new GalatApi(
+      `Tidak dapat menghubungi server di ${ASAL_API}. Pastikan backend Laravel sedang berjalan.`,
+      0,
+    )
+  }
 
-  // Access token berumur pendek; sekali kedaluwarsa, tukar lalu ulangi.
-  if (res.status === 401 && ulangi && ambilTokenSegar()) {
-    const tokenBaru = await segarkanToken()
-    if (tokenBaru) return kirim(jalur, opsi, false)
-
+  if (res.status === 401 && token) {
     hapusToken()
     saatSesiHabis()
+  }
+
+  if (!res.ok) {
+    const isi = await res.json().catch(() => null)
+    throw new GalatApi(
+      isi?.message || `Permintaan gagal dengan status ${res.status}`,
+      res.status,
+      isi?.errors ?? {},
+    )
   }
 
   return res
 }
 
-async function baca<T>(res: Response): Promise<T> {
-  const isi = await res.json().catch(() => null)
-
-  if (!res.ok) {
-    throw new GalatApi(
-      isi?.pesan ?? `Permintaan gagal dengan status ${res.status}`,
-      res.status,
-      isi?.galat ?? null,
-    )
-  }
-
-  return isi as T
-}
-
-/** Permintaan yang mengembalikan satu objek. */
+/** Mengembalikan seluruh badan JSON, termasuk `data`, `message`, `meta`, dan kunci tambahan. */
 export async function minta<T>(jalur: string, opsi: OpsiPermintaan = {}): Promise<T> {
   const res = await kirim(jalur, opsi)
-  const isi = await baca<Respons<T>>(res)
-  return isi.data
+  return (await res.json()) as T
 }
 
-/** Permintaan yang mengembalikan objek beserta pesan sukses dari backend. */
-export async function mintaDenganPesan<T>(
-  jalur: string,
-  opsi: OpsiPermintaan = {},
-): Promise<{ data: T; pesan: string }> {
-  const res = await kirim(jalur, opsi)
-  const isi = await baca<Respons<T>>(res)
-  return { data: isi.data, pesan: isi.pesan }
+/** Pintasan untuk respons berbentuk `{ data: T }`. */
+export async function mintaData<T>(jalur: string, opsi: OpsiPermintaan = {}): Promise<T> {
+  return (await minta<Respons<T>>(jalur, opsi)).data
 }
 
-/** Permintaan berhalaman: mengembalikan baris beserta metadata halaman. */
-export async function mintaHalaman<T>(
-  jalur: string,
-  opsi: OpsiPermintaan = {},
-): Promise<ResponsHalaman<T>> {
-  const res = await kirim(jalur, opsi)
-  return baca<ResponsHalaman<T>>(res)
+/** Mengunduh berkas (PDF/XLSX) dengan token, lalu memicu simpan di peramban. */
+export async function unduh(jalur: string, query: OpsiPermintaan['query'], namaCadangan: string) {
+  const res = await kirim(jalur, { query })
+  const disposisi = res.headers.get('Content-Disposition') ?? ''
+  const nama = /filename="?([^";]+)"?/i.exec(disposisi)?.[1] ?? namaCadangan
+
+  const url = URL.createObjectURL(await res.blob())
+  const tautan = document.createElement('a')
+  tautan.href = url
+  tautan.download = nama
+  tautan.click()
+  URL.revokeObjectURL(url)
 }
 
-/** URL berkas yang tersimpan di storage backend. */
-export const urlBerkas = (pathRelatif: string) => `${DASAR_BERKAS}/${pathRelatif}`
+/**
+ * Laravel membaca larik bersarang dari FormData dengan notasi kurung,
+ * mis. `costs[0][category]`. Boolean dikirim sebagai 1/0.
+ */
+export function keFormData(isi: Record<string, unknown>, formulir = new FormData(), awalan = '') {
+  for (const [kunci, nilai] of Object.entries(isi)) {
+    const nama = awalan ? `${awalan}[${kunci}]` : kunci
+    if (nilai === undefined) continue
+
+    if (nilai === null) {
+      formulir.append(nama, '')
+    } else if (nilai instanceof Blob) {
+      formulir.append(nama, nilai)
+    } else if (typeof nilai === 'boolean') {
+      formulir.append(nama, nilai ? '1' : '0')
+    } else if (typeof nilai === 'object') {
+      keFormData(nilai as Record<string, unknown>, formulir, nama)
+    } else {
+      formulir.append(nama, String(nilai))
+    }
+  }
+  return formulir
+}

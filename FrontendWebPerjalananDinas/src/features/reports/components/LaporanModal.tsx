@@ -1,533 +1,407 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 
-import {
-  apiAjukanLaporan,
-  apiDetailLaporan,
-  apiHapusKlaim,
-  apiKategoriBiaya,
-  apiPencairanDariLaporan,
-  apiTambahKlaim,
-  apiUnggahBukti,
-} from '@/api/endpoint'
-import { urlBerkas } from '@/api/klien'
+import { apiHapusPengeluaran, apiRuangLaporan, apiSimpanLaporan } from '@/api/endpoint'
+import type { KategoriBiaya, RuangLaporan } from '@/api/tipe'
 import { Icon } from '@/components/ui/Icon'
-import { Muatan } from '@/components/ui/Keadaan'
+import { Kosong, Muatan } from '@/components/ui/Keadaan'
+import { KotakGalat, Modal, PesanKolom } from '@/components/ui/Modal'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { useAuth } from '@/auth/useAuth'
+import {
+  LABEL_KATEGORI_BIAYA,
+  LABEL_PENYELESAIAN,
+  RUPA_STATUS_LAPORAN,
+  RUPA_STATUS_PENGELUARAN,
+} from '@/constants/label'
+import { useKirim } from '@/hooks/useKirim'
 import { usePermintaan } from '@/hooks/usePermintaan'
-import { FormVerifikasi } from '@/features/reports/components/FormVerifikasi'
-import { hariIni, manusiawi, rupiah, tanggalPendek } from '@/utils/format'
-import type { Laporan } from '@/api/tipe'
+import { hariIni, rupiah, tanggalPendek } from '@/utils/format'
 
 interface LaporanModalProps {
-  laporanId: number
+  perjalananId: number
   onTutup: () => void
   onBerubah: (pesan: string) => void
-  onGalat: (penyebab: unknown) => void
 }
 
-/** Kalimat penjelas tiga cabang "Status Selisih Biaya?" pada flowchart. */
-function kalimatSelisih(laporan: Laporan) {
-  const nominal = rupiah(Math.abs(Number(laporan.selisih)))
-  switch (laporan.jenis_selisih) {
-    case 'KURANG_BAYAR':
-      return `Realisasi melebihi uang muka. Perusahaan perlu membayar ${nominal} sebagai reimbursement.`
-    case 'LEBIH_BAYAR':
-      return `Uang muka lebih besar dari realisasi. Sisa ${nominal} perlu dikembalikan ke perusahaan.`
-    default:
-      return 'Realisasi sama persis dengan uang muka, tidak ada dana yang perlu berpindah.'
-  }
-}
+export function LaporanModal({ perjalananId, onTutup, onBerubah }: LaporanModalProps) {
+  const { data, memuat, galat, muatUlang } = usePermintaan(() => apiRuangLaporan(perjalananId), [perjalananId])
+  const aksi = useKirim()
 
-/**
- * Layar laporan pertanggungjawaban — flowchart langkah 6 s.d. 9.
- *
- * Menampung tiga peran sekaligus:
- *   pemohon  : menambah klaim, mengunggah nota, mengajukan laporan
- *   keuangan : memverifikasi klaim satu per satu lalu menutup laporan
- *   siapa pun: membaca hasil akhirnya
- */
-export function LaporanModal({ laporanId, onTutup, onBerubah, onGalat }: LaporanModalProps) {
-  const { boleh, profil } = useAuth()
-  const { data, memuat, galat, muatUlang } = usePermintaan(
-    () => apiDetailLaporan(laporanId),
-    [laporanId],
-  )
-  const kategori = usePermintaan(() => apiKategoriBiaya(), [])
-
-  const [sedangAksi, setSedangAksi] = useState<string | null>(null)
-  const [formKlaimTerbuka, setFormKlaimTerbuka] = useState(false)
-  const [modeVerifikasi, setModeVerifikasi] = useState(false)
-
-  // Satu input berkas tersembunyi dipakai bergantian oleh semua baris klaim;
-  // klaim mana yang sedang diunggahi disimpan pada state.
-  const inputBerkasRef = useRef<HTMLInputElement>(null)
-  const [klaimUnggah, setKlaimUnggah] = useState<number | null>(null)
-
-  const [kategoriBaru, setKategoriBaru] = useState('')
-  const [tanggalKlaim, setTanggalKlaim] = useState(hariIni())
-  const [deskripsiKlaim, setDeskripsiKlaim] = useState('')
-  const [jumlahKlaim, setJumlahKlaim] = useState('')
-
-  const jalankan = async (nama: string, aksi: () => Promise<{ pesan: string }>) => {
-    setSedangAksi(nama)
-    try {
-      const { pesan } = await aksi()
-      onBerubah(pesan)
-      muatUlang()
-    } catch (penyebab: unknown) {
-      onGalat(penyebab)
-    } finally {
-      setSedangAksi(null)
-    }
+  const selesai = (pesan: string) => {
+    onBerubah(pesan)
+    muatUlang()
   }
 
-  const tambahKlaim = async (peristiwa: FormEvent) => {
-    peristiwa.preventDefault()
-    await jalankan('klaim', () =>
-      apiTambahKlaim(laporanId, {
-        kategori_biaya_id: Number(kategoriBaru),
-        tanggal_transaksi: tanggalKlaim,
-        deskripsi: deskripsiKlaim.trim(),
-        jumlah_diajukan: Number(jumlahKlaim),
-      }),
+  const ajukan = async (ringkasan: string) => {
+    const hasil = await aksi.jalankan(() =>
+      apiSimpanLaporan(perjalananId, { summary: ringkasan.trim() || undefined, submit: true }),
     )
-    setFormKlaimTerbuka(false)
-    setKategoriBaru('')
-    setDeskripsiKlaim('')
-    setJumlahKlaim('')
+    if (hasil) selesai(hasil.message)
   }
 
-  const pilihBerkas = (klaimId: number) => {
-    setKlaimUnggah(klaimId)
-    inputBerkasRef.current?.click()
-  }
+  const p = data?.travel_request
+  const laporan = p?.expense_report
 
-  const unggahBerkas = async (berkas: File | undefined) => {
-    if (!berkas || klaimUnggah === null) return
-    await jalankan('unggah', () => apiUnggahBukti(laporanId, klaimUnggah, berkas))
-    setKlaimUnggah(null)
-    if (inputBerkasRef.current) inputBerkasRef.current.value = ''
+  return (
+    <Modal
+      judul={p ? `Laporan Biaya · ${p.request_number}` : 'Laporan biaya'}
+      keterangan={p ? `${p.destination} · ${p.purpose}` : 'Memuat data...'}
+      ukuran="lebar"
+      onTutup={onTutup}
+      sisipan={
+        data && (
+          <div className="ringkas-detail">
+            <div>
+              <span>Uang muka diterima</span>
+              <strong>{rupiah(data.advance_paid)}</strong>
+            </div>
+            <div>
+              <span>Total diklaim</span>
+              <strong>{rupiah(laporan?.total_claimed ?? 0)}</strong>
+            </div>
+            <div>
+              <span>Total disetujui</span>
+              <strong>{laporan?.total_approved === null || !laporan ? '—' : rupiah(laporan.total_approved)}</strong>
+            </div>
+            <div>
+              <span>Status</span>
+              <strong>{laporan ? RUPA_STATUS_LAPORAN[laporan.status].label : 'Belum dibuat'}</strong>
+            </div>
+          </div>
+        )
+      }
+      kaki={
+        <button type="button" className="btn" onClick={onTutup}>
+          Tutup
+        </button>
+      }
+    >
+      <KotakGalat pesan={aksi.galat} />
+
+      <Muatan data={data} memuat={memuat} galat={galat} onCobaLagi={muatUlang} barisRangka={6}>
+        {(ruang) => (
+          <IsiLaporan
+            ruang={ruang}
+            perjalananId={perjalananId}
+            mengirim={aksi.mengirim}
+            onAjukan={ajukan}
+            onSelesai={selesai}
+          />
+        )}
+      </Muatan>
+    </Modal>
+  )
+}
+
+function IsiLaporan({
+  ruang,
+  perjalananId,
+  mengirim,
+  onAjukan,
+  onSelesai,
+}: {
+  ruang: RuangLaporan
+  perjalananId: number
+  mengirim: boolean
+  onAjukan: (ringkasan: string) => void
+  onSelesai: (pesan: string) => void
+}) {
+  const laporan = ruang.travel_request.expense_report
+  const pengeluaran = laporan?.expenses ?? []
+  const [ringkasan, setRingkasan] = useState(laporan?.summary ?? '')
+  const hapus = useKirim()
+  const sudahBerangkat = ruang.travel_request.departure_date <= hariIni()
+
+  const hapusPengeluaran = async (id: number) => {
+    const hasil = await hapus.jalankan(() => apiHapusPengeluaran(perjalananId, id))
+    if (hasil) onSelesai(hasil.message)
   }
 
   return (
-    <div className="lapisan-modal" role="dialog" aria-modal="true" aria-label="Laporan pertanggungjawaban">
-      <div className="modal lebar">
-        <Muatan data={data} memuat={memuat} galat={galat} onCobaLagi={muatUlang} barisRangka={6}>
-          {(laporan) => {
-            const milikSaya =
-              String(laporan.perjalanan?.karyawan_id) === String(profil?.karyawan?.id)
-            const dapatDisunting = ['DRAFT', 'REVISI'].includes(laporan.status)
-            const klaim = laporan.klaim ?? []
-            const totalDiajukan = klaim.reduce((n, k) => n + Number(k.jumlah_diajukan), 0)
+    <>
+      {laporan?.status === 'returned' && laporan.verification_note && (
+        <div className="peringatan-plafon">
+          <Icon name="revisi" size={16} />
+          <span>
+            <b>Dikembalikan oleh Keuangan:</b> {laporan.verification_note}
+          </span>
+        </div>
+      )}
 
-            // Aturan D-2: klaim pada kategori bernota wajib punya lampiran.
-            const klaimTanpaNota = klaim.filter(
-              (k) => k.kategoriBiaya?.wajib_bukti && !(k.bukti ?? []).length,
-            )
+      {laporan?.status === 'verified' && laporan.settlement_type && (
+        <div className="kotak-info">
+          <strong>Laporan terverifikasi</strong>
+          {LABEL_PENYELESAIAN[laporan.settlement_type]}
+          {laporan.difference ? ` sebesar ${rupiah(Math.abs(laporan.difference))}.` : '.'}
+          {laporan.verification_note ? ` Catatan: ${laporan.verification_note}` : ''}
+        </div>
+      )}
 
-            return (
-              <>
-                <div className="modal-head">
-                  <div>
-                    <h2>{laporan.nomor_laporan}</h2>
-                    <p>
-                      {laporan.perjalanan?.nomor_sppd} · {laporan.perjalanan?.keperluan}
-                    </p>
-                    <div style={{ marginTop: 7 }}>
-                      <StatusBadge
-                        label={manusiawi(laporan.status)}
-                        warna={
-                          laporan.status === 'DIVERIFIKASI'
-                            ? 'hijau'
-                            : laporan.status === 'DIAJUKAN'
-                              ? 'kuning'
-                              : laporan.status === 'REVISI'
-                                ? 'ungu'
-                                : 'netral'
-                        }
-                      />
-                    </div>
-                  </div>
-                  <button type="button" className="tombol-tutup" onClick={onTutup} aria-label="Tutup">
-                    ×
-                  </button>
-                </div>
+      {!ruang.can_manage && !laporan && (
+        <div className="kotak-info">
+          <strong>Laporan belum dapat diisi</strong>
+          Laporan biaya hanya dapat disusun untuk perjalanan yang sudah disetujui Keuangan.
+        </div>
+      )}
 
-                <div className="ringkas-detail">
-                  <div>
-                    <span>Uang muka diterima</span>
-                    <strong>{rupiah(laporan.total_uang_muka)}</strong>
-                  </div>
-                  <div>
-                    <span>Total realisasi</span>
-                    <strong>{rupiah(laporan.total_realisasi)}</strong>
-                  </div>
-                  <div>
-                    <span>Selisih</span>
-                    <strong>{rupiah(Math.abs(Number(laporan.selisih)))}</strong>
-                  </div>
-                  <div>
-                    <span>Tanggal lapor</span>
-                    <strong style={{ fontSize: 13.5 }}>
-                      {tanggalPendek(laporan.tanggal_lapor)}
-                    </strong>
-                  </div>
-                </div>
+      <KotakGalat pesan={hapus.galat} />
 
-                <div className="modal-body">
-                  {laporan.status === 'DIVERIFIKASI' && (
-                    <div className="kotak-info">
-                      <strong>Hasil verifikasi</strong>
-                      {kalimatSelisih(laporan)}
-                      {laporan.catatan_verifikator && (
-                        <>
-                          <br />
-                          Catatan: {laporan.catatan_verifikator}
-                        </>
-                      )}
-                    </div>
-                  )}
+      <section className="panel">
+        <div className="panel-head">
+          <div>
+            <h2>Pengeluaran</h2>
+            <p>{pengeluaran.length} pengeluaran tercatat</p>
+          </div>
+          {laporan && <StatusBadge {...RUPA_STATUS_LAPORAN[laporan.status]} />}
+        </div>
 
-                  {laporan.status === 'REVISI' && laporan.catatan_verifikator && (
-                    <div className="peringatan-plafon">
-                      <Icon name="revisi" size={16} />
-                      <span>
-                        Dikembalikan Tim Keuangan: {laporan.catatan_verifikator}
-                      </span>
-                    </div>
-                  )}
-
-                  {dapatDisunting && klaimTanpaNota.length > 0 && (
-                    <div className="peringatan-plafon">
-                      <Icon name="peringatan" size={16} />
-                      <span>
-                        {klaimTanpaNota.length} klaim belum melampirkan nota padahal
-                        kategorinya mewajibkan bukti. Laporan belum bisa diajukan.
-                      </span>
-                    </div>
-                  )}
-
-                  <section className="panel">
-                    <div className="panel-head">
-                      <div>
-                        <h2>Ringkasan Kegiatan</h2>
-                        <p>Uraian yang disusun pemohon</p>
+        {pengeluaran.length === 0 ? (
+          <Kosong
+            ikon="file"
+            judul="Belum ada pengeluaran"
+            pesan={ruang.can_manage ? 'Tambahkan pengeluaran beserta bukti nota di bawah.' : 'Tidak ada pengeluaran yang dilaporkan.'}
+          />
+        ) : (
+          <div className="pembungkus-tabel">
+            <table className="tabel" style={{ minWidth: 640 }}>
+              <thead>
+                <tr>
+                  <th>Pengeluaran</th>
+                  <th>Bukti</th>
+                  <th className="kanan">Diklaim</th>
+                  <th className="kanan">Disetujui</th>
+                  <th>Status</th>
+                  {ruang.can_manage && <th />}
+                </tr>
+              </thead>
+              <tbody>
+                {pengeluaran.map((x) => (
+                  <tr key={x.id}>
+                    <td>
+                      <div className="sel-utama">{x.description}</div>
+                      <div className="sel-sekunder">
+                        {LABEL_KATEGORI_BIAYA[x.category]} · {tanggalPendek(x.expense_date)}
                       </div>
-                    </div>
-                    <div className="panel-body">
-                      <p style={{ fontSize: 13, color: 'var(--tinta-sedang)' }}>
-                        {laporan.ringkasan_kegiatan}
-                      </p>
-                      {laporan.hasil_capaian && (
-                        <p style={{ fontSize: 13, color: 'var(--redup)', marginTop: 9 }}>
-                          <b>Capaian:</b> {laporan.hasil_capaian}
-                        </p>
+                      {x.verification_note && <div className="sel-sekunder">Catatan: {x.verification_note}</div>}
+                    </td>
+                    <td>
+                      {x.receipt ? (
+                        <a className="btn-tautan" href={x.receipt.url} target="_blank" rel="noreferrer">
+                          Lihat
+                        </a>
+                      ) : (
+                        <span className="sel-sekunder">—</span>
                       )}
-                    </div>
-                  </section>
-
-                  {/* ── Klaim biaya & nota ── */}
-                  <section className="panel">
-                    <div className="panel-head">
-                      <div>
-                        <h2>Klaim Biaya &amp; Nota</h2>
-                        <p>
-                          {klaim.length} klaim · total diajukan {rupiah(totalDiajukan)}
-                        </p>
-                      </div>
-                      {milikSaya && dapatDisunting && (
+                    </td>
+                    <td className="kanan angka">{rupiah(x.amount)}</td>
+                    <td className="kanan angka">{x.approved_amount === null ? '—' : rupiah(x.approved_amount)}</td>
+                    <td>
+                      <StatusBadge {...RUPA_STATUS_PENGELUARAN[x.status]} />
+                    </td>
+                    {ruang.can_manage && (
+                      <td className="kanan">
                         <button
                           type="button"
-                          className="btn kecil lembut"
-                          onClick={() => setFormKlaimTerbuka((buka) => !buka)}
+                          className="tombol-hapus-baris"
+                          aria-label={`Hapus ${x.description}`}
+                          disabled={hapus.mengirim}
+                          onClick={() => hapusPengeluaran(x.id)}
                         >
-                          <Icon name="plus" size={15} />
-                          Tambah klaim
+                          <Icon name="sampah" size={16} />
                         </button>
-                      )}
-                    </div>
-
-                    {formKlaimTerbuka && (
-                      <form
-                        onSubmit={tambahKlaim}
-                        className="panel-body"
-                        style={{ borderBottom: '1px solid var(--garis)', background: 'var(--latar-lembut)' }}
-                      >
-                        <div className="baris-bidang">
-                          <div className="bidang">
-                            <label htmlFor="kategori-klaim">Kategori</label>
-                            <select
-                              id="kategori-klaim"
-                              value={kategoriBaru}
-                              onChange={(e) => setKategoriBaru(e.target.value)}
-                              required
-                            >
-                              <option value="">— Pilih —</option>
-                              {(kategori.data ?? []).map((k) => (
-                                <option key={k.id} value={k.id}>
-                                  {k.nama}
-                                  {k.wajib_bukti ? ' (wajib nota)' : ''}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="bidang">
-                            <label htmlFor="tanggal-klaim">Tanggal transaksi</label>
-                            <input
-                              id="tanggal-klaim"
-                              type="date"
-                              value={tanggalKlaim}
-                              onChange={(e) => setTanggalKlaim(e.target.value)}
-                              required
-                            />
-                          </div>
-
-                          <div className="bidang">
-                            <label htmlFor="jumlah-klaim">Jumlah diajukan</label>
-                            <input
-                              id="jumlah-klaim"
-                              type="number"
-                              min={0}
-                              step={1000}
-                              value={jumlahKlaim}
-                              onChange={(e) => setJumlahKlaim(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        <div className="bidang" style={{ marginTop: 12 }}>
-                          <label htmlFor="deskripsi-klaim">Keterangan</label>
-                          <input
-                            id="deskripsi-klaim"
-                            placeholder="mis. Tiket kereta Jakarta - Surabaya"
-                            value={deskripsiKlaim}
-                            onChange={(e) => setDeskripsiKlaim(e.target.value)}
-                            required
-                          />
-                        </div>
-
-                        <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' }}>
-                          <button
-                            type="button"
-                            className="btn kecil"
-                            onClick={() => setFormKlaimTerbuka(false)}
-                          >
-                            Batal
-                          </button>
-                          <button
-                            type="submit"
-                            className="btn kecil utama"
-                            disabled={sedangAksi === 'klaim' || !kategoriBaru || !jumlahKlaim}
-                          >
-                            Simpan klaim
-                          </button>
-                        </div>
-                      </form>
+                      </td>
                     )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
-                    <div className="pembungkus-tabel">
-                      <table className="tabel" style={{ minWidth: 640 }}>
-                        <thead>
-                          <tr>
-                            <th>Kategori &amp; keterangan</th>
-                            <th>Tanggal</th>
-                            <th className="kanan">Diajukan</th>
-                            <th className="kanan">Disetujui</th>
-                            <th>Nota</th>
-                            {milikSaya && dapatDisunting && <th />}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {klaim.map((baris) => {
-                            const bukti = baris.bukti ?? []
-                            const wajibNota = baris.kategoriBiaya?.wajib_bukti
+      {ruang.can_manage && (
+        <>
+          <FormPengeluaran perjalananId={perjalananId} kategori={ruang.expense_categories} onSelesai={onSelesai} />
 
-                            return (
-                              <tr key={baris.id}>
-                                <td>
-                                  <div className="sel-utama">
-                                    {baris.kategoriBiaya?.nama ?? '—'}
-                                  </div>
-                                  <div className="sel-sekunder">{baris.deskripsi}</div>
-                                  {baris.melebihi_plafon && (
-                                    <span className="tanda-plafon" style={{ marginTop: 3 }}>
-                                      <Icon name="peringatan" size={11} />
-                                      Melampaui plafon
-                                    </span>
-                                  )}
-                                </td>
-                                <td className="sel-sekunder">
-                                  {tanggalPendek(baris.tanggal_transaksi)}
-                                </td>
-                                <td className="kanan angka">{rupiah(baris.jumlah_diajukan)}</td>
-                                <td className="kanan angka sel-utama">
-                                  {baris.jumlah_disetujui === null
-                                    ? '—'
-                                    : rupiah(baris.jumlah_disetujui)}
-                                  <div>
-                                    <StatusBadge
-                                      label={manusiawi(baris.status)}
-                                      warna={
-                                        baris.status === 'DISETUJUI'
-                                          ? 'hijau'
-                                          : baris.status === 'DITOLAK'
-                                            ? 'merah'
-                                            : baris.status === 'DISETUJUI_SEBAGIAN'
-                                              ? 'kuning'
-                                              : 'netral'
-                                      }
-                                    />
-                                  </div>
-                                </td>
-                                <td>
-                                  {bukti.length === 0 ? (
-                                    <span className={wajibNota ? 'status merah' : 'status netral'}>
-                                      {wajibNota ? 'Wajib, belum ada' : 'Tidak wajib'}
-                                    </span>
-                                  ) : (
-                                    bukti.map((b) => (
-                                      <a
-                                        key={b.id}
-                                        href={urlBerkas(b.path_file)}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="btn-tautan"
-                                        style={{ display: 'block' }}
-                                      >
-                                        <Icon name="file" size={13} />
-                                        {b.nama_file.slice(0, 22)}
-                                      </a>
-                                    ))
-                                  )}
-                                </td>
-                                {milikSaya && dapatDisunting && (
-                                  <td className="kanan">
-                                    <div style={{ display: 'flex', gap: 5, justifyContent: 'flex-end' }}>
-                                      <button
-                                        type="button"
-                                        className="btn kecil"
-                                        onClick={() => pilihBerkas(baris.id)}
-                                        disabled={sedangAksi !== null}
-                                      >
-                                        <Icon name="unggah" size={14} />
-                                        Nota
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="btn kecil bahaya"
-                                        disabled={sedangAksi !== null}
-                                        onClick={() =>
-                                          jalankan('hapus-klaim', () =>
-                                            apiHapusKlaim(laporanId, baris.id),
-                                          )
-                                        }
-                                      >
-                                        <Icon name="sampah" size={14} />
-                                      </button>
-                                    </div>
-                                  </td>
-                                )}
-                              </tr>
-                            )
-                          })}
-
-                          {klaim.length === 0 && (
-                            <tr>
-                              <td colSpan={6} className="sel-sekunder" style={{ textAlign: 'center' }}>
-                                Belum ada klaim biaya pada laporan ini.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </section>
-
-                  {/* Berkas dipilih lewat input tersembunyi ini. */}
-                  <input
-                    ref={inputBerkasRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,application/pdf"
-                    style={{ display: 'none' }}
-                    onChange={(e) => unggahBerkas(e.target.files?.[0])}
-                  />
-
-                  {modeVerifikasi && (
-                    <FormVerifikasi
-                      laporan={laporan}
-                      onSelesai={(pesan) => {
-                        setModeVerifikasi(false)
-                        onBerubah(pesan)
-                        muatUlang()
-                      }}
-                      onBatal={() => setModeVerifikasi(false)}
-                      onGalat={onGalat}
-                    />
-                  )}
+          <section className="panel">
+            <div className="panel-head">
+              <div>
+                <h2>Ajukan ke Keuangan</h2>
+                <p>Setelah diajukan, laporan tidak dapat diubah kecuali dikembalikan Keuangan.</p>
+              </div>
+            </div>
+            <div className="panel-body" style={{ display: 'grid', gap: 12 }}>
+              {!sudahBerangkat && (
+                <div className="kotak-info">
+                  <strong>Belum dapat diajukan</strong>
+                  Pengeluaran boleh dicatat sekarang, tetapi laporan baru dapat diajukan setelah tanggal
+                  keberangkatan ({tanggalPendek(ruang.travel_request.departure_date)}).
                 </div>
+              )}
+              <div className="bidang">
+                <label htmlFor="ringkasan">
+                  Ringkasan kegiatan<span className="wajib">*</span>
+                </label>
+                <textarea
+                  id="ringkasan"
+                  placeholder="Hasil dan capaian selama perjalanan dinas"
+                  value={ringkasan}
+                  maxLength={5000}
+                  onChange={(e) => setRingkasan(e.target.value)}
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn utama"
+                  disabled={mengirim || pengeluaran.length === 0 || !ringkasan.trim() || !sudahBerangkat}
+                  onClick={() => onAjukan(ringkasan)}
+                >
+                  <Icon name="kirim" size={15} />
+                  {mengirim ? 'Mengirim...' : 'Ajukan laporan'}
+                </button>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+    </>
+  )
+}
 
-                <div className="modal-kaki">
-                  <span className="kiri">
-                    {klaim.length} klaim · {rupiah(totalDiajukan)} diajukan
-                  </span>
+function FormPengeluaran({
+  perjalananId,
+  kategori: daftarKategori,
+  onSelesai,
+}: {
+  perjalananId: number
+  kategori: RuangLaporan['expense_categories']
+  onSelesai: (pesan: string) => void
+}) {
+  const [kategori, setKategori] = useState<KategoriBiaya>('transportation')
+  const wajibNota = daftarKategori.find((k) => k.value === kategori)?.requires_receipt ?? true
+  const [tanggal, setTanggal] = useState(hariIni())
+  const [keterangan, setKeterangan] = useState('')
+  const [jumlah, setJumlah] = useState('')
+  const [nota, setNota] = useState<File | null>(null)
+  const [kunciInput, setKunciInput] = useState(0)
+  const { mengirim, galat, galatKolom, jalankan } = useKirim()
 
-                  {milikSaya && dapatDisunting && (
-                    <button
-                      type="button"
-                      className="btn utama"
-                      disabled={sedangAksi !== null || klaim.length === 0}
-                      onClick={() => jalankan('ajukan', () => apiAjukanLaporan(laporan.id))}
-                    >
-                      <Icon name="kirim" size={15} />
-                      {sedangAksi === 'ajukan' ? 'Mengirim...' : 'Ajukan ke Keuangan'}
-                    </button>
-                  )}
+  const tambah = async (peristiwa: FormEvent) => {
+    peristiwa.preventDefault()
+    const hasil = await jalankan(() =>
+      apiSimpanLaporan(perjalananId, {
+        expenses: [
+          {
+            category: kategori,
+            expense_date: tanggal,
+            description: keterangan.trim(),
+            amount: Number(jumlah),
+            receipt: nota ?? undefined,
+          },
+        ],
+      }),
+    )
+    if (!hasil) return
 
-                  {boleh('laporan.verifikasi') &&
-                    laporan.status === 'DIAJUKAN' &&
-                    !modeVerifikasi && (
-                      <button
-                        type="button"
-                        className="btn utama"
-                        onClick={() => setModeVerifikasi(true)}
-                      >
-                        <Icon name="check" size={15} />
-                        Verifikasi nota
-                      </button>
-                    )}
+    setKeterangan('')
+    setJumlah('')
+    setNota(null)
+    setKunciInput((k) => k + 1)
+    onSelesai(hasil.message)
+  }
 
-                  {boleh('pencairan.proses') &&
-                    laporan.status === 'DIVERIFIKASI' &&
-                    laporan.jenis_selisih !== 'NIHIL' &&
-                    !(laporan.pencairan ?? []).some((p) => p.laporan_id === laporan.id) && (
-                      <button
-                        type="button"
-                        className="btn sukses"
-                        disabled={sedangAksi !== null}
-                        onClick={() =>
-                          jalankan('pencairan', () => apiPencairanDariLaporan(laporan.id))
-                        }
-                      >
-                        <Icon name="wallet" size={15} />
-                        {laporan.jenis_selisih === 'KURANG_BAYAR'
-                          ? 'Proses reimbursement'
-                          : 'Catat pengembalian'}
-                      </button>
-                    )}
-
-                  <button type="button" className="btn" onClick={onTutup}>
-                    Tutup
-                  </button>
-                </div>
-              </>
-            )
-          }}
-        </Muatan>
+  return (
+    <section className="panel">
+      <div className="panel-head">
+        <div>
+          <h2>Tambah Pengeluaran</h2>
+          <p>Lampirkan foto atau PDF nota; maksimal 5 MB.</p>
+        </div>
       </div>
-    </div>
+      <form className="panel-body" style={{ display: 'grid', gap: 12 }} onSubmit={tambah}>
+        <KotakGalat pesan={galat} />
+        <div className="baris-bidang">
+          <div className="bidang">
+            <label htmlFor="kategori-pengeluaran">Kategori</label>
+            <select
+              id="kategori-pengeluaran"
+              value={kategori}
+              onChange={(e) => setKategori(e.target.value as KategoriBiaya)}
+            >
+              {daftarKategori.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {LABEL_KATEGORI_BIAYA[o.value]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="bidang">
+            <label htmlFor="tanggal-pengeluaran">Tanggal transaksi</label>
+            <input
+              id="tanggal-pengeluaran"
+              type="date"
+              max={hariIni()}
+              value={tanggal}
+              onChange={(e) => setTanggal(e.target.value)}
+              required
+            />
+            <PesanKolom pesan={galatKolom['expenses.0.expense_date']} />
+          </div>
+          <div className="bidang">
+            <label htmlFor="jumlah-pengeluaran">Jumlah (Rp)</label>
+            <input
+              id="jumlah-pengeluaran"
+              type="number"
+              min={1}
+              value={jumlah}
+              onChange={(e) => setJumlah(e.target.value)}
+              required
+            />
+            <PesanKolom pesan={galatKolom['expenses.0.amount']} />
+          </div>
+        </div>
+        <div className="baris-bidang">
+          <div className="bidang">
+            <label htmlFor="keterangan-pengeluaran">Keterangan</label>
+            <input
+              id="keterangan-pengeluaran"
+              placeholder="mis. Hotel 2 malam"
+              maxLength={200}
+              value={keterangan}
+              onChange={(e) => setKeterangan(e.target.value)}
+              required
+            />
+            <PesanKolom pesan={galatKolom['expenses.0.description']} />
+          </div>
+          <div className="bidang">
+            <label htmlFor="nota">
+              Bukti nota{wajibNota && <span className="wajib">*</span>}
+            </label>
+            <input
+              key={kunciInput}
+              id="nota"
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp,.pdf"
+              onChange={(e) => setNota(e.target.files?.[0] ?? null)}
+            />
+            <span className="petunjuk">
+              {wajibNota ? 'Wajib untuk kategori ini.' : 'Uang harian tidak memerlukan nota.'}
+            </span>
+            <PesanKolom pesan={galatKolom['expenses.0.receipt']} />
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            type="submit"
+            className="btn lembut"
+            disabled={mengirim || !keterangan.trim() || !jumlah || (wajibNota && !nota)}
+          >
+            <Icon name="plus" size={15} />
+            {mengirim ? 'Menyimpan...' : 'Tambah pengeluaran'}
+          </button>
+        </div>
+      </form>
+    </section>
   )
 }

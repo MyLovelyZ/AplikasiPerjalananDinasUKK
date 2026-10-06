@@ -1,74 +1,44 @@
 import { useState } from 'react'
 
-import { apiDaftarSppd } from '@/api/endpoint'
+import { apiDaftarPerjalanan } from '@/api/endpoint'
+import type { StatusPerjalanan } from '@/api/tipe'
 import { Icon } from '@/components/ui/Icon'
 import { Kosong, Muatan } from '@/components/ui/Keadaan'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Paginasi } from '@/components/ui/Paginasi'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { useAuth } from '@/auth/useAuth'
+import { RUPA_STATUS_PERJALANAN } from '@/constants/label'
+import { useHalaman } from '@/hooks/useHalaman'
 import { usePermintaan } from '@/hooks/usePermintaan'
-import { rentangTanggal, rupiah, rupaStatusSppd } from '@/utils/format'
+import { rentangTanggal, rupiah } from '@/utils/format'
 
 interface TripsPageProps {
-  /** Kata kunci pencarian dari topbar. */
   pencarian: string
-  onBuatSppd: () => void
-  onBukaSppd: (id: number) => void
-  /** Naik saat ada aksi yang mengubah data, memaksa daftar diambil ulang. */
+  onBuatPerjalanan: () => void
+  onBukaPerjalanan: (id: number) => void
   penandaSegar: number
 }
 
-/** Pilihan penyaring status; nilainya dikirim apa adanya ke query API. */
-const FILTER_STATUS = [
-  { nilai: '', label: 'Semua status' },
-  { nilai: 'DRAFT', label: 'Draf' },
-  { nilai: 'DIAJUKAN,MENUNGGU_PERSETUJUAN', label: 'Menunggu persetujuan' },
-  { nilai: 'REVISI', label: 'Perlu revisi' },
-  { nilai: 'DISETUJUI', label: 'Disetujui' },
-  { nilai: 'DALAM_PERJALANAN,MENUNGGU_LAPORAN', label: 'Sedang berjalan' },
-  { nilai: 'SELESAI', label: 'Selesai' },
-  { nilai: 'DITOLAK,DIBATALKAN', label: 'Ditolak / dibatalkan' },
-]
-
-export function TripsPage({
-  pencarian,
-  onBuatSppd,
-  onBukaSppd,
-  penandaSegar,
-}: TripsPageProps) {
-  const { boleh } = useAuth()
-  const [status, setStatus] = useState('')
-  const [halaman, setHalaman] = useState(1)
+export function TripsPage({ pencarian, onBuatPerjalanan, onBukaPerjalanan, penandaSegar }: TripsPageProps) {
+  const [status, setStatus] = useState<StatusPerjalanan | ''>('')
+  const [halaman, setHalaman] = useHalaman(status, pencarian)
 
   const { data, memuat, galat, muatUlang } = usePermintaan(
-    () => apiDaftarSppd({ halaman, per_halaman: 12, status: status || undefined, cari: pencarian || undefined }),
+    () => apiDaftarPerjalanan({ page: halaman, per_page: 12, status, search: pencarian }),
     [halaman, status, pencarian, penandaSegar],
   )
-
-  const gantiStatus = (nilai: string) => {
-    setStatus(nilai)
-    setHalaman(1) // filter baru selalu dimulai dari halaman pertama
-  }
-
-  const judulHalaman = boleh('sppd.lihat_semua') ? 'Perjalanan Dinas' : 'Perjalanan Saya'
 
   return (
     <>
       <PageHeader
-        eyebrow="Modul Pengajuan"
-        title={judulHalaman}
-        description={
-          boleh('sppd.lihat_semua')
-            ? 'Seluruh pengajuan perjalanan dinas perusahaan beserta statusnya.'
-            : 'Riwayat pengajuan perjalanan dinas Anda beserta status terkininya.'
-        }
+        eyebrow="Pengajuan"
+        title="Perjalanan Saya"
+        description="Riwayat pengajuan perjalanan dinas Anda beserta status terkininya."
         action={
-          boleh('sppd.buat') ? (
-            <button type="button" className="btn utama" onClick={onBuatSppd}>
-              <Icon name="plus" size={17} />
-              Ajukan Perjalanan
-            </button>
-          ) : undefined
+          <button type="button" className="btn utama" onClick={onBuatPerjalanan}>
+            <Icon name="plus" size={17} />
+            Ajukan Perjalanan
+          </button>
         }
       />
 
@@ -76,19 +46,18 @@ export function TripsPage({
         <div className="bilah-alat">
           <select
             value={status}
-            onChange={(e) => gantiStatus(e.target.value)}
+            onChange={(e) => setStatus(e.target.value as StatusPerjalanan | '')}
             aria-label="Saring berdasarkan status"
           >
-            {FILTER_STATUS.map((f) => (
-              <option key={f.nilai} value={f.nilai}>
-                {f.label}
+            <option value="">Semua status</option>
+            {Object.entries(RUPA_STATUS_PERJALANAN).map(([nilai, rupa]) => (
+              <option key={nilai} value={nilai}>
+                {rupa.label}
               </option>
             ))}
           </select>
 
-          {pencarian && (
-            <span className="status biru">Pencarian: “{pencarian}”</span>
-          )}
+          {pencarian && <span className="status biru">Pencarian: “{pencarian}”</span>}
 
           <button type="button" className="btn kecil dorong" onClick={muatUlang}>
             <Icon name="segarkan" size={15} />
@@ -96,13 +65,7 @@ export function TripsPage({
           </button>
         </div>
 
-        <Muatan
-          data={data}
-          memuat={memuat}
-          galat={galat}
-          onCobaLagi={muatUlang}
-          barisRangka={6}
-        >
+        <Muatan data={data} memuat={memuat} galat={galat} onCobaLagi={muatUlang} barisRangka={6}>
           {(hasil) =>
             hasil.data.length === 0 ? (
               <Kosong
@@ -110,12 +73,12 @@ export function TripsPage({
                 judul="Tidak ada perjalanan"
                 pesan={
                   pencarian || status
-                    ? 'Tidak ada data yang cocok dengan penyaring saat ini. Coba ubah kata kunci atau statusnya.'
+                    ? 'Tidak ada data yang cocok dengan penyaring saat ini.'
                     : 'Belum ada pengajuan perjalanan dinas. Mulai dengan membuat pengajuan baru.'
                 }
                 aksi={
-                  boleh('sppd.buat') && !pencarian && !status ? (
-                    <button type="button" className="btn kecil utama" onClick={onBuatSppd}>
+                  !pencarian && !status ? (
+                    <button type="button" className="btn kecil utama" onClick={onBuatPerjalanan}>
                       <Icon name="plus" size={15} />
                       Ajukan sekarang
                     </button>
@@ -128,8 +91,7 @@ export function TripsPage({
                   <table className="tabel">
                     <thead>
                       <tr>
-                        <th>Nomor SPPD</th>
-                        <th>Pemohon</th>
+                        <th>Nomor</th>
                         <th>Tujuan &amp; keperluan</th>
                         <th>Tanggal</th>
                         <th className="kanan">Estimasi</th>
@@ -138,71 +100,32 @@ export function TripsPage({
                       </tr>
                     </thead>
                     <tbody>
-                      {hasil.data.map((sppd) => {
-                        const rupa = rupaStatusSppd(sppd.status)
-                        return (
-                          <tr key={sppd.id}>
-                            <td className="sel-utama angka">{sppd.nomor_sppd}</td>
-                            <td>
-                              <div className="sel-utama">{sppd.pemohon?.nama_lengkap ?? '—'}</div>
-                              <div className="sel-sekunder">{sppd.departemen?.nama ?? '—'}</div>
-                            </td>
-                            <td>
-                              <div className="sel-utama">
-                                {sppd.lokasiTujuan?.nama_kota ?? sppd.tujuan_lainnya ?? '—'}
-                              </div>
-                              <div className="sel-sekunder">{sppd.keperluan}</div>
-                            </td>
-                            <td>
-                              <div className="sel-utama">
-                                {rentangTanggal(sppd.tanggal_berangkat, sppd.tanggal_kembali)}
-                              </div>
-                              <div className="sel-sekunder">{sppd.jumlah_hari} hari</div>
-                            </td>
-                            <td className="kanan angka">{rupiah(sppd.estimasi_biaya)}</td>
-                            <td>
-                              <StatusBadge label={rupa.label} warna={rupa.warna} />
-                            </td>
-                            <td className="kanan">
-                              <button
-                                type="button"
-                                className="btn kecil"
-                                onClick={() => onBukaSppd(sppd.id)}
-                              >
-                                Detail
-                              </button>
-                            </td>
-                          </tr>
-                        )
-                      })}
+                      {hasil.data.map((p) => (
+                        <tr key={p.id}>
+                          <td className="sel-utama angka">{p.request_number}</td>
+                          <td>
+                            <div className="sel-utama">{p.destination}</div>
+                            <div className="sel-sekunder">{p.purpose}</div>
+                          </td>
+                          <td>
+                            <div className="sel-utama">{rentangTanggal(p.departure_date, p.return_date)}</div>
+                            <div className="sel-sekunder">{p.duration_days} hari</div>
+                          </td>
+                          <td className="kanan angka">{rupiah(p.estimated_cost)}</td>
+                          <td>
+                            <StatusBadge {...RUPA_STATUS_PERJALANAN[p.status]} />
+                          </td>
+                          <td className="kanan">
+                            <button type="button" className="btn kecil" onClick={() => onBukaPerjalanan(p.id)}>
+                              Detail
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
-
-                <div className="paginasi">
-                  <span>
-                    Menampilkan {hasil.data.length} dari {hasil.halaman.total_data} pengajuan ·
-                    halaman {hasil.halaman.halaman_saat_ini} / {hasil.halaman.total_halaman}
-                  </span>
-                  <div className="tombol-halaman">
-                    <button
-                      type="button"
-                      className="btn kecil"
-                      disabled={halaman <= 1}
-                      onClick={() => setHalaman((n) => n - 1)}
-                    >
-                      Sebelumnya
-                    </button>
-                    <button
-                      type="button"
-                      className="btn kecil"
-                      disabled={halaman >= hasil.halaman.total_halaman}
-                      onClick={() => setHalaman((n) => n + 1)}
-                    >
-                      Berikutnya
-                    </button>
-                  </div>
-                </div>
+                <Paginasi meta={hasil.meta} satuan="pengajuan" onPindah={setHalaman} />
               </>
             )
           }

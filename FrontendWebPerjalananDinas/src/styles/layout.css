@@ -370,6 +370,10 @@
   place-items: center;
   font-size: 12px;
   font-weight: 700;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
 }
 
 .content {

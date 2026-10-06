@@ -1,372 +1,469 @@
-/**
- * Bentuk data yang dikirim backend.
- * Penamaan kolom sengaja dibiarkan snake_case persis seperti respons API,
- * supaya tidak ada lapisan penerjemah yang harus ikut diubah setiap kali
- * backend menambah kolom.
- */
+/** Kolom dibiarkan snake_case persis seperti respons API Laravel. */
 
-/** Amplop respons tunggal — lihat app/Support/respons.js di backend. */
 export interface Respons<T> {
-  sukses: boolean
-  pesan: string
   data: T
-  galat?: unknown
+  message?: string
 }
 
-/** Amplop respons berhalaman. */
-export interface ResponsHalaman<T> extends Respons<T[]> {
-  halaman: {
-    halaman_saat_ini: number
-    per_halaman: number
-    total_data: number
-    total_halaman: number
+/** Bentuk paginasi bawaan Laravel API Resource. */
+export interface ResponsHalaman<T> {
+  data: T[]
+  meta: {
+    current_page: number
+    last_page: number
+    per_page: number
+    total: number
+    from: number | null
+    to: number | null
   }
 }
 
-export interface Halaman {
-  halaman_saat_ini: number
-  per_halaman: number
-  total_data: number
-  total_halaman: number
+export interface Opsi<T extends string | number = string> {
+  value: T
+  label: string
 }
 
-// ── Autentikasi ───────────────────────────────────────────────────────
+// ── Enumerasi ─────────────────────────────────────────────────────────
 
-export interface HasilMasuk {
-  access_token: string
-  refresh_token: string
-  pengguna: {
-    id: number
-    username: string
-    nama_lengkap?: string
-    peran: string[]
-  }
-}
+export type Peran = 'super_admin' | 'supervisor' | 'finance' | 'employee'
 
-export interface ProfilPengguna {
-  id: number
-  username: string
-  status_akun: string
-  terakhir_masuk: string | null
-  karyawan: {
-    id: number
-    nip: string
-    nama_lengkap: string
-    email: string
-    departemen_id: number
-    jabatan_id: number
-  } | null
-  peran: Array<{ kode: string; nama: string }>
-  hak_akses: string[]
-}
+export type StatusPerjalanan =
+  | 'draft'
+  | 'submitted'
+  | 'supervisor_approved'
+  | 'approved'
+  | 'rejected'
+  | 'cancelled'
+  | 'completed'
 
-// ── Data master ───────────────────────────────────────────────────────
+export type JenisPerjalanan = 'local' | 'domestic' | 'international'
 
-export type Zona = 'DALAM_KOTA' | 'LUAR_KOTA' | 'LUAR_NEGERI'
+export type Transportasi =
+  | 'plane'
+  | 'train'
+  | 'ship'
+  | 'bus'
+  | 'office_vehicle'
+  | 'private_vehicle'
+  | 'other'
 
-export interface Lokasi {
-  id: number
-  nama_kota: string
-  provinsi: string | null
-  negara: string
-  zona: Zona
-  status: string
-}
+export type KategoriBiaya = 'transportation' | 'accommodation' | 'daily_allowance' | 'meals' | 'other'
 
-export interface KategoriBiaya {
-  id: number
-  kode: string
-  nama: string
-  satuan: string
-  wajib_bukti: boolean
-  status: string
-}
+export type JenisDokumen = 'invitation' | 'terms_of_reference' | 'assignment_letter' | 'other'
+
+export type TahapPersetujuan = 'supervisor' | 'finance' | 'expense_report'
+
+export type StatusLaporan = 'draft' | 'submitted' | 'returned' | 'verified'
+
+export type StatusPengeluaran = 'pending' | 'approved' | 'partially_approved' | 'rejected'
+
+export type JenisPencairan = 'advance' | 'reimbursement' | 'refund'
+
+export type StatusPencairan = 'pending' | 'paid'
+
+export type MetodeBayar = 'transfer' | 'cash' | 'payroll'
+
+export type JenisPenyelesaian = 'reimbursement' | 'refund' | 'none'
+
+// ── Pengguna & organisasi ─────────────────────────────────────────────
 
 export interface Departemen {
   id: number
-  kode: string
-  nama: string
-  status: string
+  code: string
+  name: string
+  is_active: boolean
+  users_count?: number
+  created_at?: string
+  updated_at?: string
 }
 
-export interface Jabatan {
+export interface RingkasPengguna {
   id: number
-  kode: string
-  nama: string
-  level_jabatan: number
-  status: string
+  name: string
+  email: string
+  role: Peran
+  role_label: string
+  position: string | null
+  profile_photo_url: string | null
 }
 
-// ── SPPD ──────────────────────────────────────────────────────────────
-
-export type StatusSppd =
-  | 'DRAFT'
-  | 'DIAJUKAN'
-  | 'MENUNGGU_PERSETUJUAN'
-  | 'REVISI'
-  | 'DISETUJUI'
-  | 'DITOLAK'
-  | 'DIBATALKAN'
-  | 'DALAM_PERJALANAN'
-  | 'MENUNGGU_LAPORAN'
-  | 'SELESAI'
-
-export interface RingkasKaryawan {
-  id: number
-  nip: string
-  nama_lengkap: string
-  email?: string
+export interface Pengguna extends RingkasPengguna {
+  employee_number: string | null
+  phone: string | null
+  department_id: number | null
+  department?: Departemen | null
+  supervisor_id: number | null
+  supervisor?: RingkasPengguna | null
+  bank_name?: string | null
+  bank_account_number?: string | null
+  bank_account_name?: string | null
+  is_active: boolean
+  last_login_at: string | null
+  subordinates_count?: number
+  created_at: string
+  updated_at: string
 }
 
-export interface RincianBiaya {
-  id: number
-  kategori_biaya_id: number
-  deskripsi: string | null
-  kuantitas: string
-  satuan: string
-  harga_satuan: string
-  subtotal: string
-  melebihi_plafon: boolean
-  kategoriBiaya?: KategoriBiaya
+export interface HasilMasuk {
+  token: string
+  token_type: string
+  user: Pengguna
 }
 
-export interface Persetujuan {
-  id: number
-  urutan: number
-  penyetuju_id: number
-  status: 'MENUNGGU' | 'DISETUJUI' | 'DITOLAK' | 'REVISI' | 'DIDELEGASIKAN' | 'DILEWATI'
-  catatan: string | null
-  tanggal_ditugaskan: string
-  tanggal_aksi: string | null
-  penyetuju?: { id: number; nama_lengkap: string }
-  penyetujuAsli?: { id: number; nama_lengkap: string } | null
-  tahap?: { id: number; nama_tahap: string; tipe_penyetuju: string }
-}
+// ── Perjalanan dinas ──────────────────────────────────────────────────
 
-export interface Sppd {
+export interface EstimasiBiaya {
   id: number
-  nomor_sppd: string
-  karyawan_id: number
-  departemen_id: number
-  lokasi_tujuan_id: number | null
-  tujuan_lainnya: string | null
-  jenis_perjalanan: Zona
-  keperluan: string
-  agenda: string | null
-  tanggal_berangkat: string
-  tanggal_kembali: string
-  jumlah_hari: number
-  moda_transportasi: string
-  estimasi_biaya: string
-  uang_muka_diminta: string
-  uang_muka_disetujui: string
-  status: StatusSppd
-  tahap_saat_ini: number
-  catatan_pemohon: string | null
-  tanggal_pengajuan: string | null
-  dibuat_pada: string
-  label_ringkas?: string
-  dapat_diubah?: boolean
-  pemohon?: RingkasKaryawan
-  departemen?: Departemen
-  lokasiTujuan?: Lokasi
-  rincianBiaya?: RincianBiaya[]
-  persetujuan?: Persetujuan[]
-  laporan?: Laporan | null
-  itinerary?: Itinerary[]
-  dokumen?: DokumenPendukung[]
-  pencairan?: Pencairan[]
-}
-
-export interface Itinerary {
-  id: number
-  urutan: number
-  tanggal: string
-  waktu_mulai: string | null
-  waktu_selesai: string | null
-  kegiatan: string
-  lokasi: string | null
+  category: KategoriBiaya
+  category_label: string
+  description: string | null
+  quantity: number
+  unit_price: number
+  subtotal: number
 }
 
 export interface DokumenPendukung {
   id: number
-  jenis_dokumen: string
-  nama_file: string
-  path_file: string
-  ukuran_byte: number
+  type: JenisDokumen
+  type_label: string
+  original_name: string
+  mime_type: string
+  size: number
+  url: string
+  created_at: string
 }
 
-/** Satu baris antrean persetujuan. */
-export interface TugasPersetujuan extends Persetujuan {
-  perjalanan: Sppd
-  ada_pelanggaran_plafon: boolean
-}
-
-// ── Laporan & keuangan ────────────────────────────────────────────────
-
-export type StatusLaporan = 'DRAFT' | 'DIAJUKAN' | 'REVISI' | 'DIVERIFIKASI' | 'DITOLAK'
-
-export interface BuktiPengeluaran {
+export interface Persetujuan {
   id: number
-  nama_file: string
-  path_file: string
-  tipe_mime: string
-  ukuran_byte: number
-  status_verifikasi: 'BELUM' | 'VALID' | 'TIDAK_VALID'
+  stage: TahapPersetujuan
+  stage_label: string
+  decision: 'approved' | 'rejected'
+  decision_label: string
+  note: string | null
+  approver?: RingkasPengguna
+  decided_at: string
 }
 
-export interface KlaimBiaya {
+export interface Pengeluaran {
   id: number
-  kategori_biaya_id: number
-  tanggal_transaksi: string
-  deskripsi: string
-  jumlah_diajukan: string
-  jumlah_disetujui: string | null
-  status: 'DIAJUKAN' | 'DISETUJUI' | 'DISETUJUI_SEBAGIAN' | 'DITOLAK'
-  melebihi_plafon: boolean
-  catatan_verifikasi: string | null
-  kategoriBiaya?: KategoriBiaya
-  bukti?: BuktiPengeluaran[]
+  category: KategoriBiaya
+  category_label: string
+  expense_date: string
+  description: string
+  amount: number
+  approved_amount: number | null
+  status: StatusPengeluaran
+  status_label: string
+  verification_note: string | null
+  receipt: { name: string; mime_type: string; size: number; url: string } | null
+  created_at: string
 }
 
-export interface Laporan {
+export interface LaporanBiaya {
   id: number
-  perjalanan_id: number
-  nomor_laporan: string
-  tanggal_lapor: string
-  ringkasan_kegiatan: string
-  hasil_capaian: string | null
-  total_realisasi: string
-  total_uang_muka: string
-  selisih: string
-  jenis_selisih: 'KURANG_BAYAR' | 'LEBIH_BAYAR' | 'NIHIL'
+  travel_request_id: number
   status: StatusLaporan
-  catatan_verifikator: string | null
-  tanggal_verifikasi: string | null
-  perjalanan?: Sppd
-  klaim?: KlaimBiaya[]
-  pencairan?: Pencairan[]
+  status_label: string
+  is_editable: boolean
+  summary: string | null
+  total_claimed?: number
+  total_approved: number | null
+  advance_amount: number | null
+  difference: number | null
+  settlement_type: JenisPenyelesaian | null
+  settlement_type_label: string | null
+  submitted_at: string | null
+  verified_at: string | null
+  verification_note: string | null
+  verifier?: RingkasPengguna | null
+  expenses?: Pengeluaran[]
+  created_at: string
+  updated_at: string
+}
+
+export interface Anggaran {
+  id: number
+  department_id: number
+  department?: Departemen
+  year: number
+  month: number | null
+  period_label: string
+  amount: number
+  committed_amount?: number
+  spent_amount?: number
+  remaining_amount?: number
+  utilization_percentage?: number
+  notes: string | null
+  creator?: RingkasPengguna
+  created_at: string
+  updated_at: string
 }
 
 export interface Pencairan {
   id: number
-  perjalanan_id: number
-  laporan_id: number | null
-  jenis: 'UANG_MUKA' | 'REIMBURSEMENT' | 'PENGEMBALIAN'
-  jumlah: string
-  metode: string
-  nama_bank: string | null
-  no_rekening: string | null
-  nomor_referensi: string | null
-  referensi_payroll: string | null
-  tanggal_pencairan: string | null
-  status: 'MENUNGGU' | 'DIPROSES' | 'SELESAI' | 'GAGAL'
-  perjalanan?: Sppd
-  laporan?: { id: number; nomor_laporan: string } | null
+  travel_request_id: number
+  type: JenisPencairan
+  type_label: string
+  amount: number
+  status: StatusPencairan
+  status_label: string
+  method: MetodeBayar | null
+  method_label: string | null
+  bank_name: string | null
+  bank_account_number: string | null
+  bank_account_name: string | null
+  reference_number: string | null
+  paid_at: string | null
+  notes: string | null
+  processor?: RingkasPengguna | null
+  travel_request?: Perjalanan
+  created_at: string
+}
+
+export interface Perjalanan {
+  id: number
+  request_number: string
+  purpose: string
+  description: string | null
+  destination: string
+  trip_type: JenisPerjalanan
+  trip_type_label: string
+  transportation: Transportasi
+  transportation_label: string
+  departure_date: string
+  return_date: string
+  duration_days: number
+  estimated_cost: number
+  advance_requested: number
+  advance_approved: number | null
+  status: StatusPerjalanan
+  status_label: string
+  is_editable: boolean
+  is_cancellable: boolean
+  /** Hanya ada bila relasi laporan ikut dimuat. */
+  finance_stage?: 'finance' | 'expense_report' | null
+  notes: string | null
+  submitted_at: string | null
+  completed_at: string | null
+  created_at: string
+  updated_at: string
+  requester?: Pengguna
+  department?: Departemen
+  budget?: Anggaran | null
+  cost_estimates?: EstimasiBiaya[]
+  documents?: DokumenPendukung[]
+  approvals?: Persetujuan[]
+  expense_report?: LaporanBiaya | null
+  disbursements?: Pencairan[]
+}
+
+export interface OpsiFormPerjalanan {
+  trip_types: Opsi<JenisPerjalanan>[]
+  transportations: Opsi<Transportasi>[]
+  expense_categories: Opsi<KategoriBiaya>[]
+  document_types: Opsi<JenisDokumen>[]
+  department: Departemen | null
+  approver: RingkasPengguna | null
+  max_document_size_kb: number
+}
+
+export interface PemeriksaanAnggaran {
+  budget: Anggaran | null
+  required_amount: number
+  remaining_amount: number
+  is_sufficient: boolean
+  message: string
+}
+
+export interface DetailPerjalanan {
+  data: Perjalanan
+  /** Dari endpoint atasan: apakah pengguna boleh memutuskan. */
+  can_review?: boolean
+  /** Dari endpoint keuangan, saat menunggu verifikasi anggaran. */
+  budget_check?: PemeriksaanAnggaran | null
+}
+
+export interface RuangLaporan {
+  travel_request: Perjalanan
+  can_manage: boolean
+  advance_paid: number
+  expense_categories: Array<Opsi<KategoriBiaya> & { requires_receipt: boolean }>
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────
 
-export interface TitikTren {
-  bulan: number
-  nama_bulan: string
-  jumlah: number
-  total_biaya: number
+export interface HitunganStatus {
+  status: StatusPerjalanan
+  label: string
+  total: number
 }
 
-export interface SerapanAnggaran {
-  anggaran_id: number
-  departemen: string
-  kode_departemen: string | null
-  pagu: number
-  terpakai: number
-  realisasi: number
-  sisa: number
-  persen_terpakai: number
+export interface DashboardPegawai {
+  requests_by_status: HitunganStatus[]
+  this_year: {
+    requests: number
+    approved_estimated_cost: number
+    verified_expenses: number
+  }
+  current_trip: Perjalanan | null
+  upcoming_trips: Perjalanan[]
+  expense_reports_due: Perjalanan[]
+  pending_disbursements: Pencairan[]
+  recent_requests: Perjalanan[]
 }
 
-export interface RingkasanDashboard {
-  tahun: number
-  total_sppd: number
-  per_status: Record<string, number>
-  kartu: {
-    draf: number
-    menunggu: number
-    perlu_revisi: number
-    disetujui: number
-    diproses: number
-    selesai: number
-    ditolak: number
+export interface DashboardAtasan {
+  pending_approvals: number
+  my_decisions_this_month: { approved: number; rejected: number }
+  team: {
+    members: number
+    committed_cost_this_year: number
+    requests_by_status_this_year: HitunganStatus[]
+    on_trip_today: Perjalanan[]
   }
-  biaya: {
-    total_estimasi: number
-    total_uang_muka: number
+  oldest_pending: Perjalanan[]
+}
+
+export interface TotalAnggaran {
+  amount: number
+  committed_amount: number
+  spent_amount: number
+  remaining_amount: number
+  utilization_percentage: number
+}
+
+export interface TotalKategori {
+  category: KategoriBiaya
+  label: string
+  total: number
+}
+
+export interface TotalBulan {
+  month: number
+  label: string
+  total: number
+}
+
+export interface DashboardKeuangan {
+  spending: {
+    this_month: number
+    last_month: number
+    change_amount: number
+    change_percentage: number | null
+    this_month_by_category: TotalKategori[]
+    last_month_by_category: TotalKategori[]
+    monthly_trend: TotalBulan[]
   }
-  tugas_persetujuan_saya: number
-  tren_bulanan: TitikTren[]
-  tujuan_teratas: Array<{
-    lokasi_id: number
-    nama_kota: string
-    zona: Zona | null
-    jumlah: number
-    total_biaya: number
+  budget: TotalAnggaran & {
+    year: number
+    by_department: Array<TotalAnggaran & { department: Departemen }>
+  }
+  queues: {
+    budget_verification: number
+    expense_report_verification: number
+    pending_disbursements: number
+    pending_disbursement_amount: number
+  }
+  oldest_pending_disbursements: Pencairan[]
+}
+
+export interface LogAudit {
+  id: number
+  action: string
+  action_label: string
+  description: string
+  subject_type: string | null
+  subject_id: number | null
+  old_values: Record<string, unknown> | null
+  new_values: Record<string, unknown> | null
+  ip_address: string | null
+  user_agent: string | null
+  user?: RingkasPengguna | null
+  created_at: string
+}
+
+export interface DashboardAdmin {
+  users: {
+    total: number
+    active: number
+    inactive: number
+    by_role: Array<{ role: Peran; label: string; total: number }>
+  }
+  departments: { total: number; active: number }
+  travel_requests_this_year: { total: number; by_status: HitunganStatus[] }
+  logins_today: number
+  recent_activities: LogAudit[]
+}
+
+// ── Keuangan ──────────────────────────────────────────────────────────
+
+export interface RingkasanAnggaran {
+  year: number
+  amount: number
+  committed_amount: number
+  spent_amount: number
+  remaining_amount: number
+}
+
+export interface OpsiFormAnggaran {
+  departments: Array<Pick<Departemen, 'id' | 'code' | 'name'>>
+  years: number[]
+  months: Opsi<number>[]
+}
+
+export interface LaporanKeuangan {
+  period: { year: number; month: number | null; label: string; from: string; to: string }
+  department: Pick<Departemen, 'id' | 'code' | 'name'> | null
+  generated_at: string
+  summary: {
+    trips_submitted: number
+    trips_approved: number
+    estimated_cost: number
+    realized_spending: number
+    advances_paid: number
+    reimbursements_paid: number
+    refunds_received: number
+    budget_amount: number
+    budget_committed: number
+    budget_remaining: number
+  }
+  by_category: TotalKategori[]
+  by_month: TotalBulan[]
+  by_department: Array<{
+    code: string
+    department: string
+    trips_approved: number
+    estimated_cost: number
+    realized_spending: number
+    budget_amount: number
   }>
-  perjalanan_terkini: Sppd[]
-  serapan_anggaran: SerapanAnggaran[] | null
-  antrean_keuangan: {
-    laporan_menunggu_verifikasi: number
-    uang_muka_belum_dicairkan: number
-    pencairan_berjalan: number
-  } | null
+  budgets: Array<{
+    department: string
+    period: string
+    amount: number
+    committed_amount: number
+    spent_amount: number
+    remaining_amount: number
+  }>
+  trips: Array<{
+    request_number: string
+    requester: string
+    department: string
+    purpose: string
+    destination: string
+    departure_date: string
+    return_date: string
+    status: StatusPerjalanan
+    status_label: string
+    estimated_cost: number
+    realized_cost: number | null
+  }>
 }
 
-// ── Karyawan & notifikasi ─────────────────────────────────────────────
+// ── Admin ─────────────────────────────────────────────────────────────
 
-export interface Karyawan {
-  id: number
-  nip: string
-  nama_lengkap: string
-  email: string
-  no_telepon: string | null
-  departemen_id: number
-  jabatan_id: number
-  atasan_id: number | null
-  status_karyawan: 'AKTIF' | 'CUTI' | 'NONAKTIF'
-  departemen?: Departemen
-  jabatan?: Jabatan
-  atasan?: RingkasKaryawan | null
-  akun?: {
-    id: number
-    username: string
-    status_akun: string
-    terakhir_masuk: string | null
-    peran: Array<{ id: number; kode: string; nama: string }>
-  } | null
-}
-
-export interface Notifikasi {
-  id: number
-  judul: string
-  pesan: string
-  tipe: string
-  sudah_dibaca: boolean
-  referensi_tabel: string | null
-  referensi_id: number | null
-  dibuat_pada: string
-}
-
-export interface PengaturanSistem {
-  id: number
-  kunci: string
-  nilai: string
-  tipe_nilai: 'TEKS' | 'ANGKA' | 'BOOLEAN' | 'JSON'
-  kelompok: string
-  deskripsi: string | null
-}
-
-export interface OpsiSppd {
-  jenis_perjalanan: Zona[]
-  moda_transportasi: string[]
-  status_pengajuan: StatusSppd[]
-  jenis_dokumen: string[]
+export interface OpsiFormPengguna {
+  roles: Opsi<Peran>[]
+  departments: Array<Pick<Departemen, 'id' | 'code' | 'name'>>
+  supervisors: Array<{ id: number; name: string; email: string; department_id: number | null }>
 }
