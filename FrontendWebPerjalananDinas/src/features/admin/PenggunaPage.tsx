@@ -1,12 +1,21 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { Link, useNavigate, useParams } from 'react-router'
 
-import { apiBuatPengguna, apiDaftarPengguna, apiHapusPengguna, apiOpsiPengguna, apiUbahPengguna } from '@/api/endpoint'
+import {
+  apiBuatPengguna,
+  apiDaftarPengguna,
+  apiDetailPengguna,
+  apiFormUbahPengguna,
+  apiHapusPengguna,
+  apiOpsiPengguna,
+  apiUbahPengguna,
+} from '@/api/endpoint'
 import type { FormulirPengguna } from '@/api/endpoint'
-import type { Pengguna, Peran } from '@/api/tipe'
+import type { OpsiFormPengguna, Pengguna, Peran } from '@/api/tipe'
 import { Icon } from '@/components/ui/Icon'
 import { Kosong, Memuat, Muatan } from '@/components/ui/Keadaan'
-import { KotakGalat, Modal, PesanKolom } from '@/components/ui/Modal'
+import { KotakGalat, Modal, PesanKolom, SebagaiHalaman } from '@/components/ui/Modal'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Paginasi } from '@/components/ui/Paginasi'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -15,20 +24,18 @@ import { useAuth } from '@/auth/useAuth'
 import { useHalaman } from '@/hooks/useHalaman'
 import { useKirim } from '@/hooks/useKirim'
 import { usePermintaan } from '@/hooks/usePermintaan'
+import { HalamanGalat } from '@/features/errors/HalamanGalat'
+import { useAplikasi } from '@/layouts/konteksAplikasi'
 import { inisial, waktu } from '@/utils/format'
 
-interface PenggunaPageProps {
-  pencarian: string
-  onSukses: (pesan: string) => void
-  penandaSegar: number
-}
-
-export function PenggunaPage({ pencarian, onSukses, penandaSegar }: PenggunaPageProps) {
+/** /admin/users — tambah/ubah di halaman sendiri, detail sebagai modal. */
+export function PenggunaPage() {
+  const { pencarian, sukses: onSukses, penandaSegar } = useAplikasi()
   const { pengguna: saya } = useAuth()
   const [peran, setPeran] = useState<Peran | ''>('')
   const [status, setStatus] = useState<'active' | 'inactive' | ''>('')
   const [halaman, setHalaman] = useHalaman(peran, status, pencarian)
-  const [diubah, setDiubah] = useState<Pengguna | 'baru' | null>(null)
+  const [dilihat, setDilihat] = useState<number | null>(null)
   const [dihapus, setDihapus] = useState<Pengguna | null>(null)
 
   const { data, memuat, galat, muatUlang } = usePermintaan(
@@ -37,7 +44,6 @@ export function PenggunaPage({ pencarian, onSukses, penandaSegar }: PenggunaPage
   )
 
   const selesai = (pesan: string) => {
-    setDiubah(null)
     setDihapus(null)
     onSukses(pesan)
   }
@@ -49,10 +55,10 @@ export function PenggunaPage({ pencarian, onSukses, penandaSegar }: PenggunaPage
         title="Pengguna"
         description="Akun seluruh pegawai, atasan, dan tim keuangan. Setiap pegawai wajib memiliki atasan agar dapat mengajukan perjalanan."
         action={
-          <button type="button" className="btn utama" onClick={() => setDiubah('baru')}>
+          <Link className="btn utama" to="/admin/users/new">
             <Icon name="plus" size={17} />
             Tambah Pengguna
-          </button>
+          </Link>
         }
       />
 
@@ -126,9 +132,12 @@ export function PenggunaPage({ pencarian, onSukses, penandaSegar }: PenggunaPage
                           </td>
                           <td className="sel-sekunder">{waktu(u.last_login_at)}</td>
                           <td className="kanan" style={{ whiteSpace: 'nowrap' }}>
-                            <button type="button" className="btn kecil" onClick={() => setDiubah(u)}>
-                              Ubah
+                            <button type="button" className="btn kecil" onClick={() => setDilihat(u.id)}>
+                              Detail
                             </button>{' '}
+                            <Link className="btn kecil" to={`/admin/users/${u.id}/edit`}>
+                              Ubah
+                            </Link>{' '}
                             {u.id !== saya?.id && (
                               <button type="button" className="btn kecil bahaya" onClick={() => setDihapus(u)}>
                                 Hapus
@@ -147,9 +156,7 @@ export function PenggunaPage({ pencarian, onSukses, penandaSegar }: PenggunaPage
         </Muatan>
       </section>
 
-      {diubah && (
-        <ModalPengguna pengguna={diubah === 'baru' ? undefined : diubah} onTutup={() => setDiubah(null)} onSelesai={selesai} />
-      )}
+      {dilihat !== null && <ModalDetailPengguna id={dilihat} onTutup={() => setDilihat(null)} />}
 
       {dihapus && <ModalHapus pengguna={dihapus} onTutup={() => setDihapus(null)} onSelesai={selesai} />}
     </>
@@ -192,16 +199,108 @@ function ModalHapus({ pengguna, onTutup, onSelesai }: { pengguna: Pengguna; onTu
 
 const kosongJadiNull = (teks: string) => (teks.trim() === '' ? null : teks.trim())
 
+function ModalDetailPengguna({ id, onTutup }: { id: number; onTutup: () => void }) {
+  const { data, memuat, galat, muatUlang } = usePermintaan(() => apiDetailPengguna(id), [id])
+
+  const baris = (u: Pengguna): Array<[string, string]> => [
+    ['Email', u.email],
+    ['Peran', LABEL_PERAN[u.role]],
+    ['Nomor pegawai', u.employee_number ?? '—'],
+    ['Jabatan', u.position ?? '—'],
+    ['Telepon', u.phone ?? '—'],
+    ['Departemen', u.department?.name ?? '—'],
+    ['Atasan', u.supervisor?.name ?? '—'],
+    ['Jumlah bawahan', String(u.subordinates_count ?? 0)],
+    ['Rekening', u.bank_name ? `${u.bank_name} · ${u.bank_account_number ?? ''} a.n. ${u.bank_account_name ?? ''}` : '—'],
+    ['Status', u.is_active ? 'Aktif' : 'Nonaktif'],
+    ['Terakhir masuk', waktu(u.last_login_at)],
+    ['Dibuat', waktu(u.created_at)],
+  ]
+
+  return (
+    <Modal
+      judul={data?.name ?? 'Detail pengguna'}
+      keterangan={data ? LABEL_PERAN[data.role] : 'Memuat data...'}
+      onTutup={onTutup}
+      kaki={
+        <>
+          <button type="button" className="btn" onClick={onTutup}>
+            Tutup
+          </button>
+          <Link className="btn utama" to={`/admin/users/${id}/edit`}>
+            Ubah
+          </Link>
+        </>
+      }
+    >
+      <Muatan data={data} memuat={memuat} galat={galat} onCobaLagi={muatUlang} barisRangka={8}>
+        {(u) => (
+          <div style={{ display: 'grid', gap: 9 }}>
+            {baris(u).map(([label, nilai]) => (
+              <div className="pasangan" key={label}>
+                <span>{label}</span>
+                <b>{nilai}</b>
+              </div>
+            ))}
+          </div>
+        )}
+      </Muatan>
+    </Modal>
+  )
+}
+
+/** /admin/users/new dan /admin/users/:id/edit */
+export function HalamanFormPengguna() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const { sukses } = useAplikasi()
+
+  const keDaftar = () => navigate('/admin/users')
+  const selesai = (pesan: string) => {
+    sukses(pesan)
+    keDaftar()
+  }
+
+  if (id === undefined) {
+    return (
+      <SebagaiHalaman>
+        <ModalPengguna onTutup={keDaftar} onSelesai={selesai} />
+      </SebagaiHalaman>
+    )
+  }
+
+  const angka = Number(id)
+  if (!Number.isInteger(angka) || angka <= 0) return <HalamanGalat kode={404} />
+  return <FormUbahPengguna key={angka} id={angka} onTutup={keDaftar} onSelesai={selesai} />
+}
+
+function FormUbahPengguna({ id, onTutup, onSelesai }: { id: number; onTutup: () => void; onSelesai: (pesan: string) => void }) {
+  const { data, memuat, galat, muatUlang } = usePermintaan(() => apiFormUbahPengguna(id), [id])
+
+  return (
+    <Muatan data={data} memuat={memuat} galat={galat} onCobaLagi={muatUlang} barisRangka={8}>
+      {(isi) => (
+        <SebagaiHalaman>
+          <ModalPengguna pengguna={isi.user} opsiAwal={isi.options} onTutup={onTutup} onSelesai={onSelesai} />
+        </SebagaiHalaman>
+      )}
+    </Muatan>
+  )
+}
+
 function ModalPengguna({
   pengguna,
+  opsiAwal,
   onTutup,
   onSelesai,
 }: {
   pengguna?: Pengguna
+  /** Opsi dari GET /admin/users/{id}/edit; bila kosong diambil dari GET /admin/users/create. */
+  opsiAwal?: OpsiFormPengguna
   onTutup: () => void
   onSelesai: (pesan: string) => void
 }) {
-  const opsi = usePermintaan(() => apiOpsiPengguna(), [])
+  const opsi = usePermintaan(() => (opsiAwal ? Promise.resolve(opsiAwal) : apiOpsiPengguna()), [])
   const { mengirim, galat, galatKolom, jalankan } = useKirim()
   const modeUbah = pengguna !== undefined
 

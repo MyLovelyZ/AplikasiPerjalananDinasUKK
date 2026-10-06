@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router'
+
 import {
   apiDashboardAdmin,
   apiDashboardAtasan,
@@ -16,14 +18,12 @@ import { DaftarPerjalanan, DaftarStatus } from '@/features/dashboard/components/
 import { GrafikBatang } from '@/features/dashboard/components/GrafikBatang'
 import { PanelSerapan } from '@/features/dashboard/components/PanelSerapan'
 import { usePermintaan } from '@/hooks/usePermintaan'
+import { useAplikasi } from '@/layouts/konteksAplikasi'
 import { rentangTanggal, rupiah, rupiahRingkas, sejak } from '@/utils/format'
-import type { PageKey } from '@/types/navigation'
 
 interface DashboardPageProps {
-  onNavigate: (halaman: PageKey) => void
-  onBukaPerjalanan: (id: number) => void
-  onBuatPerjalanan: () => void
-  onBukaLaporan: (perjalananId: number) => void
+  /** Pindah ke rute lain, mis. `/employee/requests`. */
+  buka: (jalur: string) => void
   penandaSegar: number
 }
 
@@ -34,9 +34,14 @@ const SAPAAN: Record<string, string> = {
   super_admin: 'Kelola akun, departemen, dan pantau aktivitas seluruh sistem.',
 }
 
-export function DashboardPage(props: DashboardPageProps) {
+/** /employee · /supervisor · /finance · /admin — isi mengikuti peran. */
+export function DashboardPage() {
   const { pengguna } = useAuth()
+  const { penandaSegar } = useAplikasi()
+  const navigate = useNavigate()
   if (!pengguna) return null
+
+  const props: DashboardPageProps = { buka: (jalur) => navigate(jalur), penandaSegar }
 
   const namaDepan = pengguna.name.split(' ')[0]
 
@@ -51,11 +56,11 @@ export function DashboardPage(props: DashboardPageProps) {
 
         {pengguna.role === 'employee' && (
           <div className="hero-aksi">
-            <button type="button" className="btn" onClick={props.onBuatPerjalanan}>
+            <button type="button" className="btn" onClick={() => props.buka('/employee/requests/new')}>
               <Icon name="plus" size={17} />
               Ajukan Perjalanan
             </button>
-            <button type="button" className="btn tembus" onClick={() => props.onNavigate('Perjalanan Saya')}>
+            <button type="button" className="btn tembus" onClick={() => props.buka('/employee/requests')}>
               Lihat Perjalanan
               <Icon name="arrow" size={17} />
             </button>
@@ -71,9 +76,9 @@ export function DashboardPage(props: DashboardPageProps) {
   )
 }
 
-function DashboardPegawai({ onNavigate, onBukaPerjalanan, onBukaLaporan, penandaSegar }: DashboardPageProps) {
+function DashboardPegawai({ buka: pindah, penandaSegar }: DashboardPageProps) {
   const { data, memuat, galat, muatUlang } = usePermintaan(() => apiDashboardPegawai(), [penandaSegar])
-  const buka = (p: Perjalanan) => onBukaPerjalanan(p.id)
+  const buka = (p: Perjalanan) => pindah(`/employee/requests/${p.id}`)
 
   return (
     <Muatan data={data} memuat={memuat} galat={galat} onCobaLagi={muatUlang} barisRangka={6}>
@@ -120,15 +125,15 @@ function DashboardPegawai({ onNavigate, onBukaPerjalanan, onBukaLaporan, penanda
                   title="Laporan Perlu Diisi"
                   subtitle="Perjalanan selesai yang laporannya belum diajukan"
                   action={
-                    <button type="button" className="btn-tautan" onClick={() => onNavigate('Laporan Biaya')}>
-                      Laporan biaya
+                    <button type="button" className="btn-tautan" onClick={() => pindah('/employee/requests?status=approved')}>
+                      Perjalanan disetujui
                       <Icon name="chevron" size={14} />
                     </button>
                   }
                 />
                 <DaftarPerjalanan
                   daftar={d.expense_reports_due}
-                  onBuka={(p) => onBukaLaporan(p.id)}
+                  onBuka={(p) => pindah(`/employee/requests/${p.id}/expenses`)}
                   kosong={{ ikon: 'check', judul: 'Tidak ada tunggakan', pesan: 'Semua laporan biaya sudah diajukan.' }}
                 />
               </section>
@@ -149,7 +154,7 @@ function DashboardPegawai({ onNavigate, onBukaPerjalanan, onBukaLaporan, penanda
                   title="Pengajuan Terbaru"
                   subtitle="Lima pengajuan terakhir Anda"
                   action={
-                    <button type="button" className="btn-tautan" onClick={() => onNavigate('Perjalanan Saya')}>
+                    <button type="button" className="btn-tautan" onClick={() => pindah('/employee/requests')}>
                       Lihat semua
                       <Icon name="chevron" size={14} />
                     </button>
@@ -188,7 +193,7 @@ function DashboardPegawai({ onNavigate, onBukaPerjalanan, onBukaLaporan, penanda
   )
 }
 
-function DashboardAtasan({ onNavigate, onBukaPerjalanan, penandaSegar }: DashboardPageProps) {
+function DashboardAtasan({ buka, penandaSegar }: DashboardPageProps) {
   const { data, memuat, galat, muatUlang } = usePermintaan(() => apiDashboardAtasan(), [penandaSegar])
 
   return (
@@ -220,7 +225,7 @@ function DashboardAtasan({ onNavigate, onBukaPerjalanan, penandaSegar }: Dashboa
                 title="Antrean Terlama"
                 subtitle="Pengajuan yang paling lama menunggu Anda"
                 action={
-                  <button type="button" className="btn-tautan" onClick={() => onNavigate('Persetujuan')}>
+                  <button type="button" className="btn-tautan" onClick={() => buka('/supervisor/approvals')}>
                     Buka antrean
                     <Icon name="chevron" size={14} />
                   </button>
@@ -228,7 +233,7 @@ function DashboardAtasan({ onNavigate, onBukaPerjalanan, penandaSegar }: Dashboa
               />
               <DaftarPerjalanan
                 daftar={d.oldest_pending}
-                onBuka={(p) => onBukaPerjalanan(p.id)}
+                onBuka={(p) => buka(`/supervisor/approvals/${p.id}`)}
                 denganPemohon
                 kosong={{ ikon: 'check', judul: 'Antrean kosong', pesan: 'Tidak ada pengajuan yang menunggu.' }}
               />
@@ -238,7 +243,7 @@ function DashboardAtasan({ onNavigate, onBukaPerjalanan, penandaSegar }: Dashboa
               <PanelHeader title="Sedang Bertugas Hari Ini" subtitle="Anggota tim dalam perjalanan dinas" />
               <DaftarPerjalanan
                 daftar={d.team.on_trip_today}
-                onBuka={(p) => onBukaPerjalanan(p.id)}
+                onBuka={(p) => buka(`/supervisor/approvals/${p.id}`)}
                 denganPemohon
                 kosong={{ ikon: 'plane', judul: 'Tidak ada', pesan: 'Tidak ada anggota tim yang sedang bertugas.' }}
               />
@@ -255,7 +260,7 @@ function DashboardAtasan({ onNavigate, onBukaPerjalanan, penandaSegar }: Dashboa
   )
 }
 
-function DashboardKeuangan({ onNavigate, penandaSegar }: DashboardPageProps) {
+function DashboardKeuangan({ buka, penandaSegar }: DashboardPageProps) {
   const { data, memuat, galat, muatUlang } = usePermintaan(() => apiDashboardKeuangan(), [penandaSegar])
 
   return (
@@ -333,7 +338,7 @@ function DashboardKeuangan({ onNavigate, penandaSegar }: DashboardPageProps) {
                   title="Pencairan Terlama"
                   subtitle="Dana yang paling lama menunggu dibayar"
                   action={
-                    <button type="button" className="btn-tautan" onClick={() => onNavigate('Pencairan')}>
+                    <button type="button" className="btn-tautan" onClick={() => buka('/finance/disbursements')}>
                       Buka pencairan
                       <Icon name="chevron" size={14} />
                     </button>
@@ -366,7 +371,7 @@ function DashboardKeuangan({ onNavigate, penandaSegar }: DashboardPageProps) {
   )
 }
 
-function DashboardAdmin({ onNavigate, penandaSegar }: DashboardPageProps) {
+function DashboardAdmin({ buka, penandaSegar }: DashboardPageProps) {
   const { data, memuat, galat, muatUlang } = usePermintaan(() => apiDashboardAdmin(), [penandaSegar])
 
   return (
@@ -392,7 +397,7 @@ function DashboardAdmin({ onNavigate, penandaSegar }: DashboardPageProps) {
                 title="Pengguna per Peran"
                 subtitle="Seluruh akun terdaftar"
                 action={
-                  <button type="button" className="btn-tautan" onClick={() => onNavigate('Pengguna')}>
+                  <button type="button" className="btn-tautan" onClick={() => buka('/admin/users')}>
                     Kelola
                     <Icon name="chevron" size={14} />
                   </button>
@@ -421,7 +426,7 @@ function DashboardAdmin({ onNavigate, penandaSegar }: DashboardPageProps) {
               title="Aktivitas Terbaru"
               subtitle="Sepuluh catatan audit terakhir"
               action={
-                <button type="button" className="btn-tautan" onClick={() => onNavigate('Log Audit')}>
+                <button type="button" className="btn-tautan" onClick={() => buka('/admin/audit-logs')}>
                   Log audit
                   <Icon name="chevron" size={14} />
                 </button>

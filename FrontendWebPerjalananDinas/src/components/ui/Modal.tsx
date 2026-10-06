@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { createContext, useContext, useEffect } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 
 import { Icon } from '@/components/ui/Icon'
@@ -16,14 +16,28 @@ interface ModalProps {
   children: ReactNode
 }
 
+/**
+ * Bila bernilai true, `Modal` digambar sebagai halaman penuh (punya URL sendiri)
+ * alih-alih jendela melayang. Modal yang dibuka dari dalam halaman itu tetap
+ * melayang karena konteksnya dikembalikan ke false.
+ */
+const KonteksLembar = createContext(false)
+
+export function SebagaiHalaman({ children }: { children: ReactNode }) {
+  return <KonteksLembar.Provider value>{children}</KonteksLembar.Provider>
+}
+
 export function Modal({ judul, keterangan, ukuran, onTutup, onKirim, sisipan, kaki, children }: ModalProps) {
+  const halaman = useContext(KonteksLembar)
+
   useEffect(() => {
+    if (halaman) return
     const tekanEscape = (peristiwa: KeyboardEvent) => {
       if (peristiwa.key === 'Escape') onTutup()
     }
     document.addEventListener('keydown', tekanEscape)
     return () => document.removeEventListener('keydown', tekanEscape)
-  }, [onTutup])
+  }, [onTutup, halaman])
 
   const isi = (
     <>
@@ -32,28 +46,50 @@ export function Modal({ judul, keterangan, ukuran, onTutup, onKirim, sisipan, ka
     </>
   )
 
+  const kepala = (
+    <div className="modal-head">
+      {halaman && (
+        <button type="button" className="tombol-kembali" onClick={onTutup} aria-label="Kembali">
+          <Icon name="chevron" size={16} />
+        </button>
+      )}
+      <div>
+        <h2>{judul}</h2>
+        {keterangan && <p>{keterangan}</p>}
+      </div>
+      {!halaman && (
+        <button type="button" className="tombol-tutup" onClick={onTutup} aria-label="Tutup">
+          ×
+        </button>
+      )}
+    </div>
+  )
+
+  const badan = onKirim ? (
+    <form onSubmit={onKirim} style={{ display: 'contents' }}>
+      {isi}
+    </form>
+  ) : (
+    isi
+  )
+
+  if (halaman) {
+    return (
+      <section className="modal lembar" aria-label={judul}>
+        {kepala}
+        {sisipan}
+        <KonteksLembar.Provider value={false}>{badan}</KonteksLembar.Provider>
+      </section>
+    )
+  }
+
   return (
     <div className="lapisan-modal" role="dialog" aria-modal="true" aria-label={judul}>
       <div className={`modal ${ukuran ?? ''}`}>
-        <div className="modal-head">
-          <div>
-            <h2>{judul}</h2>
-            {keterangan && <p>{keterangan}</p>}
-          </div>
-          <button type="button" className="tombol-tutup" onClick={onTutup} aria-label="Tutup">
-            ×
-          </button>
-        </div>
+        {kepala}
 
         {sisipan}
-
-        {onKirim ? (
-          <form onSubmit={onKirim} style={{ display: 'contents' }}>
-            {isi}
-          </form>
-        ) : (
-          isi
-        )}
+        {badan}
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 
 import { apiAntreanAtasan } from '@/api/endpoint'
 import type { FilterPersetujuan } from '@/api/endpoint'
@@ -12,13 +13,7 @@ import { ModalKeputusan } from '@/features/approvals/components/ModalKeputusan'
 import type { Keputusan } from '@/features/approvals/components/ModalKeputusan'
 import { useHalaman } from '@/hooks/useHalaman'
 import { usePermintaan } from '@/hooks/usePermintaan'
-
-interface ApprovalsPageProps {
-  pencarian: string
-  onSukses: (pesan: string) => void
-  onBukaPerjalanan: (id: number) => void
-  penandaSegar: number
-}
+import { useAplikasi } from '@/layouts/konteksAplikasi'
 
 const TAB: Array<{ nilai: FilterPersetujuan; label: string }> = [
   { nilai: 'pending', label: 'Menunggu keputusan' },
@@ -26,7 +21,10 @@ const TAB: Array<{ nilai: FilterPersetujuan; label: string }> = [
   { nilai: 'all', label: 'Semua pengajuan tim' },
 ]
 
-export function ApprovalsPage({ pencarian, onSukses, onBukaPerjalanan, penandaSegar }: ApprovalsPageProps) {
+/** /supervisor/approvals — rincian lengkap di /supervisor/approvals/:id. */
+export function ApprovalsPage() {
+  const { pencarian, sukses: onSukses, penandaSegar } = useAplikasi()
+  const navigate = useNavigate()
   const [tab, setTab] = useState<FilterPersetujuan>('pending')
   const [halaman, setHalaman] = useHalaman(tab, pencarian)
   const [keputusan, setKeputusan] = useState<{ perjalanan: Perjalanan; jenis: Keputusan } | null>(null)
@@ -88,7 +86,7 @@ export function ApprovalsPage({ pencarian, onSukses, onBukaPerjalanan, penandaSe
                     <KartuPersetujuan
                       key={p.id}
                       perjalanan={p}
-                      onLihatDetail={() => onBukaPerjalanan(p.id)}
+                      onLihatDetail={() => navigate(`/supervisor/approvals/${p.id}`)}
                       onPutuskan={
                         p.status === 'submitted' && tab === 'pending'
                           ? (jenis) => setKeputusan({ perjalanan: p, jenis })

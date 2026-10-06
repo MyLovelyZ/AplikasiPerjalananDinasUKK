@@ -1,23 +1,24 @@
+import { NavLink } from 'react-router'
+
 import { Icon } from '@/components/ui/Icon'
 import { APP_COPYRIGHT, APP_TAGLINE, APP_VERSION } from '@/constants/app'
 import { LABEL_PERAN } from '@/constants/label'
-import { HALAMAN_ANTREAN, NAV_ITEMS, PROFILE_PAGE } from '@/constants/navigation'
+import { BERANDA_PERAN, MENU_PERAN, MENU_PROFIL } from '@/constants/navigation'
 import { useAuth } from '@/auth/useAuth'
 import { inisial } from '@/utils/format'
-import type { PageKey } from '@/types/navigation'
 
 interface SidebarProps {
-  activePage: PageKey
-  onNavigate: (page: PageKey) => void
   onSignOut: () => void
   jumlahAntrean: number
   terbuka: boolean
 }
 
-export function Sidebar({ activePage, onNavigate, onSignOut, jumlahAntrean, terbuka }: SidebarProps) {
-  const { pengguna, berperan } = useAuth()
+const kelasAktif = ({ isActive }: { isActive: boolean }) => (isActive ? 'active' : '')
 
-  const menuTampil = NAV_ITEMS.filter((item) => berperan(...item.peran))
+export function Sidebar({ onSignOut, jumlahAntrean, terbuka }: SidebarProps) {
+  const { pengguna } = useAuth()
+
+  const menuTampil = pengguna ? MENU_PERAN[pengguna.role] : []
   const nama = pengguna?.name ?? 'Pengguna'
 
   return (
@@ -47,31 +48,21 @@ export function Sidebar({ activePage, onNavigate, onSignOut, jumlahAntrean, terb
 
       <nav>
         <div className="nav-label">Menu</div>
-        {menuTampil.map(({ key, icon }) => (
-          <button
-            key={key}
-            type="button"
-            className={activePage === key ? 'active' : ''}
-            aria-current={activePage === key ? 'page' : undefined}
-            onClick={() => onNavigate(key)}
-          >
+        {menuTampil.map(({ label, jalur, icon, antrean }) => (
+          // Dashboard (= beranda peran) hanya aktif pada URL persisnya.
+          <NavLink key={jalur} to={jalur} end={pengguna !== null && jalur === BERANDA_PERAN[pengguna.role]} className={kelasAktif}>
             <Icon name={icon} />
-            <span>{key}</span>
-            {HALAMAN_ANTREAN.includes(key) && jumlahAntrean > 0 && <em>{jumlahAntrean}</em>}
-          </button>
+            <span>{label}</span>
+            {antrean && jumlahAntrean > 0 && <em>{jumlahAntrean}</em>}
+          </NavLink>
         ))}
       </nav>
 
       <div className="nav-bottom">
-        <button
-          type="button"
-          className={activePage === PROFILE_PAGE ? 'active' : ''}
-          aria-current={activePage === PROFILE_PAGE ? 'page' : undefined}
-          onClick={() => onNavigate(PROFILE_PAGE)}
-        >
-          <Icon name="pengguna" />
-          <span>{PROFILE_PAGE}</span>
-        </button>
+        <NavLink to={MENU_PROFIL.jalur} className={kelasAktif}>
+          <Icon name={MENU_PROFIL.icon} />
+          <span>{MENU_PROFIL.label}</span>
+        </NavLink>
         <button type="button" className="keluar" onClick={onSignOut}>
           <Icon name="logout" />
           <span>Keluar</span>

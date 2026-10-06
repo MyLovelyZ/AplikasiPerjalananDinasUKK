@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router'
 
 import App from '@/App'
 import { PenyediaAuth } from '@/auth/AuthContext'
@@ -13,8 +14,10 @@ if (!container) {
 
 createRoot(container).render(
   <StrictMode>
-    <PenyediaAuth>
-      <App />
-    </PenyediaAuth>
+    <BrowserRouter>
+      <PenyediaAuth>
+        <App />
+      </PenyediaAuth>
+    </BrowserRouter>
   </StrictMode>,
 )

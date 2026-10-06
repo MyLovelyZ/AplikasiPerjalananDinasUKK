@@ -8,9 +8,12 @@ import { PanelHeader } from '@/components/ui/PanelHeader'
 import { LABEL_PERAN } from '@/constants/label'
 import { useAuth } from '@/auth/useAuth'
 import { useKirim } from '@/hooks/useKirim'
+import { useAplikasi } from '@/layouts/konteksAplikasi'
 import { inisial, waktu } from '@/utils/format'
 
-export function ProfilPage({ onSukses }: { onSukses: (pesan: string) => void }) {
+/** /profile — terbuka untuk keempat peran. */
+export function ProfilPage() {
+  const { sukses: onSukses } = useAplikasi()
   const { pengguna, perbaruiPengguna } = useAuth()
 
   const [nama, setNama] = useState(pengguna?.name ?? '')

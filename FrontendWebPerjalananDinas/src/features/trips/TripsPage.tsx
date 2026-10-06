@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Link, useSearchParams } from 'react-router'
 
 import { apiDaftarPerjalanan } from '@/api/endpoint'
 import type { StatusPerjalanan } from '@/api/tipe'
@@ -10,22 +10,34 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { RUPA_STATUS_PERJALANAN } from '@/constants/label'
 import { useHalaman } from '@/hooks/useHalaman'
 import { usePermintaan } from '@/hooks/usePermintaan'
+import { useAplikasi } from '@/layouts/konteksAplikasi'
 import { rentangTanggal, rupiah } from '@/utils/format'
 
-interface TripsPageProps {
-  pencarian: string
-  onBuatPerjalanan: () => void
-  onBukaPerjalanan: (id: number) => void
-  penandaSegar: number
-}
+const TAHUN_INI = new Date().getFullYear()
+const PILIHAN_TAHUN = [TAHUN_INI + 1, TAHUN_INI, TAHUN_INI - 1, TAHUN_INI - 2]
 
-export function TripsPage({ pencarian, onBuatPerjalanan, onBukaPerjalanan, penandaSegar }: TripsPageProps) {
-  const [status, setStatus] = useState<StatusPerjalanan | ''>('')
-  const [halaman, setHalaman] = useHalaman(status, pencarian)
+/** /employee/requests — penyaring status dan tahun disimpan di URL (?status=&year=). */
+export function TripsPage() {
+  const { pencarian, penandaSegar } = useAplikasi()
+  const [params, setParams] = useSearchParams()
+  const status = (params.get('status') ?? '') as StatusPerjalanan | ''
+  const tahun = Number(params.get('year')) || undefined
+  const [halaman, setHalaman] = useHalaman(status, tahun, pencarian)
+
+  const ubahPenyaring = (kunci: 'status' | 'year', nilai: string) =>
+    setParams(
+      (lama) => {
+        const baru = new URLSearchParams(lama)
+        if (nilai) baru.set(kunci, nilai)
+        else baru.delete(kunci)
+        return baru
+      },
+      { replace: true },
+    )
 
   const { data, memuat, galat, muatUlang } = usePermintaan(
-    () => apiDaftarPerjalanan({ page: halaman, per_page: 12, status, search: pencarian }),
-    [halaman, status, pencarian, penandaSegar],
+    () => apiDaftarPerjalanan({ page: halaman, per_page: 12, status, year: tahun, search: pencarian }),
+    [halaman, status, tahun, pencarian, penandaSegar],
   )
 
   return (
@@ -35,10 +47,10 @@ export function TripsPage({ pencarian, onBuatPerjalanan, onBukaPerjalanan, penan
         title="Perjalanan Saya"
         description="Riwayat pengajuan perjalanan dinas Anda beserta status terkininya."
         action={
-          <button type="button" className="btn utama" onClick={onBuatPerjalanan}>
+          <Link className="btn utama" to="/employee/requests/new">
             <Icon name="plus" size={17} />
             Ajukan Perjalanan
-          </button>
+          </Link>
         }
       />
 
@@ -46,13 +58,26 @@ export function TripsPage({ pencarian, onBuatPerjalanan, onBukaPerjalanan, penan
         <div className="bilah-alat">
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value as StatusPerjalanan | '')}
+            onChange={(e) => ubahPenyaring('status', e.target.value)}
             aria-label="Saring berdasarkan status"
           >
             <option value="">Semua status</option>
             {Object.entries(RUPA_STATUS_PERJALANAN).map(([nilai, rupa]) => (
               <option key={nilai} value={nilai}>
                 {rupa.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={tahun ?? ''}
+            onChange={(e) => ubahPenyaring('year', e.target.value)}
+            aria-label="Saring berdasarkan tahun keberangkatan"
+          >
+            <option value="">Semua tahun</option>
+            {PILIHAN_TAHUN.map((t) => (
+              <option key={t} value={t}>
+                {t}
               </option>
             ))}
           </select>
@@ -72,16 +97,16 @@ export function TripsPage({ pencarian, onBuatPerjalanan, onBukaPerjalanan, penan
                 ikon="plane"
                 judul="Tidak ada perjalanan"
                 pesan={
-                  pencarian || status
+                  pencarian || status || tahun
                     ? 'Tidak ada data yang cocok dengan penyaring saat ini.'
                     : 'Belum ada pengajuan perjalanan dinas. Mulai dengan membuat pengajuan baru.'
                 }
                 aksi={
-                  !pencarian && !status ? (
-                    <button type="button" className="btn kecil utama" onClick={onBuatPerjalanan}>
+                  !pencarian && !status && !tahun ? (
+                    <Link className="btn kecil utama" to="/employee/requests/new">
                       <Icon name="plus" size={15} />
                       Ajukan sekarang
-                    </button>
+                    </Link>
                   ) : undefined
                 }
               />
@@ -116,9 +141,9 @@ export function TripsPage({ pencarian, onBuatPerjalanan, onBukaPerjalanan, penan
                             <StatusBadge {...RUPA_STATUS_PERJALANAN[p.status]} />
                           </td>
                           <td className="kanan">
-                            <button type="button" className="btn kecil" onClick={() => onBukaPerjalanan(p.id)}>
+                            <Link className="btn kecil" to={`/employee/requests/${p.id}`}>
                               Detail
-                            </button>
+                            </Link>
                           </td>
                         </tr>
                       ))}

@@ -12,18 +12,16 @@ import { NAMA_BULAN } from '@/constants/label'
 import { useHalaman } from '@/hooks/useHalaman'
 import { useKirim } from '@/hooks/useKirim'
 import { usePermintaan } from '@/hooks/usePermintaan'
+import { useAplikasi } from '@/layouts/konteksAplikasi'
 import { rupiah, rupiahRingkas } from '@/utils/format'
-
-interface AnggaranPageProps {
-  onSukses: (pesan: string) => void
-  penandaSegar: number
-}
 
 const TAHUN_INI = new Date().getFullYear()
 
 const kelasBilah = (persen: number) => (persen >= 100 ? 'lewat' : persen >= 80 ? 'penuh' : '')
 
-export function AnggaranPage({ onSukses, penandaSegar }: AnggaranPageProps) {
+/** /finance/budgets */
+export function AnggaranPage() {
+  const { sukses: onSukses, penandaSegar } = useAplikasi()
   const [tahun, setTahun] = useState(TAHUN_INI)
   const [halaman, setHalaman] = useHalaman(tahun)
   const [formTerbuka, setFormTerbuka] = useState(false)

@@ -39,16 +39,24 @@ Akun hasil seeder (kata sandi semuanya `password`):
 | `npm run lint`      | ESLint untuk seluruh berkas `.ts` / `.tsx`  |
 | `npm run preview`   | Menjalankan hasil build dari folder `dist/` |
 
-## Alur & menu per peran
+## Peran & rute
 
-| Peran       | Menu                                                     |
-| ----------- | -------------------------------------------------------- |
-| Pegawai     | Dashboard, Perjalanan Saya, Laporan Biaya                |
-| Atasan      | Dashboard, Persetujuan                                   |
-| Keuangan    | Dashboard, Verifikasi, Pencairan, Anggaran, Laporan Keuangan |
-| Super Admin | Dashboard, Pengguna, Departemen, Log Audit               |
+Aplikasi hanya mengenal empat peran tetap (enum `App\Enums\Role` di backend).
+Setiap peran punya awalan URL yang sama dengan prefiks API-nya — lihat
+`../endpointAPI.md`. Membuka URL milik peran lain menampilkan halaman 403,
+alamat yang tidak ada menampilkan 404.
 
-Semua peran juga memiliki halaman **Profil** (ubah nama, telepon, foto, kata sandi).
+| Peran       | Rute                                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------------------ |
+| Semua       | `/login`, `/profile`                                                                                   |
+| Pegawai     | `/employee`, `/employee/requests`, `/employee/requests/new`, `/employee/requests/:id`, `/:id/edit`, `/:id/expenses` |
+| Atasan      | `/supervisor`, `/supervisor/approvals`, `/supervisor/approvals/:id`                                    |
+| Keuangan    | `/finance`, `/finance/approvals?stage=finance\|expense_report`, `/finance/approvals/:id`, `/finance/budgets`, `/finance/disbursements`, `/finance/reports` |
+| Super Admin | `/admin`, `/admin/users`, `/admin/users/new`, `/admin/users/:id/edit`, `/admin/departments`, `/admin/audit-logs` |
+
+Peta rute ada di `src/App.tsx`, menu sidebar di `src/constants/navigation.ts`.
+Saat di-deploy, server web perlu mengarahkan semua jalur yang tidak dikenal ke
+`index.html` (fallback SPA).
 
 1. Pegawai menyimpan pengajuan sebagai draf atau langsung mengajukannya ke atasan.
 2. Atasan menyetujui (diteruskan ke Keuangan) atau menolak dengan alasan.
@@ -63,7 +71,7 @@ Semua peran juga memiliki halaman **Profil** (ubah nama, telepon, foto, kata san
 
 ```
 src/
-├── App.tsx            # State lintas halaman, pemilihan halaman, modal global
+├── App.tsx            # Peta rute per peran (react-router) + penjaga login/peran
 ├── api/
 │   ├── klien.ts       #   fetch + token Bearer + galat validasi 422 + unduh berkas
 │   ├── endpoint.ts    #   seluruh endpoint backend di satu tempat
@@ -73,11 +81,11 @@ src/
 ├── components/ui/     # Komponen pakai-ulang: Modal, Paginasi, StatCard, Keadaan, ...
 ├── features/
 │   ├── dashboard/     #   satu dashboard per peran
-│   ├── trips/         #   daftar, formulir, dan detail perjalanan (+ panel keputusan)
-│   ├── reports/       #   laporan biaya pegawai
+│   ├── trips/         #   daftar, formulir, detail, dan laporan biaya (LPJ) perjalanan
 │   ├── approvals/     #   antrean persetujuan atasan
 │   ├── finance/       #   verifikasi, pencairan, anggaran, laporan keuangan
 │   ├── admin/         #   pengguna, departemen, log audit
+│   ├── errors/        #   halaman 403 / 404
 │   └── profile/
 ├── constants/         # Label Indonesia untuk enum backend, menu navigasi
 ├── hooks/             # usePermintaan, useKirim, useHalaman, useToast

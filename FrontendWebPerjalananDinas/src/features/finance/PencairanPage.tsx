@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { useNavigate } from 'react-router'
 
 import { apiBayarPencairan, apiDaftarPencairan } from '@/api/endpoint'
 import type { JenisPencairan, MetodeBayar, Pencairan, StatusPencairan } from '@/api/tipe'
@@ -18,16 +19,13 @@ import {
 import { useHalaman } from '@/hooks/useHalaman'
 import { useKirim } from '@/hooks/useKirim'
 import { usePermintaan } from '@/hooks/usePermintaan'
+import { useAplikasi } from '@/layouts/konteksAplikasi'
 import { hariIni, rupiah, tanggal } from '@/utils/format'
 
-interface PencairanPageProps {
-  pencarian: string
-  onSukses: (pesan: string) => void
-  onBukaPerjalanan: (id: number) => void
-  penandaSegar: number
-}
-
-export function PencairanPage({ pencarian, onSukses, onBukaPerjalanan, penandaSegar }: PencairanPageProps) {
+/** /finance/disbursements */
+export function PencairanPage() {
+  const { pencarian, sukses: onSukses, penandaSegar } = useAplikasi()
+  const navigate = useNavigate()
   const [status, setStatus] = useState<StatusPencairan | ''>('pending')
   const [jenis, setJenis] = useState<JenisPencairan | ''>('')
   const [halaman, setHalaman] = useHalaman(status, jenis, pencarian)
@@ -97,7 +95,7 @@ export function PencairanPage({ pencarian, onSukses, onBukaPerjalanan, penandaSe
                             <button
                               type="button"
                               className="btn-tautan angka"
-                              onClick={() => onBukaPerjalanan(d.travel_request_id)}
+                              onClick={() => navigate(`/finance/approvals/${d.travel_request_id}`)}
                             >
                               {d.travel_request?.request_number ?? `#${d.travel_request_id}`}
                             </button>

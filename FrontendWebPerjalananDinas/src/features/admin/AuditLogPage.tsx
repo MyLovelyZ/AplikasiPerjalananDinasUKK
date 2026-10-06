@@ -8,9 +8,12 @@ import { Paginasi } from '@/components/ui/Paginasi'
 import { LABEL_AKSI_AUDIT } from '@/constants/label'
 import { useHalaman } from '@/hooks/useHalaman'
 import { usePermintaan } from '@/hooks/usePermintaan'
+import { useAplikasi } from '@/layouts/konteksAplikasi'
 import { waktu } from '@/utils/format'
 
-export function AuditLogPage({ pencarian }: { pencarian: string }) {
+/** /admin/audit-logs */
+export function AuditLogPage() {
+  const { pencarian } = useAplikasi()
   const [aksi, setAksi] = useState('')
   const [dari, setDari] = useState('')
   const [sampai, setSampai] = useState('')

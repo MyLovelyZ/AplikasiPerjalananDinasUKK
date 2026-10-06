@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Link, useSearchParams } from 'react-router'
 
 import { apiAntreanKeuangan } from '@/api/endpoint'
 import type { TahapKeuangan } from '@/api/endpoint'
@@ -10,22 +10,20 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { LABEL_TAHAP } from '@/constants/label'
 import { useHalaman } from '@/hooks/useHalaman'
 import { usePermintaan } from '@/hooks/usePermintaan'
+import { useAplikasi } from '@/layouts/konteksAplikasi'
 import { rentangTanggal, rupiah } from '@/utils/format'
 
-interface VerifikasiPageProps {
-  pencarian: string
-  onBukaPerjalanan: (id: number) => void
-  penandaSegar: number
-}
-
-const TAB: Array<{ nilai: TahapKeuangan | ''; label: string }> = [
-  { nilai: '', label: 'Semua antrean' },
-  { nilai: 'finance', label: 'Verifikasi anggaran' },
-  { nilai: 'expense_report', label: 'Verifikasi laporan biaya' },
+const TAB: Array<{ nilai: TahapKeuangan; label: string }> = [
+  { nilai: 'finance', label: 'Cek anggaran' },
+  { nilai: 'expense_report', label: 'Laporan biaya' },
 ]
 
-export function VerifikasiPage({ pencarian, onBukaPerjalanan, penandaSegar }: VerifikasiPageProps) {
-  const [tahap, setTahap] = useState<TahapKeuangan | ''>('')
+/** /finance/approvals?stage=finance|expense_report */
+export function VerifikasiPage() {
+  const { pencarian, penandaSegar } = useAplikasi()
+  const [params, setParams] = useSearchParams()
+  const tahap: TahapKeuangan = params.get('stage') === 'expense_report' ? 'expense_report' : 'finance'
+  const setTahap = (nilai: TahapKeuangan) => setParams({ stage: nilai }, { replace: true })
   const [halaman, setHalaman] = useHalaman(tahap, pencarian)
 
   const { data, memuat, galat, muatUlang } = usePermintaan(
@@ -108,9 +106,9 @@ export function VerifikasiPage({ pencarian, onBukaPerjalanan, penandaSegar }: Ve
                             )}
                           </td>
                           <td className="kanan">
-                            <button type="button" className="btn kecil utama" onClick={() => onBukaPerjalanan(p.id)}>
+                            <Link className="btn kecil utama" to={`/finance/approvals/${p.id}`}>
                               Periksa
-                            </button>
+                            </Link>
                           </td>
                         </tr>
                       ))}

@@ -544,6 +544,42 @@ table.tabel .kanan {
   color: var(--redup);
 }
 
+/* Modal yang digambar sebagai halaman penuh (rute detail/formulir). */
+.modal.lembar {
+  width: 100%;
+  max-height: none;
+  box-shadow: none;
+  border: 1px solid var(--garis);
+}
+
+.modal.lembar .modal-head {
+  justify-content: flex-start;
+}
+
+.modal.lembar .modal-body {
+  overflow: visible;
+}
+
+.tombol-kembali {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid var(--garis);
+  border-radius: 8px;
+  background: var(--putih);
+  color: var(--tinta);
+}
+
+.tombol-kembali svg {
+  transform: rotate(180deg);
+}
+
+.tombol-kembali:hover {
+  background: var(--latar-lembut);
+}
+
 /* ── Keadaan: memuat, kosong, galat ──────────────────────────────────── */
 
 .keadaan {

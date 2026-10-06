@@ -1,19 +1,21 @@
+import { Link, useLocation } from 'react-router'
+
 import { Icon } from '@/components/ui/Icon'
+import { MENU_PROFIL, menuAktif } from '@/constants/navigation'
 import { useAuth } from '@/auth/useAuth'
 import { inisial } from '@/utils/format'
-import type { PageKey } from '@/types/navigation'
 
 interface TopbarProps {
-  activePage: PageKey
   searchQuery: string
   onSearchChange: (value: string) => void
   onBukaMenu: () => void
-  onBukaProfil: () => void
 }
 
-export function Topbar({ activePage, searchQuery, onSearchChange, onBukaMenu, onBukaProfil }: TopbarProps) {
+export function Topbar({ searchQuery, onSearchChange, onBukaMenu }: TopbarProps) {
   const { pengguna } = useAuth()
+  const { pathname } = useLocation()
   const nama = pengguna?.name ?? ''
+  const judul = pengguna ? (menuAktif(pengguna.role, pathname)?.label ?? 'Halaman') : ''
 
   return (
     <header className="topbar">
@@ -24,7 +26,7 @@ export function Topbar({ activePage, searchQuery, onSearchChange, onBukaMenu, on
       <div className="crumb">
         <span>Portal</span>
         <b>/</b>
-        <strong>{activePage}</strong>
+        <strong>{judul}</strong>
       </div>
 
       <div className="top-actions">
@@ -38,13 +40,13 @@ export function Topbar({ activePage, searchQuery, onSearchChange, onBukaMenu, on
           />
         </div>
 
-        <button type="button" className="top-avatar" title={nama} onClick={onBukaProfil}>
+        <Link to={MENU_PROFIL.jalur} className="top-avatar" title={nama}>
           {pengguna?.profile_photo_url ? (
             <img src={pengguna.profile_photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
           ) : (
             inisial(nama)
           )}
-        </button>
+        </Link>
       </div>
     </header>
   )

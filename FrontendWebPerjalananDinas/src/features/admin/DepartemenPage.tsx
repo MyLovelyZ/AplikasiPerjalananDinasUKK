@@ -10,13 +10,11 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useKirim } from '@/hooks/useKirim'
 import { usePermintaan } from '@/hooks/usePermintaan'
+import { useAplikasi } from '@/layouts/konteksAplikasi'
 
-interface DepartemenPageProps {
-  onSukses: (pesan: string) => void
-  penandaSegar: number
-}
-
-export function DepartemenPage({ onSukses, penandaSegar }: DepartemenPageProps) {
+/** /admin/departments */
+export function DepartemenPage() {
+  const { sukses: onSukses, penandaSegar } = useAplikasi()
   const [diubah, setDiubah] = useState<Departemen | 'baru' | null>(null)
   const hapus = useKirim()
   const { data, memuat, galat, muatUlang } = usePermintaan(() => apiDaftarDepartemen(), [penandaSegar])

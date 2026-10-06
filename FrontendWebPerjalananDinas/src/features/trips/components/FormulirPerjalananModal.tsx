@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 
 import { apiBuatPerjalanan, apiOpsiPerjalanan, apiUbahPerjalanan } from '@/api/endpoint'
 import type { BarisBiaya, FormulirPerjalanan } from '@/api/endpoint'
-import type { JenisDokumen, Perjalanan } from '@/api/tipe'
+import type { JenisDokumen, OpsiFormPerjalanan, Perjalanan } from '@/api/tipe'
 import { Icon } from '@/components/ui/Icon'
 import { Memuat } from '@/components/ui/Keadaan'
 import { KotakGalat, Modal, PesanKolom } from '@/components/ui/Modal'
@@ -21,6 +21,8 @@ import { hariIni, rupiah, ukuranBerkas } from '@/utils/format'
 interface FormulirPerjalananModalProps {
   /** Diisi saat mengubah pengajuan yang sudah ada. */
   perjalanan?: Perjalanan
+  /** Opsi yang sudah ikut terambil (GET .../edit); bila kosong diambil dari GET .../create. */
+  opsiAwal?: OpsiFormPerjalanan
   onTutup: () => void
   onTersimpan: (perjalanan: Perjalanan, pesan: string) => void
 }
@@ -46,8 +48,8 @@ const barisKosong = (): BarisLokal => ({
   unit_price: 0,
 })
 
-export function FormulirPerjalananModal({ perjalanan, onTutup, onTersimpan }: FormulirPerjalananModalProps) {
-  const opsi = usePermintaan(() => apiOpsiPerjalanan(), [])
+export function FormulirPerjalananModal({ perjalanan, opsiAwal, onTutup, onTersimpan }: FormulirPerjalananModalProps) {
+  const opsi = usePermintaan(() => (opsiAwal ? Promise.resolve(opsiAwal) : apiOpsiPerjalanan()), [])
   const { mengirim, galat, galatKolom, jalankan, setGalat } = useKirim()
   const modeUbah = perjalanan !== undefined
 

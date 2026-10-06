@@ -86,6 +86,10 @@ export const apiOpsiPerjalanan = () => mintaData<OpsiFormPerjalanan>('/employee/
 export const apiDetailPerjalananPegawai = (id: number) =>
   minta<DetailPerjalanan>(`/employee/requests/${id}`)
 
+/** Ditolak (422) bila pengajuan sudah tidak bisa diubah. */
+export const apiFormUbahPerjalanan = (id: number) =>
+  mintaData<{ travel_request: Perjalanan; options: OpsiFormPerjalanan }>(`/employee/requests/${id}/edit`)
+
 export interface BarisBiaya {
   category: KategoriBiaya | ''
   description: string
@@ -273,6 +277,11 @@ export const apiDaftarPengguna = (
 ) => minta<ResponsHalaman<Pengguna>>('/admin/users', { query: { per_page: 15, ...filter } })
 
 export const apiOpsiPengguna = () => mintaData<OpsiFormPengguna>('/admin/users/create')
+
+export const apiDetailPengguna = (id: number) => mintaData<Pengguna>(`/admin/users/${id}`)
+
+export const apiFormUbahPengguna = (id: number) =>
+  mintaData<{ user: Pengguna; options: OpsiFormPengguna }>(`/admin/users/${id}/edit`)
 
 export interface FormulirPengguna {
   name: string
