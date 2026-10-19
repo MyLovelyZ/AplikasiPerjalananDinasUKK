@@ -4,6 +4,7 @@ import { Outlet, useLocation } from 'react-router'
 import { apiAntreanAtasan, apiAntreanKeuangan } from '@/api/endpoint'
 import { useAuth } from '@/auth/useAuth'
 import { Toast } from '@/components/feedback/Toast'
+import { useNotifikasi } from '@/hooks/useNotifikasi'
 import { usePermintaan } from '@/hooks/usePermintaan'
 import { useToast } from '@/hooks/useToast'
 import { KonteksAplikasi } from '@/layouts/konteksAplikasi'
@@ -32,6 +33,8 @@ export function AppLayout() {
     return 0
   }, [peran, penandaSegar])
 
+  const { belumDibaca, muatUlang: segarkanNotifikasi } = useNotifikasi([pathname, penandaSegar])
+
   const sukses = useCallback(
     (teks: string) => {
       tampilkan(teks, 'sukses')
@@ -41,8 +44,8 @@ export function AppLayout() {
   )
 
   const nilai = useMemo<NilaiAplikasi>(
-    () => ({ pencarian, sukses, penandaSegar }),
-    [pencarian, sukses, penandaSegar],
+    () => ({ pencarian, sukses, penandaSegar, notifikasiBelumDibaca: belumDibaca, segarkanNotifikasi }),
+    [pencarian, sukses, penandaSegar, belumDibaca, segarkanNotifikasi],
   )
 
   return (
@@ -64,6 +67,8 @@ export function AppLayout() {
             searchQuery={pencarian}
             onSearchChange={(teks) => setCari({ jalur: pathname, teks })}
             onBukaMenu={() => setLaciTerbuka({ jalur: pathname, buka: true })}
+            jumlahBelumDibaca={belumDibaca}
+            onNotifikasiBerubah={segarkanNotifikasi}
           />
           <div className="content">
             <Outlet />

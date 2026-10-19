@@ -909,6 +909,27 @@ a.daftar-baris {
   margin-top: 3px;
 }
 
+.laci-notif-kaki {
+  display: block;
+  padding: 10px 15px;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--biru);
+  border-top: 1px solid var(--garis);
+  background: var(--putih);
+}
+
+.laci-notif-kaki:hover {
+  background: var(--biru-kabut);
+  color: var(--biru-tua);
+}
+
+/* Di halaman penuh, baris terakhir tidak perlu garis bawah ganda dengan tepi panel. */
+.daftar-notif .notif-baris:last-child {
+  border-bottom: 0;
+}
+
 .pembungkus-notif {
   position: relative;
 }

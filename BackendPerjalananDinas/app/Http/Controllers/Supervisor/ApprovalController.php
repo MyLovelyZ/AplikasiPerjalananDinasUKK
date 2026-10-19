@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Supervisor;
 use App\Enums\ApprovalDecision;
 use App\Enums\ApprovalStage;
 use App\Enums\AuditAction;
+use App\Enums\NotificationEvent;
 use App\Enums\TravelRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TravelRequestResource;
 use App\Models\AuditLog;
 use App\Models\TravelRequest;
+use App\Models\User;
+use App\Notifications\TravelRequestActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -100,6 +103,12 @@ class ApprovalController extends Controller
             ]));
         });
 
+        $extra = ['stage' => ApprovalStage::Supervisor->value, 'note' => $validated['note'] ?? null];
+        TravelRequestActivity::send($travelRequest->user, NotificationEvent::RequestSupervisorApproved, $travelRequest, $request->user(), $extra);
+        TravelRequestActivity::send(User::financeTeam(), NotificationEvent::RequestAwaitingFinance, $travelRequest, $request->user(), [
+            'stage' => ApprovalStage::Finance->value,
+        ]);
+
         return TravelRequestResource::make($travelRequest->loadDetails())->additional([
             'message' => __('Travel request approved and forwarded to finance.'),
         ]);
@@ -135,6 +144,11 @@ class ApprovalController extends Controller
                 'name' => $travelRequest->user->name,
             ]));
         });
+
+        TravelRequestActivity::send($travelRequest->user, NotificationEvent::RequestRejected, $travelRequest, $request->user(), [
+            'stage' => ApprovalStage::Supervisor->value,
+            'note' => $validated['note'],
+        ]);
 
         return TravelRequestResource::make($travelRequest->loadDetails())->additional([
             'message' => __('Travel request rejected.'),

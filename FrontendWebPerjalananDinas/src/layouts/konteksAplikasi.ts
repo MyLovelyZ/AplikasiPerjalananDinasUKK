@@ -7,6 +7,10 @@ export interface NilaiAplikasi {
   sukses: (pesan: string) => void
   /** Naik setiap kali ada aksi yang mengubah data. */
   penandaSegar: number
+  /** Jumlah notifikasi belum dibaca, untuk lencana lonceng. */
+  notifikasiBelumDibaca: number
+  /** Mengambil ulang jumlah belum dibaca, mis. setelah menandai notifikasi dibaca. */
+  segarkanNotifikasi: () => void
 }
 
 export const KonteksAplikasi = createContext<NilaiAplikasi | null>(null)

@@ -5,6 +5,7 @@ import type {
   JenisPerjalanan,
   KategoriBiaya,
   MetodeBayar,
+  Notifikasi,
   Peran,
   StatusLaporan,
   StatusPencairan,
@@ -13,6 +14,7 @@ import type {
   TahapPersetujuan,
   Transportasi,
 } from '@/api/tipe'
+import { rupiah } from '@/utils/format'
 import type { WarnaStatus } from '@/utils/format'
 
 /**
@@ -145,6 +147,77 @@ export const NAMA_BULAN = [
   'November',
   'Desember',
 ]
+
+/**
+ * Judul dan kalimat notifikasi dalam bahasa Indonesia, disusun dari data
+ * notifikasi. Jenis yang belum dikenal memakai ringkasan Inggris dari backend.
+ */
+export function teksNotifikasi(n: Notifikasi): { judul: string; pesan: string } {
+  const { request_number: nomor, actor_name, amount, note, stage, settlement_type, disbursement_type, completed } = n.details
+  const pelaku = actor_name ?? 'Seseorang'
+  const jumlah = rupiah(amount ?? 0)
+  const alasan = note ? ` Catatan: “${note}”` : ''
+
+  switch (n.event) {
+    case 'request_submitted':
+      return { judul: 'Pengajuan menunggu persetujuan', pesan: `${pelaku} mengajukan perjalanan ${nomor}.` }
+    case 'request_cancelled':
+      return { judul: 'Pengajuan dibatalkan', pesan: `${pelaku} membatalkan perjalanan ${nomor}.` }
+    case 'request_supervisor_approved':
+      return {
+        judul: 'Disetujui atasan',
+        pesan: `${pelaku} menyetujui perjalanan ${nomor}. Kini menunggu verifikasi anggaran oleh Keuangan.`,
+      }
+    case 'request_awaiting_finance':
+      return {
+        judul: 'Menunggu verifikasi anggaran',
+        pesan: `Perjalanan ${nomor} telah disetujui atasan dan perlu dicek anggarannya.`,
+      }
+    case 'request_approved':
+      return {
+        judul: 'Perjalanan disetujui',
+        pesan: amount
+          ? `Perjalanan ${nomor} disetujui dengan uang muka ${jumlah}.`
+          : `Perjalanan ${nomor} disetujui Keuangan.`,
+      }
+    case 'request_rejected':
+      return {
+        judul: 'Pengajuan ditolak',
+        pesan: `${pelaku} menolak perjalanan ${nomor}${stage === 'finance' ? ' pada verifikasi anggaran' : ''}.${alasan}`,
+      }
+    case 'expense_report_submitted':
+      return {
+        judul: 'Laporan biaya menunggu verifikasi',
+        pesan: `${pelaku} mengirim laporan biaya perjalanan ${nomor} sebesar ${jumlah}.`,
+      }
+    case 'expense_report_returned':
+      return {
+        judul: 'Laporan biaya dikembalikan',
+        pesan: `Laporan biaya perjalanan ${nomor} perlu diperbaiki lalu dikirim ulang.${alasan}`,
+      }
+    case 'expense_report_verified':
+      return {
+        judul: 'Laporan biaya diverifikasi',
+        pesan:
+          settlement_type === 'reimbursement'
+            ? `Laporan biaya perjalanan ${nomor} diverifikasi. Kekurangan ${jumlah} akan dibayarkan kepada Anda.`
+            : settlement_type === 'refund'
+              ? `Laporan biaya perjalanan ${nomor} diverifikasi. Mohon kembalikan sisa uang muka ${jumlah}.`
+              : `Laporan biaya perjalanan ${nomor} diverifikasi. Tidak ada selisih, perjalanan selesai.`,
+      }
+    case 'disbursement_paid': {
+      const selesai = completed ? ' Perjalanan kini selesai.' : ''
+      return disbursement_type === 'refund'
+        ? { judul: 'Pengembalian diterima', pesan: `Keuangan menerima pengembalian ${jumlah} untuk perjalanan ${nomor}.${selesai}` }
+        : {
+            judul: 'Dana dicairkan',
+            pesan: `Keuangan membayarkan ${(disbursement_type ? LABEL_JENIS_PENCAIRAN[disbursement_type] : 'dana').toLowerCase()} ${jumlah} untuk perjalanan ${nomor}.${selesai}`,
+          }
+    }
+    default:
+      return { judul: 'Notifikasi', pesan: n.message ?? '' }
+  }
+}
 
 /** Opsi `<select>` dari peta label, dengan urutan kunci yang ditulis di atas. */
 export const opsiDari = <K extends string>(peta: Record<K, string>) =>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Employee;
 use App\Enums\AuditAction;
 use App\Enums\DocumentType;
 use App\Enums\ExpenseCategory;
+use App\Enums\NotificationEvent;
 use App\Enums\Transportation;
 use App\Enums\TravelRequestStatus;
 use App\Enums\TripType;
@@ -17,6 +18,7 @@ use App\Http\Resources\UserSummaryResource;
 use App\Models\AuditLog;
 use App\Models\TravelRequest;
 use App\Models\User;
+use App\Notifications\TravelRequestActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -116,6 +118,10 @@ class TravelRequestController extends Controller
             return $travelRequest;
         });
 
+        if ($submits) {
+            TravelRequestActivity::send($employee->supervisor, NotificationEvent::RequestSubmitted, $travelRequest, $employee);
+        }
+
         return TravelRequestResource::make($travelRequest->loadDetails())->additional([
             'message' => $submits
                 ? __('Travel request submitted to your supervisor.')
@@ -208,6 +214,10 @@ class TravelRequestController extends Controller
 
         Storage::disk('local')->delete($removedDocumentPaths);
 
+        if ($submits) {
+            TravelRequestActivity::send($request->user()->supervisor, NotificationEvent::RequestSubmitted, $travelRequest, $request->user());
+        }
+
         return TravelRequestResource::make($travelRequest->loadDetails())->additional([
             'message' => $submits
                 ? __('Travel request submitted to your supervisor.')
@@ -222,15 +232,23 @@ class TravelRequestController extends Controller
     {
         Gate::authorize('update', $travelRequest);
 
-        DB::transaction(function () use ($request, $travelRequest): void {
+        $previousStatus = DB::transaction(function () use ($request, $travelRequest): TravelRequestStatus {
             $travelRequest->lockInStatus(...TravelRequestStatus::cancellable());
+            $previousStatus = $travelRequest->status;
 
             $travelRequest->update(['status' => TravelRequestStatus::Cancelled]);
 
             AuditLog::record($request, AuditAction::Cancelled, $travelRequest, __('Cancelled travel request :number.', [
                 'number' => $travelRequest->request_number,
             ]));
+
+            return $previousStatus;
         });
+
+        // A draft never reached the supervisor, so there is nobody to tell.
+        if ($previousStatus !== TravelRequestStatus::Draft) {
+            TravelRequestActivity::send($request->user()->supervisor, NotificationEvent::RequestCancelled, $travelRequest, $request->user());
+        }
 
         return TravelRequestResource::make($travelRequest->loadDetails())->additional([
             'message' => __('Travel request cancelled.'),

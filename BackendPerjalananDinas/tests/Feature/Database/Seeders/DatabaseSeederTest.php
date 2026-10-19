@@ -31,3 +31,14 @@ it('seeds the demo employee a trip in every status', function () {
         ->toBe(collect(TravelRequestStatus::cases())->map->value->sort()->values()->all());
     expect(TravelRequest::query()->where('status', TravelRequestStatus::Completed)->count())->toBeGreaterThan(5);
 });
+
+it('seeds unread notifications for the employee, supervisor, and finance demo accounts', function (string $email) {
+    Storage::fake('local');
+    $this->seed(DatabaseSeeder::class);
+
+    expect(User::query()->where('email', $email)->sole()->unreadNotifications()->count())->toBeGreaterThan(0);
+})->with([
+    'employee@citramandiri.test',
+    'supervisor@citramandiri.test',
+    'finance@citramandiri.test',
+]);

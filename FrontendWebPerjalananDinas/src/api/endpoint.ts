@@ -15,6 +15,7 @@ import type {
   LaporanKeuangan,
   LogAudit,
   MetodeBayar,
+  Notifikasi,
   Opsi,
   OpsiFormAnggaran,
   OpsiFormPengguna,
@@ -327,3 +328,18 @@ export const apiLogAudit = (
   minta<ResponsHalaman<LogAudit> & { filters: { actions: Opsi[] } }>('/admin/audit-logs', {
     query: { per_page: 20, ...filter },
   })
+
+// ── Notifikasi (semua peran) ──────────────────────────────────────────
+
+export const apiDaftarNotifikasi = (filter: { unread?: boolean; page?: number; per_page?: number } = {}) =>
+  minta<ResponsHalaman<Notifikasi> & { meta: { unread_count: number } }>('/notifications', {
+    query: { ...filter, unread: filter.unread ? 1 : undefined },
+  })
+
+export const apiJumlahBelumDibaca = (signal?: AbortSignal) =>
+  mintaData<{ unread_count: number }>('/notifications/unread-count', { signal })
+
+export const apiTandaiDibaca = (id: string) =>
+  mintaData<Notifikasi>(`/notifications/${id}/read`, { metode: 'POST' })
+
+export const apiTandaiSemuaDibaca = () => minta<Pesan>('/notifications/read-all', { metode: 'POST' })

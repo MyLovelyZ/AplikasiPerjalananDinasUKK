@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             BudgetSeeder::class,
             TravelRequestSeeder::class,
+            NotificationSeeder::class,
         ]);
     }
 }

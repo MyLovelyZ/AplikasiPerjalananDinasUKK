@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Finance;
 use App\Enums\AuditAction;
 use App\Enums\DisbursementStatus;
 use App\Enums\DisbursementType;
+use App\Enums\NotificationEvent;
 use App\Enums\PaymentMethod;
 use App\Enums\TravelRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DisbursementResource;
 use App\Models\AuditLog;
 use App\Models\Disbursement;
+use App\Notifications\TravelRequestActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -100,6 +102,15 @@ class DisbursementController extends Controller
                 'number' => $travelRequest->request_number,
             ]));
         });
+
+        $travelRequest = $disbursement->travelRequest;
+
+        TravelRequestActivity::send($travelRequest->user, NotificationEvent::DisbursementPaid, $travelRequest, $request->user(), [
+            'disbursement_id' => $disbursement->id,
+            'disbursement_type' => $disbursement->type->value,
+            'amount' => (float) $disbursement->amount,
+            'completed' => $travelRequest->status === TravelRequestStatus::Completed,
+        ]);
 
         return DisbursementResource::make($disbursement->load(['travelRequest.user', 'processor']))->additional([
             'message' => __('Disbursement recorded as paid.'),

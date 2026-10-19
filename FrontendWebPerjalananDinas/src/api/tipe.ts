@@ -467,3 +467,39 @@ export interface OpsiFormPengguna {
   departments: Array<Pick<Departemen, 'id' | 'code' | 'name'>>
   supervisors: Array<{ id: number; name: string; email: string; department_id: number | null }>
 }
+
+// ── Notifikasi ────────────────────────────────────────────────────────
+
+export type JenisNotifikasi =
+  | 'request_submitted'
+  | 'request_cancelled'
+  | 'request_supervisor_approved'
+  | 'request_awaiting_finance'
+  | 'request_approved'
+  | 'request_rejected'
+  | 'expense_report_submitted'
+  | 'expense_report_returned'
+  | 'expense_report_verified'
+  | 'disbursement_paid'
+
+export interface Notifikasi {
+  /** UUID dari tabel notifikasi Laravel. */
+  id: string
+  event: JenisNotifikasi
+  /** Ringkasan berbahasa Inggris dari backend; dipakai bila jenisnya tidak dikenal. */
+  message: string | null
+  travel_request_id: number | null
+  details: {
+    request_number: string
+    actor_name: string | null
+    amount?: number
+    note?: string | null
+    stage?: TahapPersetujuan
+    settlement_type?: JenisPenyelesaian
+    disbursement_type?: JenisPencairan
+    completed?: boolean
+  }
+  is_read: boolean
+  read_at: string | null
+  created_at: string
+}

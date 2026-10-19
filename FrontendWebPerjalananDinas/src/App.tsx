@@ -9,6 +9,7 @@ import { DepartemenPage } from '@/features/admin/DepartemenPage'
 import { HalamanFormPengguna, PenggunaPage } from '@/features/admin/PenggunaPage'
 import { ApprovalsPage } from '@/features/approvals/ApprovalsPage'
 import { LoginPage } from '@/features/auth/LoginPage'
+import { NotifikasiPage } from '@/features/notifications/NotifikasiPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { HalamanGalat } from '@/features/errors/HalamanGalat'
 import { AnggaranPage } from '@/features/finance/AnggaranPage'
@@ -48,6 +49,7 @@ export default function App() {
       <Route element={<WajibMasuk />}>
         <Route index element={<KeBeranda />} />
         <Route path="profile" element={<ProfilPage />} />
+        <Route path="notifications" element={<NotifikasiPage />} />
 
         <Route path="employee" element={<KhususPeran peran="employee" />}>
           <Route index element={<DashboardPage />} />
