@@ -7,132 +7,139 @@
 .layar-masuk {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1.05fr 1fr;
+  grid-template-columns: 1.08fr 1fr;
   background: var(--putih);
+  overflow: hidden;
 }
 
-/* Sisi kiri: panel biru berisi identitas dan ringkasan alur aplikasi. */
+/* Sisi kiri: panel biru tua gelap dengan latar belakang visual */
 .masuk-sisi {
-  background: linear-gradient(160deg, var(--biru-tua) 0%, var(--biru) 58%, #2f7ae8 100%);
+  background: #07152b;
   color: var(--putih);
-  padding: 46px;
+  padding: 48px;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
   position: relative;
   overflow: hidden;
 }
 
-/* Lingkaran samar yang memberi kedalaman tanpa mengalihkan perhatian. */
-.masuk-sisi::after {
-  content: "";
+/* Kartu latar belakang visual (Watermark Tripflow) */
+.masuk-sisi-kartu-latar {
   position: absolute;
-  width: 460px;
-  height: 460px;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 7%);
-  right: -160px;
-  bottom: -190px;
-}
-
-.masuk-sisi > * {
-  position: relative;
-  z-index: 1;
-}
-
-.masuk-merek {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-
-.masuk-merek img {
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
-  object-fit: cover;
-  border: 1px solid rgb(255 255 255 / 26%);
-}
-
-.masuk-merek strong {
-  font-family: "Plus Jakarta Sans", "Manrope", sans-serif;
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--putih);
-  display: block;
-  line-height: 1.2;
-}
-
-.masuk-merek small {
-  font-size: 11.5px;
-  color: rgb(255 255 255 / 76%);
-}
-
-.masuk-utama h2 {
-  color: var(--putih);
-  font-size: 30px;
-  line-height: 1.25;
-  margin-bottom: 12px;
-  max-width: 17ch;
-}
-
-.masuk-utama > p {
-  color: rgb(255 255 255 / 84%);
-  font-size: 14px;
-  max-width: 44ch;
-  margin-bottom: 26px;
-}
-
-.masuk-langkah {
+  width: min(450px, 86%);
+  height: 520px;
+  background: rgba(14, 28, 54, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
-  gap: 13px;
+  align-items: center;
+  padding-top: 36px;
+  pointer-events: none;
+  user-select: none;
 }
 
-.masuk-langkah div {
+.kartu-latar-header {
   display: flex;
   align-items: center;
-  gap: 11px;
-  font-size: 13.5px;
-  color: rgb(255 255 255 / 90%);
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.15);
+  margin-bottom: 12px;
 }
 
-.masuk-langkah span {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: rgb(255 255 255 / 16%);
-  border: 1px solid rgb(255 255 255 / 22%);
-  display: grid;
-  place-items: center;
-  font-size: 11.5px;
+.kartu-latar-logo {
+  font-weight: 800;
+  font-size: 22px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.kartu-latar-brand {
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+
+.kartu-latar-title {
+  font-size: 20px;
   font-weight: 700;
-  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.1);
+  font-family: "Plus Jakarta Sans", sans-serif;
 }
 
-.masuk-kaki {
-  font-size: 11.5px;
-  color: rgb(255 255 255 / 66%);
+/* Konten utama sisi kiri di atas kartu */
+.masuk-sisi-konten {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 450px;
 }
 
-/* Sisi kanan: formulir. */
+.masuk-sisi-perusahaan {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--putih);
+  font-size: 19px;
+  margin-bottom: 24px;
+}
+
+.masuk-sisi-perusahaan strong {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.masuk-sisi-perusahaan span {
+  font-size: 18px;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.masuk-sisi-judul {
+  color: var(--putih);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+  font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+}
+
+.masuk-sisi-deskripsi {
+  background: rgba(11, 23, 44, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px 20px;
+  color: #94a3b8;
+  font-size: 13.5px;
+  line-height: 1.6;
+  backdrop-filter: blur(8px);
+}
+
+/* Sisi kanan: formulir masuk */
 .masuk-panel {
   display: grid;
   place-items: center;
   padding: 40px 30px;
+  background: #ffffff;
 }
 
 .masuk-kotak {
-  width: min(384px, 100%);
+  width: min(380px, 100%);
 }
 
-.masuk-kotak h1 {
-  font-size: 25px;
+.masuk-judul {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
   margin-bottom: 5px;
+  letter-spacing: -0.02em;
 }
 
-.masuk-kotak > p {
-  color: var(--redup);
+.masuk-subjudul {
+  color: #64748b;
   font-size: 13.5px;
   margin-bottom: 26px;
 }
@@ -140,7 +147,151 @@
 .masuk-formulir {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 16px;
+}
+
+.masuk-bidang {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.masuk-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.masuk-baris-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.masuk-tautan-lupa {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #0284c7;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.14s ease;
+}
+
+.masuk-tautan-lupa:hover {
+  color: #0369a1;
+  text-decoration: underline;
+}
+
+.masuk-input-wadah {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0 12px;
+  background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.masuk-input-wadah:focus-within {
+  border-color: #07152b;
+  box-shadow: 0 0 0 1px #07152b;
+}
+
+.masuk-input-ikon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.masuk-input-wadah input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: #0f172a;
+  font-size: 13.5px;
+  padding: 0;
+  height: 100%;
+}
+
+.masuk-input-wadah input::placeholder {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.masuk-tombol-mata {
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.masuk-tombol-mata:hover {
+  color: #475569;
+}
+
+.masuk-tombol-kirim {
+  height: 44px;
+  width: 100%;
+  background: #071731;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+
+.masuk-tombol-kirim:hover:not(:disabled) {
+  background: #0f274e;
+}
+
+.masuk-tombol-kirim:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.masuk-tombol-kirim:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.masuk-info-uji {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 11.5px;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.masuk-info-uji code {
+  background: #e2e8f0;
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: #0f172a;
+  font-weight: 600;
 }
 
 .kotak-galat {
@@ -173,6 +324,7 @@
   margin-bottom: 3px;
   font-weight: 700;
 }
+
 
 .kotak-info code {
   background: var(--putih);
@@ -995,4 +1147,903 @@ button.daftar-baris:last-child {
   gap: 6px;
   flex-wrap: wrap;
   margin-top: 7px;
+}
+
+/* ── Dashboard Overview Page (Mockup Travel Portal) ────────────────────── */
+
+.dashboard-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.dashboard-header {
+  margin-bottom: 2px;
+}
+
+.dashboard-header h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.dashboard-header p {
+  font-size: 13.5px;
+  color: #64748b;
+}
+
+/* 3 Stat Cards */
+.dashboard-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.dash-stat-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 22px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 122px;
+}
+
+.dash-stat-card.card-teal {
+  border-left: 4px solid #00897b;
+}
+
+.dash-stat-card.card-amber {
+  border-left: 4px solid #f59e0b;
+}
+
+.dash-stat-card.card-blue {
+  border-left: 4px solid #3b82f6;
+}
+
+.dash-stat-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.dash-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.dash-stat-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.dash-stat-badge.badge-teal {
+  background: #e6fffa;
+  color: #00897b;
+}
+
+.dash-stat-badge.badge-amber {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.dash-stat-badge.badge-blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.dash-stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* Table Card */
+.dash-table-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+}
+
+.dash-table-head {
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dash-table-head h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dash-table-head button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #00897b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.14s ease;
+}
+
+.dash-table-head button:hover {
+  color: #00695c;
+  text-decoration: underline;
+}
+
+.dash-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dash-table th {
+  background: #f8fafc;
+  padding: 12px 24px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dash-table td {
+  padding: 14px 24px;
+  font-size: 13.5px;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.dash-table tr:last-child td {
+  border-bottom: none;
+}
+
+.dash-table tr:hover td {
+  background: #fafbfd;
+}
+
+.dash-employee-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash-employee-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.dash-employee-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dash-employee-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.dash-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dash-status-pill.pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.dash-status-pill.approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.dash-status-pill.completed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.dash-status-pill.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dash-action-btn {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.14s ease;
+}
+
+.dash-action-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Exam Guidance Scenario Box */
+.dash-guidance-box {
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 16px 20px;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.dash-guidance-box ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* ── Travel Request Wizard (Bagian Karyawan / Employee Flow) ────────── */
+
+.travel-wizard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* Stepper Bar */
+.travel-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0 16px;
+  width: 100%;
+}
+
+.travel-step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  cursor: pointer;
+}
+
+.travel-step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.travel-step-item.active .travel-step-circle {
+  background: #00897b;
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(0, 137, 123, 0.15);
+}
+
+.travel-step-item.completed .travel-step-circle {
+  background: #081a33;
+  color: #ffffff;
+}
+
+.travel-step-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.travel-step-item.active .travel-step-label {
+  color: #0f172a;
+}
+
+.travel-step-line {
+  flex: 1;
+  max-width: 140px;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 14px;
+  margin-bottom: 22px;
+}
+
+.travel-step-line.completed {
+  background: #00897b;
+}
+
+/* 2-Column Wizard Grid */
+.travel-wizard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1.05fr;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.travel-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.travel-card-head {
+  margin-bottom: 20px;
+}
+
+.travel-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.travel-card-subtitle {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Form controls */
+.travel-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.travel-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.travel-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.travel-input-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  height: 42px;
+  padding: 0 12px;
+  gap: 10px;
+  transition: all 0.15s ease;
+}
+
+.travel-input-box:focus-within {
+  border-color: #00897b;
+  box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.12);
+}
+
+.travel-input-box input,
+.travel-input-box select {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 13.5px;
+  color: #0f172a;
+  height: 100%;
+}
+
+.travel-input-box input::placeholder {
+  color: #94a3b8;
+}
+
+.travel-input-icon {
+  color: #94a3b8;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.travel-textarea {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  color: #0f172a;
+  outline: none;
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.travel-textarea:focus {
+  border-color: #00897b;
+  box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.12);
+}
+
+/* Wizard action buttons */
+.travel-wizard-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-wizard-cancel,
+.btn-wizard-back {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 20px;
+  color: #475569;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.btn-wizard-cancel:hover,
+.btn-wizard-back:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.btn-wizard-next {
+  background: #00897b;
+  border: none;
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 24px;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s ease;
+}
+
+.btn-wizard-next:hover {
+  background: #00796b;
+}
+
+.btn-wizard-submit {
+  background: #f97316;
+  border: none;
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 24px;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  transition: background 0.15s ease;
+}
+
+.btn-wizard-submit:hover:not(:disabled) {
+  background: #ea580c;
+}
+
+.btn-wizard-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Policy Guidelines Card (Step 1 Right) */
+.policy-guidelines-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.policy-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 12px;
+}
+
+.policy-badge {
+  display: inline-block;
+  background: #ffedd5;
+  color: #c2410c;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.policy-subtext {
+  font-size: 12.5px;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.policy-item {
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fafbfd;
+  margin-bottom: 10px;
+}
+
+.policy-item-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.policy-item-desc {
+  font-size: 11.5px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* Step 2 Styles (Estimasi Biaya) */
+.cost-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.cost-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cost-search-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #0284c7;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cost-search-link:hover {
+  text-decoration: underline;
+}
+
+/* Dark Policy Guide Card */
+.dark-policy-card {
+  background: #0b1e38;
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+.dark-policy-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.dark-grade-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+}
+
+.dark-grade-badge small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.dark-grade-badge strong {
+  display: block;
+  font-size: 13.5px;
+  color: #ffffff;
+  margin-top: 2px;
+}
+
+.dark-policy-table {
+  width: 100%;
+  font-size: 12.5px;
+}
+
+.dark-policy-table td {
+  padding: 6px 0;
+  color: #94a3b8;
+}
+
+.dark-policy-table td:last-child {
+  text-align: right;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Total Estimasi Summary Card */
+.total-summary-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 22px;
+}
+
+.total-summary-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+
+.total-summary-table {
+  width: 100%;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.total-summary-table td {
+  padding: 6px 0;
+  color: #64748b;
+}
+
+.total-summary-table td:last-child {
+  text-align: right;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.total-grand-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-top: 1px solid #e2e8f0;
+  margin-bottom: 18px;
+}
+
+.total-grand-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.total-grand-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #00897b;
+}
+
+/* Step 3 Styles (Dokumen Pendukung) */
+.dropzone-box {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 38px 20px;
+  text-align: center;
+  background: #fafbfd;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.dropzone-box:hover {
+  border-color: #00897b;
+  background: #f0fdfa;
+}
+
+.dropzone-icon-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 12px;
+}
+
+.dropzone-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.dropzone-hint {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.btn-browse-file {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  height: 34px;
+  padding: 0 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.btn-browse-file:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.uploaded-files-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.uploaded-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  background: #ffffff;
+}
+
+.uploaded-file-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-type-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.file-type-badge.pdf {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.file-type-badge.img {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.file-info-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.file-info-size {
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+
+.btn-delete-file {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  transition: all 0.14s ease;
+}
+
+.btn-delete-file:hover {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.declaration-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 12px 0;
+  font-size: 13px;
+  color: #334155;
+}
+
+.declaration-box input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: #00897b;
+  cursor: pointer;
 }

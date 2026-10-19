@@ -132,6 +132,8 @@ export default function App() {
             onBuatSppd={() => setFormTerbuka(true)}
             onBukaSppd={bukaSppd}
             penandaSegar={penandaSegar}
+            onSukses={sukses}
+            onNavigate={setHalamanAktif}
           />
         )
       case 'Perjalanan Saya':
@@ -178,6 +180,7 @@ export default function App() {
       jumlahAntrean={jumlahAntrean}
       jumlahNotifikasi={jumlahNotifikasi}
       onNotifikasiBerubah={muatLencana}
+      onBuatSppd={() => setFormTerbuka(true)}
       overlays={
         <>
           {formTerbuka && (

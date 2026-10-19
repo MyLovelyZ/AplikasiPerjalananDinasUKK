@@ -71,6 +71,14 @@
     display: none;
   }
 
+  .dashboard-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .travel-wizard-grid {
+    grid-template-columns: 1fr;
+  }
+
   .baris-rincian {
     grid-template-columns: 1fr 1fr;
   }

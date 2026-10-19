@@ -2,25 +2,17 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { Icon } from '@/components/ui/Icon'
-import { APP_COPYRIGHT, APP_TAGLINE } from '@/constants/app'
 import { useAuth } from '@/auth/useAuth'
 
-/** Ringkasan alur aplikasi, mengikuti urutan pada flowchart sistem. */
-const LANGKAH = [
-  'Ajukan SPPD digital lengkap dengan rincian biaya',
-  'Atasan menyetujui, menolak, atau meminta revisi',
-  'Uang muka cair, perjalanan berjalan',
-  'Unggah nota, Keuangan verifikasi dan menutup selisih',
-]
-
-/** Halaman masuk. Satu-satunya layar yang bisa dibuka tanpa token. */
 export function LoginPage() {
   const { masuk } = useAuth()
 
   const [username, setUsername] = useState('')
   const [kataSandi, setKataSandi] = useState('')
+  const [tampilkanSandi, setTampilkanSandi] = useState(false)
   const [galat, setGalat] = useState<string | null>(null)
   const [mengirim, setMengirim] = useState(false)
+  const [dialogLupaSandi, setDialogLupaSandi] = useState(false)
 
   const kirim = async (peristiwa: FormEvent) => {
     peristiwa.preventDefault()
@@ -42,41 +34,43 @@ export function LoginPage() {
 
   return (
     <div className="layar-masuk">
+      {/* Sisi Kiri: Panel Gelap Sesuai Gambar */}
       <section className="masuk-sisi">
-        <div className="masuk-merek">
-          <img src="/logo.jpg" alt="Logo DinasGo" />
-          <div>
-            <strong>
-              DINAS<span>GO</span>
-            </strong>
-            <small>{APP_TAGLINE}</small>
+        {/* Latar Belakang Kartu Samar (Watermark Tripflow) */}
+        <div className="masuk-sisi-kartu-latar" aria-hidden="true">
+          <div className="kartu-latar-header">
+            <span className="kartu-latar-logo">T</span>
+            <span className="kartu-latar-brand">Tripflow</span>
           </div>
+          <div className="kartu-latar-title">Welcome Back!</div>
         </div>
 
-        <div className="masuk-utama">
-          <h2>Perjalanan dinas, dari pengajuan sampai pencairan.</h2>
-          <p>
-            Satu portal untuk pengajuan SPPD, persetujuan berjenjang, pelaporan nota,
-            dan penyelesaian dana — tanpa berkas kertas yang berpindah meja.
-          </p>
+        {/* Konten Utama Sisi Kiri */}
+        <div className="masuk-sisi-konten">
+          {/* Tagline / Perusahaan */}
+          <div className="masuk-sisi-perusahaan">
+            <strong>corporate_fare</strong>
+            <span>PT. Citra Mandiri</span>
+          </div>
 
-          <div className="masuk-langkah">
-            {LANGKAH.map((teks, indeks) => (
-              <div key={teks}>
-                <span>{indeks + 1}</span>
-                {teks}
-              </div>
-            ))}
+          {/* Judul Utama */}
+          <h1 className="masuk-sisi-judul">
+            Welcome to the SPPD Travel &amp; Expense Portal
+          </h1>
+
+          {/* Kotak Deskripsi */}
+          <div className="masuk-sisi-deskripsi">
+            Streamline your corporate travel requests, manage expenses, and track
+            approvals in one unified platform.
           </div>
         </div>
-
-        <div className="masuk-kaki">{APP_COPYRIGHT}</div>
       </section>
 
+      {/* Sisi Kanan: Formulir Masuk Sesuai Gambar */}
       <section className="masuk-panel">
         <div className="masuk-kotak">
-          <h1>Masuk ke portal</h1>
-          <p>Gunakan akun yang diberikan administrator perusahaan.</p>
+          <h2 className="masuk-judul">Welcome Back</h2>
+          <p className="masuk-subjudul">Please sign in to your account</p>
 
           <form className="masuk-formulir" onSubmit={kirim}>
             {galat && (
@@ -86,54 +80,124 @@ export function LoginPage() {
               </div>
             )}
 
-            <div className="bidang">
-              <label htmlFor="username">
-                Username<span className="wajib">*</span>
+            {/* Field: EMAIL OR NIK */}
+            <div className="masuk-bidang">
+              <label htmlFor="login-username" className="masuk-label">
+                EMAIL OR NIK
               </label>
-              <input
-                id="username"
-                name="username"
-                autoComplete="username"
-                placeholder="mis. user24001"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
+              <div className="masuk-input-wadah">
+                <span className="masuk-input-ikon">
+                  <Icon name="pengguna" size={18} />
+                </span>
+                <input
+                  id="login-username"
+                  name="username"
+                  type="text"
+                  autoComplete="username"
+                  placeholder="Enter your email or NIK"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </div>
             </div>
 
-            <div className="bidang">
-              <label htmlFor="kata-sandi">
-                Kata sandi<span className="wajib">*</span>
-              </label>
-              <input
-                id="kata-sandi"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
-                value={kataSandi}
-                onChange={(e) => setKataSandi(e.target.value)}
-                required
-              />
+            {/* Field: PASSWORD */}
+            <div className="masuk-bidang">
+              <div className="masuk-baris-label">
+                <label htmlFor="login-password" className="masuk-label">
+                  PASSWORD
+                </label>
+                <button
+                  type="button"
+                  className="masuk-tautan-lupa"
+                  onClick={() => setDialogLupaSandi(true)}
+                >
+                  Forgot Password?
+                </button>
+              </div>
+              <div className="masuk-input-wadah">
+                <span className="masuk-input-ikon">
+                  <Icon name="kunci" size={18} />
+                </span>
+                <input
+                  id="login-password"
+                  name="password"
+                  type={tampilkanSandi ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  value={kataSandi}
+                  onChange={(e) => setKataSandi(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="masuk-tombol-mata"
+                  aria-label={tampilkanSandi ? 'Sembunyikan sandi' : 'Tampilkan sandi'}
+                  onClick={() => setTampilkanSandi((prev) => !prev)}
+                >
+                  <Icon name={tampilkanSandi ? 'eyeOff' : 'eye'} size={18} />
+                </button>
+              </div>
             </div>
 
+            {/* Tombol Login */}
             <button
               type="submit"
-              className="btn utama blok"
+              className="masuk-tombol-kirim"
               disabled={mengirim || !username || !kataSandi}
             >
-              {mengirim ? 'Memeriksa...' : 'Masuk'}
-              {!mengirim && <Icon name="arrow" size={17} />}
+              <span>{mengirim ? 'Logging in...' : 'Login'}</span>
+              <Icon name="arrow" size={16} />
             </button>
 
-            <div className="kotak-info">
-              <strong>Akun contoh untuk pengujian</strong>
-              Super Admin <code>user24001</code>, kata sandi <code>password123</code>.
-              Akun lain mengikuti pola <code>user2400x</code> dengan kata sandi yang sama.
+            {/* Akun Contoh untuk Pengujian */}
+            <div className="masuk-info-uji">
+              <strong>Akun contoh:</strong> Super Admin <code>user24001</code> / sandi <code>password123</code>
             </div>
           </form>
         </div>
       </section>
+
+      {/* Modal Dialog Lupa Kata Sandi */}
+      {dialogLupaSandi && (
+        <div className="modal-backdrop" onClick={() => setDialogLupaSandi(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
+            <div className="modal-head">
+              <div>
+                <h2>Bantuan Lupa Kata Sandi</h2>
+                <p>Pengaturan ulang kredensial akun</p>
+              </div>
+              <button
+                type="button"
+                className="tombol-tutup"
+                onClick={() => setDialogLupaSandi(false)}
+                aria-label="Tutup"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body" style={{ fontSize: '13.5px', color: '#475569', lineHeight: 1.6 }}>
+              <p>
+                Untuk alasan keamanan dan integritas data SPPD PT. Citra Mandiri,
+                pengaturan ulang kata sandi dilakukan secara terpusat oleh administrator.
+              </p>
+              <p>
+                Silakan hubungi <strong>Divisi IT</strong> atau <strong>Divisi SDM / HRD</strong> perusahaan dengan menyertakan NIK Anda.
+              </p>
+            </div>
+            <div className="modal-kaki">
+              <button
+                type="button"
+                className="btn utama"
+                onClick={() => setDialogLupaSandi(false)}
+              >
+                Mengerti
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

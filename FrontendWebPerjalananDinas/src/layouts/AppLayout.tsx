@@ -14,6 +14,7 @@ interface AppLayoutProps {
   jumlahAntrean: number
   jumlahNotifikasi: number
   onNotifikasiBerubah: () => void
+  onBuatSppd?: () => void
   /** Isi halaman yang sedang aktif. */
   children: ReactNode
   /** Lapisan di atas halaman: modal dan toast. */
@@ -30,6 +31,7 @@ export function AppLayout({
   jumlahAntrean,
   jumlahNotifikasi,
   onNotifikasiBerubah,
+  onBuatSppd,
   children,
   overlays,
 }: AppLayoutProps) {
@@ -49,6 +51,7 @@ export function AppLayout({
         onSignOut={onSignOut}
         jumlahAntrean={jumlahAntrean}
         terbuka={laciTerbuka}
+        onBuatSppd={onBuatSppd}
       />
 
       {laciTerbuka && (

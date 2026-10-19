@@ -84,18 +84,16 @@ export function Topbar({
         <Icon name="menu" />
       </button>
 
-      <div className="crumb">
-        <span>Portal</span>
-        <b>/</b>
-        <strong>{activePage}</strong>
+      <div className="topbar-company-title">
+        {activePage === 'Pengajuan Dinas' ? 'New Travel Request' : 'PT. Citra Mandiri'}
       </div>
 
       <div className="top-actions">
-        <div className="search">
-          <Icon name="search" size={17} />
+        <div className="search topbar-search-pill">
+          <Icon name="search" size={16} />
           <input
-            aria-label="Cari nomor SPPD atau keperluan"
-            placeholder="Cari SPPD atau keperluan..."
+            aria-label="Search"
+            placeholder="Search..."
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
           />
@@ -104,15 +102,13 @@ export function Topbar({
         <div className="pembungkus-notif" ref={pembungkusRef}>
           <button
             type="button"
-            className="icon-btn"
+            className="icon-btn topbar-icon-btn"
             aria-label={`Notifikasi, ${jumlahBelumDibaca} belum dibaca`}
             aria-expanded={laciTerbuka}
             onClick={() => setLaciTerbuka((buka) => !buka)}
           >
-            <Icon name="bell" />
-            {jumlahBelumDibaca > 0 && (
-              <i className="titik">{jumlahBelumDibaca > 9 ? '9+' : jumlahBelumDibaca}</i>
-            )}
+            <Icon name="bell" size={19} />
+            {jumlahBelumDibaca > 0 && <span className="topbar-red-dot" />}
           </button>
 
           {laciTerbuka && (
@@ -156,6 +152,15 @@ export function Topbar({
             </div>
           )}
         </div>
+
+        <button
+          type="button"
+          className="icon-btn topbar-icon-btn"
+          aria-label="Help"
+          title="Bantuan SPPD Travel Portal"
+        >
+          <Icon name="help" size={19} />
+        </button>
 
         <div className="top-avatar" title={nama}>
           {inisial(nama)}
