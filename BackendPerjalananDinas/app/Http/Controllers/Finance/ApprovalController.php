@@ -9,6 +9,7 @@ use App\Enums\DisbursementStatus;
 use App\Enums\DisbursementType;
 use App\Enums\ExpenseReportStatus;
 use App\Enums\ExpenseStatus;
+use App\Enums\NotificationEvent;
 use App\Enums\SettlementType;
 use App\Enums\TravelRequestStatus;
 use App\Http\Controllers\Controller;
@@ -18,6 +19,7 @@ use App\Models\AuditLog;
 use App\Models\Budget;
 use App\Models\ExpenseReport;
 use App\Models\TravelRequest;
+use App\Notifications\TravelRequestActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -142,6 +144,14 @@ class ApprovalController extends Controller
                 : __('Returned the expense report of travel request :number for revision.', ['number' => $travelRequest->request_number]));
         });
 
+        TravelRequestActivity::send(
+            $travelRequest->user,
+            $stage === ApprovalStage::Finance ? NotificationEvent::RequestRejected : NotificationEvent::ExpenseReportReturned,
+            $travelRequest,
+            $request->user(),
+            ['stage' => $stage->value, 'note' => $validated['note']],
+        );
+
         return TravelRequestResource::make($travelRequest->loadDetails())->additional([
             'message' => $stage === ApprovalStage::Finance
                 ? __('Travel request rejected.')
@@ -223,6 +233,12 @@ class ApprovalController extends Controller
 
             return $advanceApproved;
         });
+
+        TravelRequestActivity::send($travelRequest->user, NotificationEvent::RequestApproved, $travelRequest, $request->user(), [
+            'stage' => ApprovalStage::Finance->value,
+            'amount' => $advanceApproved,
+            'note' => $validated['note'] ?? null,
+        ]);
 
         return TravelRequestResource::make($travelRequest->loadDetails())->additional([
             'message' => $advanceApproved > 0
@@ -336,6 +352,13 @@ class ApprovalController extends Controller
 
             return [$settlementType, abs($difference)];
         });
+
+        TravelRequestActivity::send($travelRequest->user, NotificationEvent::ExpenseReportVerified, $travelRequest, $request->user(), [
+            'stage' => ApprovalStage::ExpenseReport->value,
+            'settlement_type' => $settlementType->value,
+            'amount' => $settlementAmount,
+            'note' => $validated['note'] ?? null,
+        ]);
 
         return TravelRequestResource::make($travelRequest->loadDetails())->additional([
             'message' => match ($settlementType) {

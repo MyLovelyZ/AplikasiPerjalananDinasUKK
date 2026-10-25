@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Employee;
 
+use App\Enums\ApprovalStage;
 use App\Enums\AuditAction;
 use App\Enums\DisbursementStatus;
 use App\Enums\DisbursementType;
 use App\Enums\ExpenseCategory;
 use App\Enums\ExpenseReportStatus;
 use App\Enums\ExpenseStatus;
+use App\Enums\NotificationEvent;
 use App\Enums\TravelRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employee\StoreExpenseRequest;
@@ -18,6 +20,8 @@ use App\Models\Disbursement;
 use App\Models\Expense;
 use App\Models\ExpenseReport;
 use App\Models\TravelRequest;
+use App\Models\User;
+use App\Notifications\TravelRequestActivity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -121,6 +125,13 @@ class ExpenseController extends Controller
 
             return $expenseReport;
         });
+
+        if ($submits) {
+            TravelRequestActivity::send(User::financeTeam(), NotificationEvent::ExpenseReportSubmitted, $travelRequest, $request->user(), [
+                'stage' => ApprovalStage::ExpenseReport->value,
+                'amount' => (float) $expenseReport->expenses()->sum('amount'),
+            ]);
+        }
 
         return ExpenseReportResource::make($expenseReport->load(['expenses', 'verifier']))
             ->additional([

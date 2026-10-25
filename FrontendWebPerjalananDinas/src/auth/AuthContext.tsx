@@ -14,6 +14,20 @@ import type { NilaiAuth } from '@/auth/konteks'
 import type { ProfilPengguna } from '@/api/tipe'
 
 /**
+ * Hak akses per peran, sesuai proposal PT. Citra Mandiri:
+ *   employee   : mengajukan SPPD, melihat perjalanan sendiri, menyusun LPJ
+ *   supervisor : menyetujui / menolak SPPD tim, memantau perjalanan tim
+ *   finance    : mencairkan dana, memverifikasi LPJ
+ *   super_admin: seluruh hak (ditangani terpisah di bawah)
+ */
+const HAK_PER_PERAN: Record<string, string[]> = {
+  employee: ['dashboard.lihat', 'sppd.buat', 'sppd.lihat', 'laporan.lihat', 'laporan.buat'],
+  supervisor: ['dashboard.lihat', 'sppd.lihat', 'sppd.setujui'],
+  finance: ['dashboard.lihat', 'sppd.lihat', 'pencairan.proses', 'laporan.lihat', 'laporan.verifikasi'],
+  super_admin: [],
+}
+
+/**
  * Menyimpan identitas pengguna yang sedang masuk.
  *
  * Token disimpan di localStorage supaya sesi bertahan saat halaman dimuat
@@ -77,16 +91,17 @@ export function PenyediaAuth({ children }: { children: ReactNode }) {
   }, [bersihkanSesi])
 
   const nilai = useMemo<NilaiAuth>(() => {
-    const hakAkses = new Set(profil?.hak_akses ?? [])
-    const peran = new Set((profil?.peran ?? []).map((p) => p.kode))
+    const kodePeran = profil?.peran?.[0]?.kode ?? 'employee'
+    const hakAkses = new Set(HAK_PER_PERAN[kodePeran] ?? HAK_PER_PERAN.employee)
+    const semua = kodePeran === 'super_admin'
 
     return {
       profil,
       memuat,
       masuk,
       keluar,
-      boleh: (...kode: string[]) => kode.some((k) => hakAkses.has(k)),
-      berperan: (...kode: string[]) => kode.some((k) => peran.has(k)),
+      boleh: (...kode: string[]) => semua || kode.some((k) => hakAkses.has(k)),
+      berperan: (...kode: string[]) => kode.includes(kodePeran),
     }
   }, [profil, memuat, masuk, keluar])
 

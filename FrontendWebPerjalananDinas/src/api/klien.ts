@@ -12,7 +12,7 @@ import type { Respons, ResponsHalaman } from '@/api/tipe'
  * cukup ditulis satu kali di berkas ini.
  */
 
-const ASAL_API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+const ASAL_API = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
 export const DASAR_API = `${ASAL_API}/api`
 export const DASAR_BERKAS = `${ASAL_API}/storage`
 
@@ -49,8 +49,16 @@ export const hapusToken = () => {
   localStorage.removeItem(KUNCI_SEGAR)
 }
 
-export const ambilTokenAkses = () => localStorage.getItem(KUNCI_AKSES)
-export const ambilTokenSegar = () => localStorage.getItem(KUNCI_SEGAR)
+export const ambilTokenAkses = () => {
+  const t = localStorage.getItem(KUNCI_AKSES)
+  if (!t || t === 'undefined' || t === 'null') return null
+  return t
+}
+export const ambilTokenSegar = () => {
+  const t = localStorage.getItem(KUNCI_SEGAR)
+  if (!t || t === 'undefined' || t === 'null') return null
+  return t
+}
 
 /** Dipanggil saat sesi benar-benar habis, supaya aplikasi kembali ke login. */
 let saatSesiHabis: () => void = () => {}

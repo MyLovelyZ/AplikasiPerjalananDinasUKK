@@ -113,8 +113,12 @@ const RUPA_STATUS: Record<StatusSppd, { label: string; warna: WarnaStatus }> = {
   SELESAI: { label: 'Selesai', warna: 'hijau' },
 }
 
-export const rupaStatusSppd = (status: StatusSppd) =>
-  RUPA_STATUS[status] ?? { label: manusiawi(status), warna: 'netral' as WarnaStatus }
+export const rupaStatusSppd = (status: StatusSppd) => {
+  const item = RUPA_STATUS[status]
+  if (item) return item
+  const teks = typeof status === 'string' ? manusiawi(status) : 'Menunggu'
+  return { label: teks || 'Menunggu', warna: 'netral' as WarnaStatus }
+}
 
 const RUPA_LAPORAN: Record<string, { label: string; warna: WarnaStatus }> = {
   DRAFT: { label: 'Draf', warna: 'netral' },
@@ -124,8 +128,12 @@ const RUPA_LAPORAN: Record<string, { label: string; warna: WarnaStatus }> = {
   DITOLAK: { label: 'Ditolak', warna: 'merah' },
 }
 
-export const rupaStatusLaporan = (status: string) =>
-  RUPA_LAPORAN[status] ?? { label: manusiawi(status), warna: 'netral' as WarnaStatus }
+export const rupaStatusLaporan = (status: string) => {
+  const item = RUPA_LAPORAN[status]
+  if (item) return item
+  const teks = typeof status === 'string' ? manusiawi(status) : 'Draf'
+  return { label: teks || 'Draf', warna: 'netral' as WarnaStatus }
+}
 
 const RUPA_PENCAIRAN: Record<string, WarnaStatus> = {
   MENUNGGU: 'kuning',

@@ -145,8 +145,8 @@ export function ReportsPage({ onBukaLaporan, penandaSegar }: ReportsPageProps) {
                   </thead>
                   <tbody>
                     {hasil.data.map((laporan) => {
-                      const rupa = rupaStatusLaporan(laporan.status)
-                      const selisih = RUPA_SELISIH[laporan.jenis_selisih]
+                      const rupa = rupaStatusLaporan(laporan.status) ?? { label: 'Selesai', warna: 'hijau' }
+                      const selisih = RUPA_SELISIH[laporan.jenis_selisih] ?? RUPA_SELISIH.NIHIL
 
                       return (
                         <tr key={laporan.id}>

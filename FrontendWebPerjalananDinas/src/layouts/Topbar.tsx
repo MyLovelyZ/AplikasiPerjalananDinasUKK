@@ -88,6 +88,8 @@ export function Topbar({
         {activePage === 'Pengajuan Dinas' ? 'New Travel Request' : 'PT. Citra Mandiri'}
       </div>
 
+
+
       <div className="top-actions">
         <div className="search topbar-search-pill">
           <Icon name="search" size={16} />

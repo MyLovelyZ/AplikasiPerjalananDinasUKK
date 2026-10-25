@@ -13,30 +13,66 @@ interface SidebarProps {
   onBuatSppd?: () => void
 }
 
-/** Navigasi utama bergaya Travel Portal PT. Citra Mandiri */
+/** Navigasi utama dengan pemisahan peran ketat (Admin, Supervisor, Keuangan, Pegawai) */
 export function Sidebar({
   activePage,
   onNavigate,
   onSignOut,
   jumlahAntrean,
   terbuka,
-  onBuatSppd,
+  onBuatSppd: _onBuatSppd,
 }: SidebarProps) {
-  const { boleh } = useAuth()
+  const { profil } = useAuth()
+  const peranKode = profil?.peran?.[0]?.kode ?? 'employee'
+  const isSuperAdmin = peranKode === 'super_admin'
+  const isSupervisor = peranKode === 'supervisor'
+  const isFinance = peranKode === 'finance'
+  const isEmployee = peranKode === 'employee'
+
+  const roleTitle = isSuperAdmin
+    ? 'Super Admin'
+    : isSupervisor
+      ? 'Supervisor'
+      : isFinance
+        ? 'Keuangan (Finance)'
+        : 'Pegawai (Employee)'
+
+  const roleBadgeStyle = isSuperAdmin
+    ? { background: 'rgba(217, 119, 6, 0.25)', color: '#FBBF24', border: '1px solid rgba(217, 119, 6, 0.4)' }
+    : isSupervisor
+      ? { background: 'rgba(2, 132, 199, 0.25)', color: '#38BDF8', border: '1px solid rgba(2, 132, 199, 0.4)' }
+      : isFinance
+        ? { background: 'rgba(5, 150, 105, 0.25)', color: '#34D399', border: '1px solid rgba(5, 150, 105, 0.4)' }
+        : { background: 'rgba(255, 255, 255, 0.15)', color: '#E2E8F0', border: '1px solid rgba(255, 255, 255, 0.2)' }
 
   return (
     <aside className={`sidebar ${terbuka ? 'buka' : ''}`}>
-      {/* Brand Header with Circular Logo */}
+      {/* Brand Header with Circular Logo & Active Role Badge */}
       <div className="sidebar-brand-box">
         <div className="sidebar-brand-circle">
           <Icon name="plane" size={24} />
         </div>
         <div className="sidebar-brand-title">Travel Portal</div>
         <div className="sidebar-brand-subtitle">PT. Citra Mandiri</div>
+        <div
+          style={{
+            marginTop: 8,
+            padding: '3px 10px',
+            borderRadius: 12,
+            fontSize: 11,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+            display: 'inline-block',
+            ...roleBadgeStyle,
+          }}
+        >
+          {roleTitle}
+        </div>
       </div>
 
       <nav>
-        {/* Dashboard */}
+        {/* 1. Dashboard — Disesuaikan per peran */}
         <button
           type="button"
           className={activePage === 'Dashboard' ? 'active' : ''}
@@ -47,8 +83,8 @@ export function Sidebar({
           <span>Dashboard</span>
         </button>
 
-        {/* Travel Requests */}
-        {boleh('sppd.buat') && (
+        {/* 2. Menu khusus PEGAWAI / EMPLOYEE */}
+        {(isEmployee || isSuperAdmin) && (
           <button
             type="button"
             className={activePage === 'Pengajuan Dinas' ? 'active' : ''}
@@ -56,12 +92,11 @@ export function Sidebar({
             onClick={() => onNavigate('Pengajuan Dinas')}
           >
             <Icon name="plane" size={19} />
-            <span>Travel Requests</span>
+            <span>Pengajuan Dinas</span>
           </button>
         )}
 
-        {/* History / Perjalanan Saya */}
-        {boleh('sppd.lihat') && (
+        {(isEmployee || isSuperAdmin) && (
           <button
             type="button"
             className={activePage === 'Perjalanan Saya' ? 'active' : ''}
@@ -69,12 +104,12 @@ export function Sidebar({
             onClick={() => onNavigate('Perjalanan Saya')}
           >
             <Icon name="clock" size={19} />
-            <span>History</span>
+            <span>Perjalanan Saya</span>
           </button>
         )}
 
-        {/* Persetujuan (jika berhak) */}
-        {boleh('sppd.setujui') && (
+        {/* 3. Menu khusus SUPERVISOR (ATASAN) */}
+        {(isSupervisor || isSuperAdmin) && (
           <button
             type="button"
             className={activePage === 'Persetujuan' ? 'active' : ''}
@@ -82,13 +117,25 @@ export function Sidebar({
             onClick={() => onNavigate('Persetujuan')}
           >
             <Icon name="check" size={19} />
-            <span>Persetujuan</span>
+            <span>Persetujuan SPPD</span>
             {jumlahAntrean > 0 && <em>{jumlahAntrean}</em>}
           </button>
         )}
 
-        {/* Claims / Keuangan */}
-        {boleh('pencairan.proses') && (
+        {isSupervisor && (
+          <button
+            type="button"
+            className={activePage === 'Perjalanan Saya' ? 'active' : ''}
+            aria-current={activePage === 'Perjalanan Saya' ? 'page' : undefined}
+            onClick={() => onNavigate('Perjalanan Saya')}
+          >
+            <Icon name="plane" size={19} />
+            <span>Monitoring Tim</span>
+          </button>
+        )}
+
+        {/* 4. Menu khusus KEUANGAN / FINANCE */}
+        {(isFinance || isSuperAdmin) && (
           <button
             type="button"
             className={activePage === 'Keuangan' ? 'active' : ''}
@@ -96,12 +143,11 @@ export function Sidebar({
             onClick={() => onNavigate('Keuangan')}
           >
             <Icon name="wallet" size={19} />
-            <span>Claims</span>
+            <span>Pencairan Dana</span>
           </button>
         )}
 
-        {/* Reports / Laporan (jika berhak) */}
-        {boleh('laporan.lihat') && (
+        {(isFinance || isEmployee || isSuperAdmin) && (
           <button
             type="button"
             className={activePage === 'Laporan' ? 'active' : ''}
@@ -109,24 +155,39 @@ export function Sidebar({
             onClick={() => onNavigate('Laporan')}
           >
             <Icon name="file" size={19} />
-            <span>Laporan</span>
+            <span>{isFinance ? 'Verifikasi LPJ' : 'Laporan LPJ'}</span>
           </button>
         )}
 
-        {/* Profile / Pegawai */}
-        <button
-          type="button"
-          className={activePage === 'Pegawai' ? 'active' : ''}
-          aria-current={activePage === 'Pegawai' ? 'page' : undefined}
-          onClick={() => onNavigate('Pegawai')}
-        >
-          <Icon name="pengguna" size={19} />
-          <span>Profile</span>
-        </button>
+        {/* 5. Menu khusus ADMIN */}
+        {isSuperAdmin && (
+          <button
+            type="button"
+            className={activePage === 'Pegawai' ? 'active' : ''}
+            aria-current={activePage === 'Pegawai' ? 'page' : undefined}
+            onClick={() => onNavigate('Pegawai')}
+          >
+            <Icon name="pengguna" size={19} />
+            <span>Kelola Pegawai</span>
+          </button>
+        )}
+
+        {/* Profil Saya untuk Staf/SPV/Keuangan */}
+        {!isSuperAdmin && (
+          <button
+            type="button"
+            className={activePage === 'Pegawai' ? 'active' : ''}
+            aria-current={activePage === 'Pegawai' ? 'page' : undefined}
+            onClick={() => onNavigate('Pegawai')}
+          >
+            <Icon name="pengguna" size={19} />
+            <span>Profil Saya</span>
+          </button>
+        )}
       </nav>
 
-      {/* Button "+ New Travel" */}
-      {boleh('sppd.buat') && (
+      {/* Button "+ New Travel" HANYA untuk Pegawai & Super Admin */}
+      {(isEmployee || isSuperAdmin) && (
         <button
           type="button"
           className="btn-new-travel"
@@ -140,15 +201,17 @@ export function Sidebar({
 
       {/* Settings & Logout */}
       <div className="nav-bottom">
-        <button
-          type="button"
-          className={activePage === SETTINGS_PAGE ? 'active' : ''}
-          aria-current={activePage === SETTINGS_PAGE ? 'page' : undefined}
-          onClick={() => onNavigate(SETTINGS_PAGE)}
-        >
-          <Icon name="settings" size={19} />
-          <span>Settings</span>
-        </button>
+        {isSuperAdmin && (
+          <button
+            type="button"
+            className={activePage === SETTINGS_PAGE ? 'active' : ''}
+            aria-current={activePage === SETTINGS_PAGE ? 'page' : undefined}
+            onClick={() => onNavigate(SETTINGS_PAGE)}
+          >
+            <Icon name="settings" size={19} />
+            <span>Settings</span>
+          </button>
+        )}
         <button type="button" className="keluar" onClick={onSignOut}>
           <Icon name="logout" size={19} />
           <span>Logout</span>

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 
 import App from '@/App'
 import { PenyediaAuth } from '@/auth/AuthContext'
+import { BatasGalat } from '@/components/feedback/BatasGalat'
 import '@/styles/index.css'
 
 const container = document.getElementById('root')
@@ -13,8 +14,10 @@ if (!container) {
 
 createRoot(container).render(
   <StrictMode>
-    <PenyediaAuth>
-      <App />
-    </PenyediaAuth>
+    <BatasGalat>
+      <PenyediaAuth>
+        <App />
+      </PenyediaAuth>
+    </BatasGalat>
   </StrictMode>,
 )

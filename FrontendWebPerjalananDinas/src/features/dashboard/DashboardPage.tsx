@@ -1,9 +1,12 @@
 import { apiRingkasanDashboard } from '@/api/endpoint'
+import { useAuth } from '@/auth/useAuth'
 import { Icon } from '@/components/ui/Icon'
 import { Muatan } from '@/components/ui/Keadaan'
 import { usePermintaan } from '@/hooks/usePermintaan'
+import { rupiah } from '@/utils/format'
+import type { IconName } from '@/types/icon'
 import type { PageKey } from '@/types/navigation'
-import type { Sppd } from '@/api/tipe'
+import type { RingkasanDashboard, Sppd } from '@/api/tipe'
 
 interface DashboardPageProps {
   onBuatSppd: () => void
@@ -11,142 +14,204 @@ interface DashboardPageProps {
   onBukaSppd: (id: number) => void
 }
 
-interface TravelRow {
-  id: number
-  employee: string
-  destination: string
-  date: string
-  status: 'Pending' | 'Approved' | 'Completed' | 'Rejected'
-  statusVariant: 'pending' | 'approved' | 'completed' | 'rejected'
-  sppdId?: number
+type Peran = 'employee' | 'supervisor' | 'finance' | 'super_admin'
+
+interface KartuStat {
+  label: string
+  nilai: string | number
+  ikon: IconName
+  warna: 'card-teal' | 'card-amber' | 'card-blue'
+  badge: 'badge-teal' | 'badge-amber' | 'badge-blue'
 }
 
-// 4 Data baris persis seperti pada screenshot mockup jika data backend belum banyak
-const MOCK_ROWS: TravelRow[] = [
-  {
-    id: 1,
-    employee: 'Budi Santoso',
-    destination: 'Jakarta - Bali',
-    date: 'Oct 12 - Oct 15, 2023',
-    status: 'Pending',
-    statusVariant: 'pending',
-  },
-  {
-    id: 2,
-    employee: 'Siti Aminah',
-    destination: 'Surabaya - Jakarta',
-    date: 'Oct 14 - Oct 16, 2023',
-    status: 'Approved',
-    statusVariant: 'approved',
-  },
-  {
-    id: 3,
-    employee: 'Agus Wijaya',
-    destination: 'Bandung - Singapore',
-    date: 'Oct 10 - Oct 12, 2023',
-    status: 'Completed',
-    statusVariant: 'completed',
-  },
-  {
-    id: 4,
-    employee: 'Rina Melati',
-    destination: 'Medan - Jakarta',
-    date: 'Oct 20 - Oct 22, 2023',
-    status: 'Rejected',
-    statusVariant: 'rejected',
-  },
-]
+interface AksiCepat {
+  label: string
+  keterangan: string
+  ikon: IconName
+  halaman: PageKey
+}
 
-function formatRentangInggris(tglAwal?: string, tglAkhir?: string): string {
-  if (!tglAwal) return 'Oct 12 - Oct 15, 2023'
-  try {
-    const start = new Date(tglAwal)
-    const end = tglAkhir ? new Date(tglAkhir) : start
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const m1 = months[start.getMonth()]
-    const d1 = start.getDate()
-    const m2 = months[end.getMonth()]
-    const d2 = end.getDate()
-    const year = end.getFullYear() || start.getFullYear() || 2023
+/** Judul & deskripsi dashboard per peran. */
+const JUDUL: Record<Peran, { judul: string; deskripsi: string }> = {
+  employee: {
+    judul: 'Dashboard Pegawai',
+    deskripsi: 'Ajukan perjalanan dinas, pantau status persetujuan, dan susun laporan (LPJ) Anda.',
+  },
+  supervisor: {
+    judul: 'Dashboard Supervisor',
+    deskripsi: 'Tinjau dan putuskan pengajuan SPPD dari tim Anda.',
+  },
+  finance: {
+    judul: 'Dashboard Keuangan',
+    deskripsi: 'Cairkan uang muka, verifikasi LPJ, dan selesaikan reimbursement.',
+  },
+  super_admin: {
+    judul: 'Dashboard Administrator',
+    deskripsi: 'Ringkasan seluruh operasional perjalanan dinas PT. Citra Mandiri.',
+  },
+}
 
-    if (m1 === m2) {
-      return `${m1} ${d1} - ${d2}, ${year}`
-    }
-    return `${m1} ${d1} - ${m2} ${d2}, ${year}`
-  } catch {
-    return 'Oct 12 - Oct 15, 2023'
+/** Tombol pintas yang relevan untuk tiap peran. */
+const AKSI: Record<Peran, AksiCepat[]> = {
+  employee: [
+    { label: 'Ajukan SPPD Baru', keterangan: 'Isi formulir perjalanan dinas', ikon: 'plus', halaman: 'Pengajuan Dinas' },
+    { label: 'Perjalanan Saya', keterangan: 'Lihat status pengajuan', ikon: 'plane', halaman: 'Perjalanan Saya' },
+    { label: 'Laporan LPJ', keterangan: 'Laporkan realisasi biaya', ikon: 'file', halaman: 'Laporan' },
+  ],
+  supervisor: [
+    { label: 'Antrean Persetujuan', keterangan: 'Setujui / tolak SPPD tim', ikon: 'check', halaman: 'Persetujuan' },
+    { label: 'Monitoring Tim', keterangan: 'Pantau perjalanan tim', ikon: 'plane', halaman: 'Perjalanan Saya' },
+  ],
+  finance: [
+    { label: 'Pencairan Dana', keterangan: 'Uang muka & reimbursement', ikon: 'wallet', halaman: 'Keuangan' },
+    { label: 'Verifikasi LPJ', keterangan: 'Periksa laporan & nota', ikon: 'file', halaman: 'Laporan' },
+  ],
+  super_admin: [
+    { label: 'Kelola Pegawai', keterangan: 'Data karyawan & peran', ikon: 'pengguna', halaman: 'Pegawai' },
+    { label: 'Persetujuan', keterangan: 'Antrean seluruh SPPD', ikon: 'check', halaman: 'Persetujuan' },
+    { label: 'Keuangan', keterangan: 'Pencairan dana', ikon: 'wallet', halaman: 'Keuangan' },
+    { label: 'Pengaturan', keterangan: 'Konfigurasi sistem', ikon: 'settings', halaman: 'Pengaturan' },
+  ],
+}
+
+function kartuPerPeran(peran: Peran, r: RingkasanDashboard): KartuStat[] {
+  const k = r.kartu
+  const ak = r.antrean_keuangan
+  switch (peran) {
+    case 'employee':
+      return [
+        { label: 'MENUNGGU PERSETUJUAN', nilai: k.menunggu, ikon: 'clock', warna: 'card-amber', badge: 'badge-amber' },
+        { label: 'DISETUJUI / BERJALAN', nilai: k.disetujui + k.diproses, ikon: 'plane', warna: 'card-teal', badge: 'badge-teal' },
+        { label: 'SELESAI', nilai: k.selesai, ikon: 'check', warna: 'card-blue', badge: 'badge-blue' },
+      ]
+    case 'supervisor':
+      return [
+        { label: 'PERLU KEPUTUSAN ANDA', nilai: r.tugas_persetujuan_saya || k.menunggu, ikon: 'clock', warna: 'card-amber', badge: 'badge-amber' },
+        { label: 'SUDAH DISETUJUI', nilai: k.disetujui + k.diproses, ikon: 'check', warna: 'card-teal', badge: 'badge-teal' },
+        { label: 'DITOLAK', nilai: k.ditolak, ikon: 'file', warna: 'card-blue', badge: 'badge-blue' },
+      ]
+    case 'finance':
+      return [
+        { label: 'UANG MUKA BELUM CAIR', nilai: ak?.uang_muka_belum_dicairkan ?? 0, ikon: 'wallet', warna: 'card-amber', badge: 'badge-amber' },
+        { label: 'LPJ MENUNGGU VERIFIKASI', nilai: ak?.laporan_menunggu_verifikasi ?? 0, ikon: 'file', warna: 'card-teal', badge: 'badge-teal' },
+        { label: 'TOTAL UANG MUKA', nilai: rupiah(r.biaya?.total_uang_muka ?? 0), ikon: 'chart', warna: 'card-blue', badge: 'badge-blue' },
+      ]
+    default:
+      return [
+        { label: 'TOTAL SPPD', nilai: r.total_sppd, ikon: 'plane', warna: 'card-teal', badge: 'badge-teal' },
+        { label: 'MENUNGGU PERSETUJUAN', nilai: k.menunggu, ikon: 'clock', warna: 'card-amber', badge: 'badge-amber' },
+        { label: 'TOTAL ESTIMASI BIAYA', nilai: rupiah(r.biaya?.total_estimasi ?? 0), ikon: 'chart', warna: 'card-blue', badge: 'badge-blue' },
+      ]
   }
 }
 
-function petakanStatusSppd(status: string): {
-  status: 'Pending' | 'Approved' | 'Completed' | 'Rejected'
-  statusVariant: 'pending' | 'approved' | 'completed' | 'rejected'
-} {
+function labelStatus(status: string): { teks: string; varian: string } {
   switch (status) {
-    case 'MENUNGGU_PERSETUJUAN':
-    case 'DRAFT':
-    case 'REVISI':
-      return { status: 'Pending', statusVariant: 'pending' }
     case 'DISETUJUI':
-    case 'DIPROSES':
     case 'DALAM_PERJALANAN':
-      return { status: 'Approved', statusVariant: 'approved' }
+      return { teks: 'Disetujui', varian: 'approved' }
     case 'MENUNGGU_LAPORAN':
     case 'SELESAI':
-      return { status: 'Completed', statusVariant: 'completed' }
+      return { teks: 'Selesai', varian: 'completed' }
     case 'DITOLAK':
-      return { status: 'Rejected', statusVariant: 'rejected' }
+    case 'DIBATALKAN':
+      return { teks: 'Ditolak', varian: 'rejected' }
     default:
-      return { status: 'Pending', statusVariant: 'pending' }
+      return { teks: 'Menunggu', varian: 'pending' }
+  }
+}
+
+function rentang(a?: string, b?: string) {
+  if (!a) return '—'
+  const f = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+  try {
+    return b && b !== a ? `${f.format(new Date(a))} – ${f.format(new Date(b))}` : f.format(new Date(a))
+  } catch {
+    return a
   }
 }
 
 export function DashboardPage({ onNavigate, onBukaSppd }: DashboardPageProps) {
-  const { data, memuat, galat, muatUlang } = usePermintaan(() => apiRingkasanDashboard(), [])
+  const { profil } = useAuth()
+  const peran = (profil?.peran?.[0]?.kode ?? 'employee') as Peran
+  const info = JUDUL[peran] ?? JUDUL.employee
+  const aksi = AKSI[peran] ?? AKSI.employee
+  const nama = profil?.karyawan?.nama_lengkap ?? profil?.username ?? ''
+
+  const { data, memuat, galat, muatUlang } = usePermintaan(
+    () => apiRingkasanDashboard(),
+    [profil?.id],
+  )
+
+  const halamanDaftar: PageKey = peran === 'finance' ? 'Keuangan' : peran === 'supervisor' ? 'Persetujuan' : 'Perjalanan Saya'
 
   return (
     <div className="dashboard-wrap">
-      {/* Header Halaman */}
       <div className="dashboard-header">
-        <h1>Dashboard Overview</h1>
-        <p>Welcome back. Here is the summary of travel operations.</p>
+        <h1>{info.judul}</h1>
+        <p>
+          Halo, <strong>{nama}</strong>. {info.deskripsi}
+        </p>
+      </div>
+
+      {/* Aksi cepat sesuai peran */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+          gap: 14,
+          marginBottom: 20,
+        }}
+      >
+        {aksi.map((a) => (
+          <button
+            key={a.label}
+            type="button"
+            onClick={() => onNavigate(a.halaman)}
+            className="panel"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '14px 16px',
+              textAlign: 'left',
+              cursor: 'pointer',
+              border: '1px solid #E2E8F0',
+              borderRadius: 12,
+              background: '#FFFFFF',
+            }}
+          >
+            <span
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: '#0C2340',
+                color: '#FFFFFF',
+                flexShrink: 0,
+              }}
+            >
+              <Icon name={a.ikon} size={18} />
+            </span>
+            <span>
+              <strong style={{ display: 'block', fontSize: 14, color: '#0F172A' }}>{a.label}</strong>
+              <small style={{ color: '#64748B', fontSize: 12 }}>{a.keterangan}</small>
+            </span>
+          </button>
+        ))}
       </div>
 
       <Muatan data={data} memuat={memuat} galat={galat} onCobaLagi={muatUlang} barisRangka={4}>
         {(ringkasan) => {
-          // Angka dinamis dari backend dengan fallback ke angka mockup jika 0
-          const activeTrips =
-            (ringkasan.kartu.diproses + ringkasan.kartu.disetujui) > 0
-              ? ringkasan.kartu.diproses + ringkasan.kartu.disetujui
-              : 12
-          const pendingApprovals =
-            ringkasan.kartu.menunggu > 0 ? ringkasan.kartu.menunggu : 24
-          const completedTrips =
-            ringkasan.kartu.selesai > 0 ? ringkasan.kartu.selesai : 156
-
-          // Gabungkan data perjalanan nyata dengan mockup agar tampilan persis 4 baris
-          const realRows: TravelRow[] = ringkasan.perjalanan_terkini.map((sppd: Sppd) => {
-            const statusInfo = petakanStatusSppd(sppd.status)
-            return {
-              id: sppd.id,
-              employee: sppd.karyawan?.nama_lengkap ?? 'Pegawai',
-              destination: sppd.lokasiTujuan?.nama_kota ?? sppd.tujuan_lainnya ?? 'Jakarta - Bali',
-              date: formatRentangInggris(sppd.tanggal_berangkat, sppd.tanggal_kembali),
-              status: statusInfo.status,
-              statusVariant: statusInfo.statusVariant,
-              sppdId: sppd.id,
-            }
-          })
-
-          const tampilanBaris: TravelRow[] =
-            realRows.length >= 4
-              ? realRows.slice(0, 4)
-              : [...realRows, ...MOCK_ROWS.slice(realRows.length)]
+          const kartu = kartuPerPeran(peran, ringkasan)
+          const baris: Sppd[] = (ringkasan.perjalanan_terkini ?? []).slice(0, 5)
 
           return (
             <>
-              {/* Notifikasi tugas persetujuan jika ada */}
-              {ringkasan.tugas_persetujuan_saya > 0 && (
+              {peran === 'supervisor' && ringkasan.tugas_persetujuan_saya > 0 && (
                 <div
                   className="panel"
                   style={{
@@ -157,11 +222,12 @@ export function DashboardPage({ onNavigate, onBukaSppd }: DashboardPageProps) {
                     background: '#eff6ff',
                     border: '1px solid #bfdbfe',
                     borderRadius: 10,
+                    marginBottom: 16,
                   }}
                 >
                   <Icon name="clock" size={18} />
                   <span style={{ fontSize: 13, color: '#1e3a8a' }}>
-                    <strong>{ringkasan.tugas_persetujuan_saya} pengajuan</strong> menunggu keputusan persetujuan Anda.{' '}
+                    <strong>{ringkasan.tugas_persetujuan_saya} pengajuan</strong> menunggu keputusan Anda.{' '}
                     <button
                       type="button"
                       className="btn-tautan"
@@ -174,48 +240,25 @@ export function DashboardPage({ onNavigate, onBukaSppd }: DashboardPageProps) {
                 </div>
               )}
 
-              {/* 3 Stat Cards di Atas */}
               <div className="dashboard-stat-grid">
-                {/* Kartu 1: ACTIVE TRIPS */}
-                <div className="dash-stat-card card-teal">
-                  <div className="dash-stat-top">
-                    <span className="dash-stat-label">ACTIVE TRIPS</span>
-                    <div className="dash-stat-badge badge-teal">
-                      <Icon name="plane" size={18} />
+                {kartu.map((c) => (
+                  <div key={c.label} className={`dash-stat-card ${c.warna}`}>
+                    <div className="dash-stat-top">
+                      <span className="dash-stat-label">{c.label}</span>
+                      <div className={`dash-stat-badge ${c.badge}`}>
+                        <Icon name={c.ikon} size={18} />
+                      </div>
                     </div>
+                    <div className="dash-stat-value">{c.nilai}</div>
                   </div>
-                  <div className="dash-stat-value">{activeTrips}</div>
-                </div>
-
-                {/* Kartu 2: PENDING APPROVALS */}
-                <div className="dash-stat-card card-amber">
-                  <div className="dash-stat-top">
-                    <span className="dash-stat-label">PENDING APPROVALS</span>
-                    <div className="dash-stat-badge badge-amber">
-                      <Icon name="file" size={18} />
-                    </div>
-                  </div>
-                  <div className="dash-stat-value">{pendingApprovals}</div>
-                </div>
-
-                {/* Kartu 3: COMPLETED THIS MONTH */}
-                <div className="dash-stat-card card-blue">
-                  <div className="dash-stat-top">
-                    <span className="dash-stat-label">COMPLETED THIS MONTH</span>
-                    <div className="dash-stat-badge badge-blue">
-                      <Icon name="check" size={18} />
-                    </div>
-                  </div>
-                  <div className="dash-stat-value">{completedTrips}</div>
-                </div>
+                ))}
               </div>
 
-              {/* Tabel Recent Travel Requests */}
               <div className="dash-table-card">
                 <div className="dash-table-head">
-                  <h2>Recent Travel Requests</h2>
-                  <button type="button" onClick={() => onNavigate('Perjalanan Saya')}>
-                    View All
+                  <h2>{peran === 'employee' ? 'Pengajuan Terbaru Saya' : 'Pengajuan SPPD Terbaru'}</h2>
+                  <button type="button" onClick={() => onNavigate(halamanDaftar)}>
+                    Lihat Semua
                   </button>
                 </div>
 
@@ -223,69 +266,56 @@ export function DashboardPage({ onNavigate, onBukaSppd }: DashboardPageProps) {
                   <table className="dash-table">
                     <thead>
                       <tr>
-                        <th>EMPLOYEE</th>
-                        <th>DESTINATION</th>
-                        <th>DATE</th>
+                        <th>PEGAWAI</th>
+                        <th>TUJUAN</th>
+                        <th>TANGGAL</th>
                         <th>STATUS</th>
-                        <th>ACTIONS</th>
+                        <th />
                       </tr>
                     </thead>
                     <tbody>
-                      {tampilanBaris.map((item) => (
-                        <tr
-                          key={item.id}
-                          style={{ cursor: item.sppdId ? 'pointer' : 'default' }}
-                          onClick={() => {
-                            if (item.sppdId) onBukaSppd(item.sppdId)
-                          }}
-                        >
-                          <td>
-                            <div className="dash-employee-cell">
-                              <div className="dash-employee-avatar">
-                                {item.employee.charAt(0)}
-                              </div>
-                              <span className="dash-employee-name">{item.employee}</span>
-                            </div>
-                          </td>
-                          <td>{item.destination}</td>
-                          <td>{item.date}</td>
-                          <td>
-                            <span className={`dash-status-pill ${item.statusVariant}`}>
-                              {item.status}
-                            </span>
-                          </td>
-                          <td>
-                            <button
-                              type="button"
-                              className="dash-action-btn"
-                              aria-label="Actions"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                if (item.sppdId) {
-                                  onBukaSppd(item.sppdId)
-                                } else {
-                                  onNavigate('Perjalanan Saya')
-                                }
-                              }}
-                            >
-                              <Icon name="dots" size={16} />
-                            </button>
+                      {baris.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} style={{ textAlign: 'center', color: '#64748B', padding: 24 }}>
+                            Belum ada pengajuan.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        baris.map((s) => {
+                          const st = labelStatus(s.status)
+                          const namaPegawai = s.pemohon?.nama_lengkap ?? 'Pegawai'
+                          return (
+                            <tr key={s.id} style={{ cursor: 'pointer' }} onClick={() => onBukaSppd(s.id)}>
+                              <td>
+                                <div className="dash-employee-cell">
+                                  <div className="dash-employee-avatar">{namaPegawai.charAt(0)}</div>
+                                  <span className="dash-employee-name">{namaPegawai}</span>
+                                </div>
+                              </td>
+                              <td>{s.lokasiTujuan?.nama_kota ?? s.tujuan_lainnya ?? '—'}</td>
+                              <td>{rentang(s.tanggal_berangkat, s.tanggal_kembali)}</td>
+                              <td>
+                                <span className={`dash-status-pill ${st.varian}`}>{st.teks}</span>
+                              </td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="dash-action-btn"
+                                  aria-label="Detail"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    onBukaSppd(s.id)
+                                  }}
+                                >
+                                  <Icon name="dots" size={16} />
+                                </button>
+                              </td>
+                            </tr>
+                          )
+                        })
+                      )}
                     </tbody>
                   </table>
-                </div>
-              </div>
-
-              {/* Catatan Skenario Pengujian UKK Sesuai Gambar */}
-              <div className="dash-guidance-box">
-                <ol>
-                  <li>Membuat dan Menembus Request API Baru (GET / POST, dll)</li>
-                  <li>Mengimpor Koleksi API yang Sudah Ada (dari Postman, OpenAPI/Swagger, cURL)</li>
-                </ol>
-                <div style={{ marginTop: 6, fontWeight: 600, color: '#475569' }}>
-                  Skenario 1: Menembak Endpoint API Baru (Contoh: GET Request)
                 </div>
               </div>
             </>

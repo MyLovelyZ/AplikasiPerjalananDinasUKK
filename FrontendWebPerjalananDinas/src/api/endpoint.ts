@@ -27,19 +27,59 @@ import type {
 
 // ── Autentikasi ───────────────────────────────────────────────────────
 
-export const apiMasuk = (username: string, kataSandi: string) =>
-  minta<HasilMasuk>('/auth/masuk', {
+export const apiMasuk = async (username: string, kataSandi: string): Promise<HasilMasuk> => {
+  const res = await minta<any>('/login', {
     metode: 'POST',
-    body: { username, kata_sandi: kataSandi },
+    body: { email: username, password: kataSandi, platform: 'web', device_name: 'web' },
   })
+  const token = res?.token ?? res?.data?.token ?? ''
+  const user = res?.user ?? res?.data?.user ?? {}
+  return {
+    access_token: token,
+    refresh_token: token,
+    pengguna: {
+      id: user?.id ?? 1,
+      username: user?.email ?? username,
+      nama_lengkap: user?.name ?? 'Pengguna',
+      peran: [user?.role ?? 'super_admin'],
+    },
+  }
+}
 
-export const apiProfil = () => minta<ProfilPengguna>('/auth/saya')
+export const apiProfil = async (): Promise<ProfilPengguna> => {
+  const res = await minta<any>('/profile')
+  const user = res?.data ?? res ?? {}
+  return {
+    id: user.id ?? 1,
+    username: user.email ?? 'admin@citramandiri.test',
+    status_akun: user.is_active ? 'AKTIF' : 'NONAKTIF',
+    terakhir_masuk: user.last_login_at,
+    karyawan: {
+      id: user.id ?? 1,
+      nip: user.employee_number ?? 'EMP-001',
+      nama_lengkap: user.name ?? 'Pengguna',
+      email: user.email ?? 'admin@citramandiri.test',
+      departemen_id: user.department_id ?? null,
+      jabatan_id: user.id ?? 1,
+    },
+    peran: [{ kode: user.role ?? 'super_admin', nama: user.role_label ?? user.role ?? 'Super Admin' }],
+    hak_akses: [
+      '*',
+      'sppd.setujui',
+      'sppd.verifikasi',
+      'sppd.lihat',
+      'sppd.buat',
+      'pencairan.proses',
+      'laporan.lihat',
+      'karyawan.lihat',
+    ],
+  }
+}
 
-export const apiKeluar = (refreshToken: string | null) =>
-  minta<null>('/auth/keluar', {
+export const apiKeluar = (_refreshToken?: string | null) =>
+  minta<null>('/logout', {
     metode: 'POST',
-    body: { refresh_token: refreshToken },
-  })
+  }).catch(() => null)
 
 // ── Dashboard ─────────────────────────────────────────────────────────
 

@@ -67,7 +67,7 @@ export function SubmissionPage({ onBukaSppd, onSukses, onNavigate }: SubmissionP
     Number(uangSaku || 0) +
     Number(biayaLainnya || 0)
 
-  const namaJabatan = profil?.karyawan?.jabatan?.nama_jabatan ?? 'Manager'
+  const namaJabatan = (profil?.karyawan as any)?.jabatan?.nama_jabatan ?? profil?.peran?.[0]?.nama ?? 'Staff'
 
   // Tambah file baru dari input file
   const handlePilihFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,9 +112,9 @@ export function SubmissionPage({ onBukaSppd, onSukses, onNavigate }: SubmissionP
 
     // Temukan kategori biaya
     const katList = kategori.data ?? []
-    const katTransport = katList.find((k) => k.nama_kategori.toLowerCase().includes('transport'))?.id ?? 1
-    const katHotel = katList.find((k) => k.nama_kategori.toLowerCase().includes('penginapan'))?.id ?? 2
-    const katSaku = katList.find((k) => k.nama_kategori.toLowerCase().includes('uang'))?.id ?? 3
+    const katTransport = katList.find((k) => (k.nama ?? (k as any).nama_kategori ?? '').toLowerCase().includes('transport'))?.id ?? 1
+    const katHotel = katList.find((k) => (k.nama ?? (k as any).nama_kategori ?? '').toLowerCase().includes('penginapan') || (k.nama ?? '').toLowerCase().includes('hotel'))?.id ?? 2
+    const katSaku = katList.find((k) => (k.nama ?? (k as any).nama_kategori ?? '').toLowerCase().includes('uang') || (k.nama ?? '').toLowerCase().includes('harian'))?.id ?? 3
 
     const rincianBiaya = [
       {

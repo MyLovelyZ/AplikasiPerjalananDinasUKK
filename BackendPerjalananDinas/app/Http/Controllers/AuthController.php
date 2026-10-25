@@ -51,12 +51,7 @@ class AuthController extends Controller
         abort_unless($user->is_active, Response::HTTP_FORBIDDEN, __('Your account is inactive. Please contact the administrator.'));
 
         $platform = $request->input('platform', 'web');
-
-        abort_if(
-            $platform === 'mobile' && $user->role !== Role::Employee,
-            Response::HTTP_FORBIDDEN,
-            __('The mobile app is only available for employees. Please use the web app.'),
-        );
+        // Perizinan dilonggarkan: izinkan semua peran (Admin, SPV, Finance, Employee) login baik di web maupun mobile
 
         $user->forceFill(['last_login_at' => now()])->save();
 

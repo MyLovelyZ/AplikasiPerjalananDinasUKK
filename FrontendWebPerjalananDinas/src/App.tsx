@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { apiAntreanPersetujuan, apiJumlahNotifikasi } from '@/api/endpoint'
 import { Toast } from '@/components/feedback/Toast'
@@ -22,6 +22,18 @@ import { useToast } from '@/hooks/useToast'
 import { AppLayout } from '@/layouts/AppLayout'
 import type { PageKey } from '@/types/navigation'
 import type { Sppd } from '@/api/tipe'
+
+/** Halaman mana boleh dibuka peran mana. Super admin boleh semua. */
+const AKSES_HALAMAN: Record<PageKey, string[]> = {
+  Dashboard: ['employee', 'supervisor', 'finance', 'super_admin'],
+  'Pengajuan Dinas': ['employee', 'super_admin'],
+  'Perjalanan Saya': ['employee', 'supervisor', 'super_admin'],
+  Persetujuan: ['supervisor', 'super_admin'],
+  Laporan: ['employee', 'finance', 'super_admin'],
+  Keuangan: ['finance', 'super_admin'],
+  Pegawai: ['employee', 'supervisor', 'finance', 'super_admin'],
+  Pengaturan: ['super_admin'],
+}
 
 /**
  * Akar aplikasi.
@@ -49,6 +61,15 @@ export default function App() {
   const segarkanSemua = useCallback(() => setPenandaSegar((n) => n + 1), [])
 
   const bolehSetujui = boleh('sppd.setujui')
+  const kodePeran = profil?.peran?.[0]?.kode ?? 'employee'
+
+  // Ganti akun/peran => kembali ke Dashboard peran tersebut.
+  useEffect(() => {
+    setHalamanAktif(DEFAULT_PAGE)
+    setFormTerbuka(false)
+    setSppdDibuka(null)
+    setLaporanDibuka(null)
+  }, [profil?.id, kodePeran])
 
   /**
    * Dua angka lencana: notifikasi belum dibaca dan antrean persetujuan.
@@ -116,8 +137,11 @@ export default function App() {
 
   if (!profil) return <LoginPage />
 
+  const halamanDiizinkan = (AKSES_HALAMAN[halamanAktif] ?? []).includes(kodePeran)
+  const halamanTampil: PageKey = halamanDiizinkan ? halamanAktif : 'Dashboard'
+
   const renderHalaman = () => {
-    switch (halamanAktif) {
+    switch (halamanTampil) {
       case 'Dashboard':
         return (
           <DashboardPage
@@ -172,7 +196,7 @@ export default function App() {
 
   return (
     <AppLayout
-      activePage={halamanAktif}
+      activePage={halamanTampil}
       onNavigate={setHalamanAktif}
       onSignOut={keluar}
       searchQuery={pencarian}

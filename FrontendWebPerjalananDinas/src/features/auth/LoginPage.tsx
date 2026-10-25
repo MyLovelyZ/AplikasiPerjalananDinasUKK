@@ -152,8 +152,35 @@ export function LoginPage() {
             </button>
 
             {/* Akun Contoh untuk Pengujian */}
-            <div className="masuk-info-uji">
-              <strong>Akun contoh:</strong> Super Admin <code>user24001</code> / sandi <code>password123</code>
+            <div className="masuk-info-uji" style={{ marginTop: '1rem', fontSize: '12px', lineHeight: 1.6 }}>
+              <strong>Akun contoh (sandi: <code>password</code>):</strong>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                {[
+                  { role: 'Admin', email: 'admin@citramandiri.test' },
+                  { role: 'Finance', email: 'finance@citramandiri.test' },
+                  { role: 'Supervisor', email: 'supervisor@citramandiri.test' },
+                  { role: 'Employee', email: 'employee@citramandiri.test' },
+                ].map((acc) => (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    style={{
+                      background: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '4px',
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => {
+                      setUsername(acc.email)
+                      setKataSandi('password')
+                    }}
+                  >
+                    {acc.role}
+                  </button>
+                ))}
+              </div>
             </div>
           </form>
         </div>
