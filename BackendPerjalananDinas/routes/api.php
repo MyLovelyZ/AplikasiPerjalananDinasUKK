@@ -66,5 +66,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/disbursements', [Finance\DisbursementController::class, 'index'])->name('disbursements.index');
         Route::post('/disbursements/{disbursement}/pay', [Finance\DisbursementController::class, 'pay'])->name('disbursements.pay');
         Route::get('/reports', [Finance\ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/monthly', Finance\MonthlyComparisonController::class)->name('reports.monthly');
     });
 });

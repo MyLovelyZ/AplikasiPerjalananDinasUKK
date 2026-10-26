@@ -5,10 +5,11 @@ import type { FilterLaporanKeuangan } from '@/api/endpoint'
 import { Icon } from '@/components/ui/Icon'
 import { Kosong, Muatan } from '@/components/ui/Keadaan'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Pilihan } from '@/components/ui/Pilihan'
 import { PanelHeader } from '@/components/ui/PanelHeader'
 import { StatCard } from '@/components/ui/StatCard'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { LABEL_KATEGORI_BIAYA, NAMA_BULAN, RUPA_STATUS_PERJALANAN } from '@/constants/label'
+import { LABEL_KATEGORI_BIAYA, labelPeriode, NAMA_BULAN, RUPA_STATUS_PERJALANAN } from '@/constants/label'
 import { GrafikBatang } from '@/features/dashboard/components/GrafikBatang'
 import { useKirim } from '@/hooks/useKirim'
 import { usePermintaan } from '@/hooks/usePermintaan'
@@ -40,7 +41,7 @@ export function LaporanKeuanganPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Keuangan"
+        eyebrow="Manajer Keuangan"
         title="Laporan Keuangan"
         description="Rekap perjalanan, realisasi biaya, pencairan, dan serapan anggaran untuk satu tahun atau satu bulan."
         action={
@@ -58,37 +59,40 @@ export function LaporanKeuanganPage() {
       />
 
       {unduhan.galat && (
-        <div className="kotak-galat" role="alert" style={{ marginBottom: 16 }}>
+        <div className="kotak-galat" role="alert">
           <Icon name="peringatan" size={16} />
           <span>Gagal mengunduh laporan: {unduhan.galat}</span>
         </div>
       )}
 
-      <section className="panel" style={{ marginBottom: 16 }}>
+      <section className="panel">
         <div className="bilah-alat">
-          <select value={tahun} onChange={(e) => setTahun(Number(e.target.value))} aria-label="Tahun">
-            {[TAHUN_INI - 2, TAHUN_INI - 1, TAHUN_INI, TAHUN_INI + 1].map((t) => (
-              <option key={t} value={t}>
-                Tahun {t}
-              </option>
-            ))}
-          </select>
-          <select value={bulan} onChange={(e) => setBulan(Number(e.target.value))} aria-label="Bulan">
-            <option value={0}>Setahun penuh</option>
-            {NAMA_BULAN.map((nama, indeks) => (
-              <option key={nama} value={indeks + 1}>
-                {nama}
-              </option>
-            ))}
-          </select>
-          <select value={departemen} onChange={(e) => setDepartemen(Number(e.target.value))} aria-label="Departemen">
-            <option value={0}>Semua departemen</option>
-            {(opsi.data?.departments ?? []).map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
+          <Pilihan
+            label="Tahun"
+            nilai={tahun}
+            onUbah={setTahun}
+            opsi={[TAHUN_INI - 2, TAHUN_INI - 1, TAHUN_INI, TAHUN_INI + 1].map((t) => ({ nilai: t, label: String(t) }))}
+          />
+          <Pilihan
+            label="Periode"
+            nilai={bulan}
+            bawaan={0}
+            onUbah={setBulan}
+            opsi={[
+              { nilai: 0, label: 'Setahun penuh' },
+              ...NAMA_BULAN.map((nama, indeks) => ({ nilai: indeks + 1, label: nama })),
+            ]}
+          />
+          <Pilihan
+            label="Departemen"
+            nilai={departemen}
+            bawaan={0}
+            onUbah={setDepartemen}
+            opsi={[
+              { nilai: 0, label: 'Semua departemen' },
+              ...(opsi.data?.departments ?? []).map((d) => ({ nilai: d.id, label: d.name })),
+            ]}
+          />
         </div>
       </section>
 
@@ -99,28 +103,21 @@ export function LaporanKeuanganPage() {
             <>
               <div className="grid-stat">
                 <StatCard
-                  icon="plane"
                   title="Perjalanan disetujui"
                   value={r.trips_approved}
                   note={`${r.trips_submitted} diajukan · estimasi ${rupiahRingkas(r.estimated_cost)}`}
                 />
                 <StatCard
-                  icon="chart"
-                  warna="ungu"
                   title="Realisasi biaya"
                   value={rupiahRingkas(r.realized_spending)}
                   note="Pengeluaran terverifikasi"
                 />
                 <StatCard
-                  icon="wallet"
-                  warna="kuning"
                   title="Dana dibayarkan"
                   value={rupiahRingkas(r.advances_paid + r.reimbursements_paid)}
                   note={`Uang muka ${rupiahRingkas(r.advances_paid)} · reimburse ${rupiahRingkas(r.reimbursements_paid)}`}
                 />
                 <StatCard
-                  icon="grid"
-                  warna="hijau"
                   title="Sisa anggaran"
                   value={rupiahRingkas(r.budget_remaining)}
                   note={`Dari pagu ${rupiahRingkas(r.budget_amount)}`}
@@ -129,7 +126,7 @@ export function LaporanKeuanganPage() {
 
               <div className="grid-dua">
                 <section className="panel">
-                  <PanelHeader title="Realisasi per Kategori" subtitle={laporan.period.label} />
+                  <PanelHeader title="Realisasi per Kategori" subtitle={labelPeriode(laporan.period)} />
                   <div className="daftar">
                     {laporan.by_category.map((k) => (
                       <div className="daftar-baris" key={k.category}>
@@ -152,7 +149,7 @@ export function LaporanKeuanganPage() {
                   </section>
                 ) : (
                   <section className="panel">
-                    <PanelHeader title="Pencairan" subtitle={laporan.period.label} />
+                    <PanelHeader title="Pencairan" subtitle={labelPeriode(laporan.period)} />
                     <div className="daftar">
                       <div className="daftar-baris">
                         <span className="isi">
@@ -177,7 +174,7 @@ export function LaporanKeuanganPage() {
                 )}
               </div>
 
-              <section className="panel" style={{ marginTop: 16 }}>
+              <section className="panel">
                 <PanelHeader title="Per Departemen" subtitle="Estimasi perjalanan disetujui dibanding realisasi dan pagu" />
                 {laporan.by_department.length === 0 ? (
                   <Kosong ikon="gedung" judul="Belum ada data" pesan="Tidak ada aktivitas pada periode ini." />
@@ -209,7 +206,7 @@ export function LaporanKeuanganPage() {
                 )}
               </section>
 
-              <section className="panel" style={{ marginTop: 16 }}>
+              <section className="panel">
                 <PanelHeader title="Daftar Perjalanan" subtitle={`${laporan.trips.length} perjalanan berangkat pada periode ini`} />
                 {laporan.trips.length === 0 ? (
                   <Kosong ikon="plane" judul="Tidak ada perjalanan" pesan="Tidak ada perjalanan pada periode ini." />

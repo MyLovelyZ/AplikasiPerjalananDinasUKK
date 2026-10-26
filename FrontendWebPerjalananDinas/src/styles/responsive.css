@@ -1,8 +1,10 @@
 /* ==========================================================================
    Responsive — penyesuaian tata letak untuk layar sempit
 
-   Sidebar berubah menjadi laci geser di bawah 1024px; kelas `.buka`
-   dipasang dari komponen AppLayout.
+   ≤1180px  grid dua kolom menjadi satu kolom
+   ≤1024px  sidebar berubah menjadi laci geser (kelas `.buka` dari AppLayout)
+   ≤720px   ponsel: judul, angka ringkasan, formulir, dan modal menyesuaikan lebar
+   ≤480px   ponsel kecil
    ========================================================================== */
 
 @media (max-width: 1180px) {
@@ -11,11 +13,20 @@
   .grid-dua.rata {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .ringkasan-wizard {
+    position: static;
+  }
 }
 
 @media (max-width: 1024px) {
+  :root {
+    --jarak-konten: 16px;
+  }
+
   .app {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    background: var(--latar);
   }
 
   .sidebar {
@@ -23,35 +34,30 @@
     top: 0;
     left: 0;
     z-index: 70;
-    width: var(--lebar-sidebar);
+    width: min(var(--lebar-sidebar), 84vw);
     transform: translateX(-100%);
     transition: transform 0.22s ease;
-    box-shadow: var(--bayang-naik);
   }
 
   .sidebar.buka {
     transform: translateX(0);
+    box-shadow: var(--bayang-naik);
   }
 
   .tirai-sidebar {
     position: fixed;
     inset: 0;
-    background: rgb(15 27 45 / 40%);
+    background: rgb(25 39 58 / 55%);
     z-index: 65;
     border: 0;
   }
 
   .mobile-menu {
     display: grid;
-    place-items: center;
   }
 
   .search {
-    width: 190px;
-  }
-
-  .content {
-    padding: 20px 16px;
+    width: 200px;
   }
 }
 
@@ -63,12 +69,26 @@
 
 @media (max-width: 860px) {
   .layar-masuk {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  /* Panel biru pengantar disembunyikan agar formulir mendapat layar penuh. */
+  /* Panel pengantar disembunyikan agar formulir mendapat layar penuh. */
   .masuk-sisi {
     display: none;
+  }
+
+  .baris-biaya {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .baris-biaya-judul,
+  .baris-biaya .bidang:nth-of-type(1) {
+    grid-column: 1 / -1;
+  }
+
+  .baris-biaya-subtotal {
+    grid-column: 1 / -1;
+    padding-bottom: 0;
   }
 
   .baris-rincian {
@@ -82,13 +102,25 @@
 }
 
 @media (max-width: 720px) {
-  .search {
+  .grafik-label b {
+    font-size: 13px;
+  }
+
+  .grafik.grafik-ganda {
+    padding-top: 30px;
+  }
+
+  .topbar {
+    gap: 8px;
+  }
+
+  .topbar-judul small {
     display: none;
   }
 
-  .crumb span,
-  .crumb b {
-    display: none;
+  .search {
+    width: 150px;
+    padding: 0 11px;
   }
 
   .page-title {
@@ -96,38 +128,164 @@
     align-items: stretch;
   }
 
-  .page-title .btn {
+  .page-title h1 {
+    font-size: 24px;
+  }
+
+  .page-title .btn,
+  .page-title .aksi-judul {
     width: 100%;
   }
 
-  .hero {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .hero-aksi {
-    width: 100%;
-  }
-
-  .hero-aksi .btn {
+  .page-title .aksi-judul .btn {
     flex: 1;
   }
 
+  .grid-stat {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px 16px;
+  }
+
+  .stat strong {
+    font-size: 24px;
+  }
+
+  .sorotan strong {
+    font-size: 28px;
+  }
+
+  .tindakan-angka {
+    width: 48px;
+    height: 48px;
+    font-size: 21px;
+  }
+
   .grid-persetujuan {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .baris-rincian {
     grid-template-columns: 1fr;
   }
 
+  /* Filter memenuhi lebar agar mudah disentuh. */
+  .bilah-alat .pilihan,
+  .bilah-alat .pilihan-tanggal,
+  .bilah-alat .pencarian {
+    flex: 1 1 150px;
+    max-width: none;
+  }
+
+  .pilihan-tombol,
+  .pilihan-tanggal {
+    min-width: 0;
+  }
+
+  /* Daftar selebar tombolnya agar tidak keluar dari layar. */
+  .pilihan-daftar {
+    right: 0;
+    width: auto;
+    max-width: none;
+  }
+
+  .pilihan-daftar li {
+    white-space: normal;
+  }
+
+  .bilah-alat .dorong {
+    margin-left: 0;
+  }
+
+  .panel-head {
+    flex-wrap: wrap;
+  }
+
+  /* Tab dibagi rata selebar layar; teks panjang turun ke baris kedua, bukan digulir. */
+  .tab {
+    gap: 12px;
+  }
+
+  .tab button {
+    flex: 1;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.35;
+  }
+
+  /* Langkah wizard: hanya langkah aktif yang menampilkan teks. */
+  .langkah-wizard li {
+    flex: 0 0 auto;
+  }
+
+  .langkah-wizard li.aktif {
+    flex: 1;
+  }
+
+  .langkah-wizard li:not(.aktif) em {
+    display: none;
+  }
+
+  .aksi-wizard > .btn,
+  .aksi-kanan,
+  .aksi-kanan .btn {
+    flex: 1;
+  }
+
+  /* Modal naik dari bawah layar dan memenuhi lebar. */
+  .lapisan-modal {
+    padding: 0;
+    place-items: end stretch;
+  }
+
+  .modal,
+  .modal.lebar,
+  .modal.sempit {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .modal:not(.lembar) :is(.modal-head, .modal-body) {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
   .modal-kaki {
     flex-wrap: wrap;
+  }
+
+  .modal:not(.lembar) .modal-kaki {
+    padding: 12px 16px;
   }
 
   .modal-kaki .kiri {
     width: 100%;
     margin-bottom: 4px;
+  }
+
+  .modal-kaki .btn {
+    flex: 1;
+  }
+
+  .modal.lembar {
+    border-radius: 0;
+  }
+
+  .grid-persetujuan {
+    gap: 28px;
+  }
+
+  .content {
+    gap: 28px;
+  }
+
+  .laci-notif {
+    position: fixed;
+    top: calc(var(--tinggi-topbar) + 6px);
+    left: 12px;
+    right: 12px;
+    width: auto;
   }
 
   .toast {
@@ -138,34 +296,39 @@
   }
 }
 
-@media (max-width: 520px) {
-  .grid-stat {
-    grid-template-columns: 1fr 1fr;
+@media (max-width: 480px) {
+  /* Bila kolom cari tampil, judul halaman mengalah karena sudah ada di isi halaman. */
+  .topbar:has(.search) .topbar-judul {
+    display: none;
   }
 
-  .stat {
-    padding: 13px;
+  .search {
+    flex: 1;
+    width: auto;
   }
 
-  .stat strong {
-    font-size: 18px;
+  .top-actions {
+    flex: 1;
+    justify-content: flex-end;
   }
 
-  .stat-icon {
-    width: 34px;
-    height: 34px;
-  }
-
-  .content {
-    padding: 16px 12px;
+  table.tabel thead th,
+  table.tabel tbody td {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
   .grafik {
     height: 140px;
-    padding: 14px 12px 0;
+    gap: 4px;
+    padding-top: 14px;
   }
 
   .grafik-kolom small {
-    font-size: 9px;
+    font-size: 11.5px;
+  }
+
+  .masuk-panel {
+    padding: 28px 16px;
   }
 }

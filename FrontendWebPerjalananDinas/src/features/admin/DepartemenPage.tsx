@@ -29,7 +29,7 @@ export function DepartemenPage() {
       <PageHeader
         eyebrow="Super Admin"
         title="Departemen"
-        description="Unit kerja tempat pegawai bernaung dan anggaran dialokasikan. Departemen yang masih dipakai cukup dinonaktifkan."
+        description="Unit kerja tempat karyawan bernaung dan anggaran dialokasikan. Departemen yang masih dipakai cukup dinonaktifkan."
         action={
           <button type="button" className="btn utama" onClick={() => setDiubah('baru')}>
             <Icon name="plus" size={17} />
@@ -39,7 +39,7 @@ export function DepartemenPage() {
       />
 
       {hapus.galat && (
-        <div className="kotak-galat" role="alert" style={{ marginBottom: 16 }}>
+        <div className="kotak-galat" role="alert">
           <Icon name="peringatan" size={16} />
           <span>{hapus.galat}</span>
         </div>

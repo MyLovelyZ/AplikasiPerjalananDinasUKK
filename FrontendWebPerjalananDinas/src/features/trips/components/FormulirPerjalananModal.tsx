@@ -12,7 +12,7 @@ import {
   LABEL_JENIS_PERJALANAN,
   LABEL_KATEGORI_BIAYA,
   LABEL_TRANSPORTASI,
-  opsiDari,
+  opsiBerlabel,
 } from '@/constants/label'
 import { useKirim } from '@/hooks/useKirim'
 import { usePermintaan } from '@/hooks/usePermintaan'
@@ -144,7 +144,7 @@ export function FormulirPerjalananModal({ perjalanan, opsiAwal, onTutup, onTersi
       judul={modeUbah ? `Ubah ${perjalanan.request_number}` : 'Ajukan Perjalanan Dinas'}
       keterangan={
         opsi.data?.approver
-          ? `Pengajuan akan dikirim ke atasan Anda: ${opsi.data.approver.name}.`
+          ? `Pengajuan akan dikirim ke supervisor Anda: ${opsi.data.approver.name}.`
           : 'Lengkapi formulir berikut, lalu simpan sebagai draf atau langsung ajukan.'
       }
       ukuran="lebar"
@@ -209,7 +209,7 @@ export function FormulirPerjalananModal({ perjalanan, opsiAwal, onTutup, onTersi
             <div className="bidang">
               <label htmlFor="trip-type">Jenis perjalanan</label>
               <select id="trip-type" value={tripType} onChange={(e) => setTripType(e.target.value)}>
-                {opsiDari(LABEL_JENIS_PERJALANAN).map((o) => (
+                {opsiBerlabel(opsi.data?.trip_types, LABEL_JENIS_PERJALANAN).map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>
@@ -220,7 +220,7 @@ export function FormulirPerjalananModal({ perjalanan, opsiAwal, onTutup, onTersi
             <div className="bidang">
               <label htmlFor="transportation">Transportasi</label>
               <select id="transportation" value={transportation} onChange={(e) => setTransportation(e.target.value)}>
-                {opsiDari(LABEL_TRANSPORTASI).map((o) => (
+                {opsiBerlabel(opsi.data?.transportations, LABEL_TRANSPORTASI).map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>
@@ -309,7 +309,7 @@ export function FormulirPerjalananModal({ perjalanan, opsiAwal, onTutup, onTersi
                       onChange={(e) => ubahBaris(baris.kunci, { category: e.target.value as BarisBiaya['category'] })}
                     >
                       <option value="">— Pilih —</option>
-                      {opsiDari(LABEL_KATEGORI_BIAYA).map((o) => (
+                      {opsiBerlabel(opsi.data?.expense_categories, LABEL_KATEGORI_BIAYA).map((o) => (
                         <option key={o.value} value={o.value}>
                           {o.label}
                         </option>
@@ -374,7 +374,7 @@ export function FormulirPerjalananModal({ perjalanan, opsiAwal, onTutup, onTersi
           <div className="bidang">
             <label>Dokumen pendukung</label>
             {(dokumenLama.length > 0 || dokumenBaru.length > 0) && (
-              <div className="daftar" style={{ border: '1px solid var(--garis)', borderRadius: 9, marginBottom: 8 }}>
+              <div className="daftar berbingkai" style={{ marginBottom: 8 }}>
                 {dokumenLama.map((d) => (
                   <div className="daftar-baris" key={`lama-${d.id}`}>
                     <span className="isi">
@@ -420,7 +420,7 @@ export function FormulirPerjalananModal({ perjalanan, opsiAwal, onTutup, onTersi
                 onChange={(e) => setJenisDokumen(e.target.value as JenisDokumen)}
                 style={{ maxWidth: 220 }}
               >
-                {opsiDari(LABEL_JENIS_DOKUMEN).map((o) => (
+                {opsiBerlabel(opsi.data?.document_types, LABEL_JENIS_DOKUMEN).map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>
@@ -450,10 +450,10 @@ export function FormulirPerjalananModal({ perjalanan, opsiAwal, onTutup, onTersi
           </div>
 
           <div className="bidang">
-            <label htmlFor="notes">Catatan untuk atasan</label>
+            <label htmlFor="notes">Catatan untuk supervisor</label>
             <textarea
               id="notes"
-              placeholder="Opsional — hal yang perlu diketahui atasan"
+              placeholder="Opsional — hal yang perlu diketahui supervisor"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />

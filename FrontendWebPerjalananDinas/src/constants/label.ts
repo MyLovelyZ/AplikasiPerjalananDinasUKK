@@ -29,18 +29,18 @@ interface Rupa {
 
 export const RUPA_STATUS_PERJALANAN: Record<StatusPerjalanan, Rupa> = {
   draft: { label: 'Draf', warna: 'netral' },
-  submitted: { label: 'Menunggu Atasan', warna: 'kuning' },
+  submitted: { label: 'Menunggu Supervisor', warna: 'kuning' },
   supervisor_approved: { label: 'Menunggu Keuangan', warna: 'biru' },
   approved: { label: 'Disetujui', warna: 'hijau' },
   rejected: { label: 'Ditolak', warna: 'merah' },
   cancelled: { label: 'Dibatalkan', warna: 'merah' },
-  completed: { label: 'Selesai', warna: 'ungu' },
+  completed: { label: 'Selesai', warna: 'hijau' },
 }
 
 export const RUPA_STATUS_LAPORAN: Record<StatusLaporan, Rupa> = {
   draft: { label: 'Draf', warna: 'netral' },
   submitted: { label: 'Menunggu Verifikasi', warna: 'kuning' },
-  returned: { label: 'Dikembalikan', warna: 'ungu' },
+  returned: { label: 'Dikembalikan', warna: 'kuning' },
   verified: { label: 'Terverifikasi', warna: 'hijau' },
 }
 
@@ -58,9 +58,9 @@ export const RUPA_STATUS_PENCAIRAN: Record<StatusPencairan, Rupa> = {
 
 export const LABEL_PERAN: Record<Peran, string> = {
   super_admin: 'Super Admin',
-  supervisor: 'Atasan',
-  finance: 'Keuangan',
-  employee: 'Pegawai',
+  supervisor: 'Supervisor',
+  finance: 'Manajer Keuangan',
+  employee: 'Karyawan',
 }
 
 export const LABEL_JENIS_PERJALANAN: Record<JenisPerjalanan, string> = {
@@ -95,7 +95,7 @@ export const LABEL_JENIS_DOKUMEN: Record<JenisDokumen, string> = {
 }
 
 export const LABEL_TAHAP: Record<TahapPersetujuan, string> = {
-  supervisor: 'Persetujuan atasan',
+  supervisor: 'Persetujuan supervisor',
   finance: 'Verifikasi anggaran',
   expense_report: 'Verifikasi laporan biaya',
 }
@@ -114,7 +114,7 @@ export const LABEL_METODE_BAYAR: Record<MetodeBayar, string> = {
 
 export const LABEL_PENYELESAIAN: Record<JenisPenyelesaian, string> = {
   reimbursement: 'Perusahaan membayar kekurangan',
-  refund: 'Pegawai mengembalikan kelebihan',
+  refund: 'Karyawan mengembalikan kelebihan',
   none: 'Tidak ada selisih',
 }
 
@@ -165,13 +165,13 @@ export function teksNotifikasi(n: Notifikasi): { judul: string; pesan: string } 
       return { judul: 'Pengajuan dibatalkan', pesan: `${pelaku} membatalkan perjalanan ${nomor}.` }
     case 'request_supervisor_approved':
       return {
-        judul: 'Disetujui atasan',
+        judul: 'Disetujui supervisor',
         pesan: `${pelaku} menyetujui perjalanan ${nomor}. Kini menunggu verifikasi anggaran oleh Keuangan.`,
       }
     case 'request_awaiting_finance':
       return {
         judul: 'Menunggu verifikasi anggaran',
-        pesan: `Perjalanan ${nomor} telah disetujui atasan dan perlu dicek anggarannya.`,
+        pesan: `Perjalanan ${nomor} telah disetujui supervisor dan perlu dicek anggarannya.`,
       }
     case 'request_approved':
       return {
@@ -222,3 +222,15 @@ export function teksNotifikasi(n: Notifikasi): { judul: string; pesan: string } 
 /** Opsi `<select>` dari peta label, dengan urutan kunci yang ditulis di atas. */
 export const opsiDari = <K extends string>(peta: Record<K, string>) =>
   (Object.entries(peta) as Array<[K, string]>).map(([value, label]) => ({ value, label }))
+
+/**
+ * Opsi `<select>` yang daftarnya diambil dari backend (mis. GET .../create),
+ * dengan label Indonesia dari peta; label backend dipakai bila nilainya belum
+ * dikenal. Selama opsi backend belum tersedia, peta lokal menjadi cadangan.
+ */
+export const opsiBerlabel = <K extends string>(opsi: Array<{ value: K; label: string }> | undefined, peta: Record<K, string>) =>
+  opsi ? opsi.map((o) => ({ value: o.value, label: peta[o.value] ?? o.label })) : opsiDari(peta)
+
+/** Label periode anggaran/laporan: "Oktober 2026" atau "Tahunan 2026". */
+export const labelPeriode = ({ year, month }: { year: number; month: number | null }) =>
+  month ? `${NAMA_BULAN[month - 1]} ${year}` : `Tahunan ${year}`

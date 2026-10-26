@@ -34,7 +34,7 @@ export function VerifikasiPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Keuangan"
+        eyebrow="Manajer Keuangan"
         title="Verifikasi"
         description="Pengajuan yang menunggu verifikasi anggaran sebelum berangkat, dan laporan biaya setelah kembali. Diurutkan dari keberangkatan terdekat."
       />

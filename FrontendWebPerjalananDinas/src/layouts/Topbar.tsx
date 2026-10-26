@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router'
 import { apiDaftarNotifikasi, apiTandaiSemuaDibaca } from '@/api/endpoint'
 import { Icon } from '@/components/ui/Icon'
 import { Kosong, Memuat } from '@/components/ui/Keadaan'
+import { TombolTema } from '@/components/ui/TombolTema'
 import { MENU_NOTIFIKASI, MENU_PROFIL, menuAktif } from '@/constants/navigation'
 import { useAuth } from '@/auth/useAuth'
 import { BarisNotifikasi } from '@/features/notifications/components/BarisNotifikasi'
@@ -23,7 +24,10 @@ export function Topbar({ searchQuery, onSearchChange, onBukaMenu, jumlahBelumDib
   const { pengguna } = useAuth()
   const { pathname } = useLocation()
   const nama = pengguna?.name ?? ''
-  const judul = pengguna ? (menuAktif(pengguna.role, pathname)?.label ?? 'Halaman') : ''
+  const menu = pengguna ? menuAktif(pengguna.role, pathname) : undefined
+  const judul = pathname === '/employee/requests/new' ? 'Ajukan Perjalanan' : (menu?.label ?? 'Halaman')
+  // Kolom cari hanya muncul di halaman daftar yang memang membacanya.
+  const bisaCari = menu?.cari === true && pathname === menu.jalur
 
   return (
     <header className="topbar">
@@ -31,31 +35,30 @@ export function Topbar({ searchQuery, onSearchChange, onBukaMenu, jumlahBelumDib
         <Icon name="menu" />
       </button>
 
-      <div className="crumb">
-        <span>Portal</span>
-        <b>/</b>
+      <div className="topbar-judul">
+        <small>PT. Citra Mandiri</small>
         <strong>{judul}</strong>
       </div>
 
       <div className="top-actions">
-        <div className="search">
-          <Icon name="search" size={17} />
-          <input
-            aria-label="Cari pada halaman ini"
-            placeholder="Cari nomor, nama, atau keperluan..."
-            value={searchQuery}
-            onChange={(event) => onSearchChange(event.target.value)}
-          />
-        </div>
+        {bisaCari && (
+          <div className="search">
+            <Icon name="search" size={16} />
+            <input
+              aria-label="Cari pada halaman ini"
+              placeholder="Cari nomor, nama, atau keperluan..."
+              value={searchQuery}
+              onChange={(event) => onSearchChange(event.target.value)}
+            />
+          </div>
+        )}
+
+        <TombolTema />
 
         <LaciNotifikasi jumlahBelumDibaca={jumlahBelumDibaca} onBerubah={onNotifikasiBerubah} />
 
         <Link to={MENU_PROFIL.jalur} className="top-avatar" title={nama}>
-          {pengguna?.profile_photo_url ? (
-            <img src={pengguna.profile_photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
-          ) : (
-            inisial(nama)
-          )}
+          {pengguna?.profile_photo_url ? <img src={pengguna.profile_photo_url} alt="" /> : inisial(nama)}
         </Link>
       </div>
     </header>
@@ -111,7 +114,7 @@ function LaciNotifikasi({ jumlahBelumDibaca, onBerubah }: { jumlahBelumDibaca: n
         aria-expanded={terbuka}
         onClick={() => setTerbuka((buka) => !buka)}
       >
-        <Icon name="bell" />
+        <Icon name="bell" size={18} />
         {jumlahBelumDibaca > 0 && <i className="titik">{jumlahBelumDibaca > 9 ? '9+' : jumlahBelumDibaca}</i>}
       </button>
 

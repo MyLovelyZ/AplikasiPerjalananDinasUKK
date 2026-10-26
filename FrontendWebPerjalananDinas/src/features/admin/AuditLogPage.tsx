@@ -4,6 +4,7 @@ import { apiLogAudit } from '@/api/endpoint'
 import { Icon } from '@/components/ui/Icon'
 import { Kosong, Muatan } from '@/components/ui/Keadaan'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Pilihan } from '@/components/ui/Pilihan'
 import { Paginasi } from '@/components/ui/Paginasi'
 import { LABEL_AKSI_AUDIT } from '@/constants/label'
 import { useHalaman } from '@/hooks/useHalaman'
@@ -34,16 +35,24 @@ export function AuditLogPage() {
 
       <section className="panel">
         <div className="bilah-alat">
-          <select value={aksi} onChange={(e) => setAksi(e.target.value)} aria-label="Jenis aktivitas">
-            <option value="">Semua aktivitas</option>
-            {Object.entries(LABEL_AKSI_AUDIT).map(([nilai, label]) => (
-              <option key={nilai} value={nilai}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <input type="date" aria-label="Dari tanggal" value={dari} onChange={(e) => setDari(e.target.value)} />
-          <input type="date" aria-label="Sampai tanggal" min={dari} value={sampai} onChange={(e) => setSampai(e.target.value)} />
+          <Pilihan
+            label="Aktivitas"
+            nilai={aksi}
+            bawaan=""
+            onUbah={setAksi}
+            opsi={[
+              { nilai: '', label: 'Semua aktivitas' },
+              ...Object.entries(LABEL_AKSI_AUDIT).map(([nilai, label]) => ({ nilai, label })),
+            ]}
+          />
+          <label className={`pilihan-tanggal ${dari ? 'menyaring' : ''}`}>
+            <small>Dari tanggal</small>
+            <input type="date" value={dari} onChange={(e) => setDari(e.target.value)} />
+          </label>
+          <label className={`pilihan-tanggal ${sampai ? 'menyaring' : ''}`}>
+            <small>Sampai tanggal</small>
+            <input type="date" min={dari} value={sampai} onChange={(e) => setSampai(e.target.value)} />
+          </label>
           {pencarian && <span className="status biru">Pencarian: “{pencarian}”</span>}
           <button type="button" className="btn kecil dorong" onClick={muatUlang}>
             <Icon name="segarkan" size={15} />

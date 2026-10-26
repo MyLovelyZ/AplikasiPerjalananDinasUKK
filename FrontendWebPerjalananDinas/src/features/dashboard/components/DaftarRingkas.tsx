@@ -35,21 +35,31 @@ export function DaftarPerjalanan({ daftar, onBuka, kosong, denganPemohon }: Daft
   )
 }
 
+/** Daftar label + jumlah dengan batang mendatar sepanjang proporsi terhadap nilai terbesar. */
+export function DaftarBatang({ daftar }: { daftar: Array<{ label: string; total: number }> }) {
+  const tertinggi = Math.max(...daftar.map((d) => d.total), 1)
+
+  return (
+    <div className="daftar-batang">
+      {daftar.map((d) => (
+        <div className="batang-item" key={d.label}>
+          <div className="baris-atas">
+            <span>{d.label}</span>
+            <b className="angka">{d.total}</b>
+          </div>
+          <div className="bilah">
+            <i style={{ width: `${(d.total / tertinggi) * 100}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /** Jumlah pengajuan per status; status bernilai nol disembunyikan. */
 export function DaftarStatus({ daftar }: { daftar: HitunganStatus[] }) {
   const terisi = daftar.filter((s) => s.total > 0)
   if (terisi.length === 0) return <Kosong ikon="chart" judul="Belum ada pengajuan" pesan="Angka muncul setelah ada pengajuan." />
 
-  return (
-    <div className="daftar">
-      {terisi.map((s) => (
-        <div className="daftar-baris" key={s.status}>
-          <span className="isi">
-            <b>{RUPA_STATUS_PERJALANAN[s.status].label}</b>
-          </span>
-          <span className="status netral">{s.total}</span>
-        </div>
-      ))}
-    </div>
-  )
+  return <DaftarBatang daftar={terisi.map((s) => ({ label: RUPA_STATUS_PERJALANAN[s.status].label, total: s.total }))} />
 }

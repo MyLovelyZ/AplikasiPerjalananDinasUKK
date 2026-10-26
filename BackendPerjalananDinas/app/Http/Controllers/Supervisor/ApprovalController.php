@@ -24,11 +24,13 @@ class ApprovalController extends Controller
 {
     /**
      * The team's requests: `pending` (default, oldest first), `decided` by this supervisor, or `all`.
+     * `decided` can be narrowed to the requests this supervisor approved or rejected with `decision`.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
         $filters = $request->validate([
             'status' => ['nullable', Rule::in(['pending', 'decided', 'all'])],
+            'decision' => ['nullable', Rule::enum(ApprovalDecision::class)],
             'search' => ['nullable', 'string', 'max:100'],
             'per_page' => ['nullable', 'integer', 'between:1,100'],
         ]);
@@ -40,7 +42,9 @@ class ApprovalController extends Controller
             'decided' => TravelRequest::query()
                 ->whereHas('approvals', fn (Builder $query) => $query
                     ->where('approver_id', $supervisor->id)
-                    ->where('stage', ApprovalStage::Supervisor))
+                    ->where('stage', ApprovalStage::Supervisor)
+                    ->when($filters['decision'] ?? null, fn (Builder $query, string $decision) => $query
+                        ->where('decision', $decision)))
                 ->latest('submitted_at'),
             'all' => TravelRequest::query()->visibleToSupervisor($supervisor)->latest('submitted_at'),
         };

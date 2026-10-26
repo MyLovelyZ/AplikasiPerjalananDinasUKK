@@ -19,10 +19,10 @@ const RUPA: Record<Keputusan, { judul: string; keterangan: string; label: string
   },
   tolak: {
     judul: 'Tolak pengajuan',
-    keterangan: 'Pengajuan berhenti; pegawai perlu membuat pengajuan baru bila ingin mengulang.',
+    keterangan: 'Pengajuan berhenti; karyawan perlu membuat pengajuan baru bila ingin mengulang.',
     label: 'Tolak pengajuan',
     kelas: 'btn bahaya',
-    petunjuk: 'Jelaskan alasan penolakan (min. 5 karakter) agar pegawai memahaminya.',
+    petunjuk: 'Jelaskan alasan penolakan (min. 5 karakter) agar karyawan memahaminya.',
   },
 }
 

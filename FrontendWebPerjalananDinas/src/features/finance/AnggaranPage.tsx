@@ -6,14 +6,15 @@ import { Icon } from '@/components/ui/Icon'
 import { Kosong, Memuat, Muatan } from '@/components/ui/Keadaan'
 import { KotakGalat, Modal, PesanKolom } from '@/components/ui/Modal'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Pilihan } from '@/components/ui/Pilihan'
 import { Paginasi } from '@/components/ui/Paginasi'
 import { StatCard } from '@/components/ui/StatCard'
-import { NAMA_BULAN } from '@/constants/label'
+import { labelPeriode, NAMA_BULAN } from '@/constants/label'
 import { useHalaman } from '@/hooks/useHalaman'
 import { useKirim } from '@/hooks/useKirim'
 import { usePermintaan } from '@/hooks/usePermintaan'
 import { useAplikasi } from '@/layouts/konteksAplikasi'
-import { rupiah, rupiahRingkas } from '@/utils/format'
+import { angka, rupiah, rupiahRingkas } from '@/utils/format'
 
 const TAHUN_INI = new Date().getFullYear()
 
@@ -34,7 +35,7 @@ export function AnggaranPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Keuangan"
+        eyebrow="Manajer Keuangan"
         title="Anggaran"
         description="Pagu perjalanan dinas per departemen, tahunan atau bulanan. Biaya perjalanan dikomitkan saat Keuangan menyetujuinya."
         action={
@@ -47,24 +48,18 @@ export function AnggaranPage() {
 
       {data && (
         <div className="grid-stat">
-          <StatCard icon="wallet" title="Total pagu" value={rupiahRingkas(data.summary.amount)} note={`Tahun ${data.summary.year}`} />
+          <StatCard title="Total pagu" value={rupiahRingkas(data.summary.amount)} note={`Tahun ${data.summary.year}`} />
           <StatCard
-            icon="check"
-            warna="kuning"
             title="Terkomit"
             value={rupiahRingkas(data.summary.committed_amount)}
             note="Perjalanan yang sudah disetujui"
           />
           <StatCard
-            icon="chart"
-            warna="ungu"
             title="Terealisasi"
             value={rupiahRingkas(data.summary.spent_amount)}
             note="Pengeluaran terverifikasi"
           />
           <StatCard
-            icon="grid"
-            warna="hijau"
             title="Sisa"
             value={rupiahRingkas(data.summary.remaining_amount)}
             note="Pagu dikurangi komitmen"
@@ -74,13 +69,12 @@ export function AnggaranPage() {
 
       <section className="panel">
         <div className="bilah-alat">
-          <select value={tahun} onChange={(e) => setTahun(Number(e.target.value))} aria-label="Tahun">
-            {[TAHUN_INI - 1, TAHUN_INI, TAHUN_INI + 1].map((t) => (
-              <option key={t} value={t}>
-                Tahun {t}
-              </option>
-            ))}
-          </select>
+          <Pilihan
+            label="Tahun"
+            nilai={tahun}
+            onUbah={setTahun}
+            opsi={[TAHUN_INI - 1, TAHUN_INI, TAHUN_INI + 1].map((t) => ({ nilai: t, label: String(t) }))}
+          />
           <button type="button" className="btn kecil dorong" onClick={muatUlang}>
             <Icon name="segarkan" size={15} />
             Segarkan
@@ -118,7 +112,7 @@ export function AnggaranPage() {
                               <div className="sel-utama">{a.department?.name ?? '—'}</div>
                               {a.notes && <div className="sel-sekunder">{a.notes}</div>}
                             </td>
-                            <td>{a.month ? `${NAMA_BULAN[a.month - 1]} ${a.year}` : `Tahunan ${a.year}`}</td>
+                            <td>{labelPeriode(a)}</td>
                             <td className="kanan angka">{rupiah(a.amount)}</td>
                             <td className="kanan angka">{rupiah(a.committed_amount)}</td>
                             <td className="kanan angka sel-utama">{rupiah(a.remaining_amount)}</td>
@@ -126,7 +120,7 @@ export function AnggaranPage() {
                               <div className="bilah" title={`${persen}%`}>
                                 <i className={kelasBilah(persen)} style={{ width: `${Math.min(100, persen)}%` }} />
                               </div>
-                              <small className="sel-sekunder">{persen}%</small>
+                              <small className="sel-sekunder">{angka(persen)}%</small>
                             </td>
                           </tr>
                         )

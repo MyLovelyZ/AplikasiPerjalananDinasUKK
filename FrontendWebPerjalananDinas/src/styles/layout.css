@@ -4,123 +4,63 @@
 
 .app {
   display: grid;
-  grid-template-columns: var(--lebar-sidebar) 1fr;
+  grid-template-columns: var(--lebar-sidebar) minmax(0, 1fr);
   min-height: 100vh;
 }
 
-/* ── Sidebar ─────────────────────────────────────────────────────────── */
+/* ── Sidebar (warna kedua) ───────────────────────────────────────────── */
 
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 20px 16px;
-  background: var(--putih);
-  border-right: 1px solid var(--garis);
+  gap: 24px;
+  padding: 24px 16px 18px;
+  background: var(--latar-sidebar);
+  color: var(--utama);
   position: sticky;
   top: 0;
   height: 100vh;
   overflow-y: auto;
 }
 
-.brand {
+.sidebar-merek {
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 0 6px;
+  padding: 0 8px;
 }
 
-.brand .logo-wrap {
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
-  overflow: hidden;
+.sidebar-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--ketiga);
+  color: var(--kedua);
+  display: grid;
+  place-items: center;
   flex-shrink: 0;
-  box-shadow: var(--bayang-halus);
-  border: 1px solid var(--garis);
-  background: var(--biru-pucat);
 }
 
-.brand img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.sidebar-merek strong {
   display: block;
-}
-
-.brand strong {
-  display: block;
-  font-family: "Plus Jakarta Sans", "Manrope", sans-serif;
   font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--tinta);
+  font-weight: 700;
+  color: var(--utama);
   line-height: 1.2;
 }
 
-.brand strong span {
-  color: var(--biru);
-}
-
-.brand small {
-  display: block;
-  font-size: 11px;
-  color: var(--redup);
-}
-
-/* Kartu identitas pengguna di bawah logo. */
-.workspace {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  border-radius: var(--lengkung-kecil);
-  background: var(--biru-kabut);
-  border: 1px solid var(--biru-pucat);
-}
-
-/*
- * Hanya blok teks yang boleh melar. Sebelumnya selektor ini berbunyi
- * `.workspace > div`, sehingga ikut mengenai `.avatar` — yang juga sebuah
- * div — dan `flex: 1` di sini mengalahkan `width: 34px` pada `.avatar`
- * karena specificity-nya lebih tinggi. Akibatnya avatar melar jadi
- * persegi panjang selebar separuh sidebar.
- */
-.workspace .identitas {
-  min-width: 0;
-  flex: 1;
-}
-
-.workspace b {
+.sidebar-merek small {
   display: block;
   font-size: 13px;
+  color: var(--utama);
+}
+
+.nav-label {
+  font-size: 13px;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.workspace small {
-  display: block;
-  font-size: 11px;
-  color: var(--redup);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: var(--biru);
-  color: var(--putih);
-  display: grid;
-  place-items: center;
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
-  letter-spacing: 0.02em;
+  color: var(--utama);
+  opacity: 0.7;
+  padding: 0 10px 8px;
 }
 
 .sidebar nav {
@@ -130,27 +70,18 @@
   flex: 1;
 }
 
-.nav-label {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--redup);
-  padding: 12px 10px 5px;
-}
-
 .sidebar nav a,
 .nav-bottom :is(a, button) {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
   width: 100%;
   padding: 9px 10px;
   border: 0;
   border-radius: var(--lengkung-kecil);
   background: transparent;
-  color: var(--tinta-sedang);
-  font-size: 13.5px;
+  color: inherit;
+  font-size: 14.5px;
   font-weight: 500;
   text-align: left;
   text-decoration: none;
@@ -167,69 +98,118 @@
 
 .sidebar nav a:hover,
 .nav-bottom :is(a, button):hover {
-  background: var(--latar-lembut);
-  color: var(--tinta);
+  background: rgb(223 223 223 / 7%);
+  color: var(--utama);
 }
 
-/* Menu aktif: latar biru pucat dengan pita biru di tepi kiri. */
-.sidebar nav a.active {
-  background: var(--biru-pucat);
-  color: var(--biru-tua);
+/* Menu aktif: teks terang dengan pita oranye di tepi kiri. */
+.sidebar nav a.active,
+.nav-bottom a.active {
+  background: rgb(223 223 223 / 9%);
+  color: var(--utama);
   font-weight: 600;
-  position: relative;
+  box-shadow: inset 3px 0 0 var(--ketiga);
 }
 
-.sidebar nav a.active::before {
-  content: "";
-  position: absolute;
-  left: -16px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 20px;
-  border-radius: 0 3px 3px 0;
-  background: var(--biru);
+.sidebar nav a.active svg {
+  color: var(--ketiga);
 }
 
+/* Lencana jumlah antrean. */
 .sidebar nav a em {
   font-style: normal;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
   border-radius: 99px;
-  background: var(--biru);
-  color: var(--putih);
+  background: var(--ketiga);
+  color: var(--kedua);
   display: grid;
   place-items: center;
-}
-
-.sidebar nav a.active em {
-  background: var(--biru-tua);
 }
 
 .nav-bottom {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-top: 12px;
-  border-top: 1px solid var(--garis);
-}
-
-.nav-bottom button.keluar {
-  color: var(--merah);
+  padding-top: 14px;
+  border-top: 1px solid rgb(223 223 223 / 12%);
 }
 
 .nav-bottom button.keluar:hover {
-  background: var(--merah-pucat);
+  color: var(--ketiga);
 }
 
-.sidebar-foot {
-  font-size: 10.5px;
-  color: var(--redup);
-  padding: 0 10px;
-  line-height: 1.6;
+/* Identitas pengguna yang sedang masuk, di dasar sidebar. */
+.sidebar-pengguna {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+}
+
+.sidebar-pengguna .avatar {
+  background: var(--ketiga);
+  color: var(--kedua);
+}
+
+.sidebar-pengguna div {
+  min-width: 0;
+}
+
+.sidebar-pengguna b {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--utama);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-pengguna small {
+  display: block;
+  font-size: 13px;
+  color: var(--utama);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Avatar inisial ──────────────────────────────────────────────────── */
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--tinta);
+  color: var(--latar);
+  display: grid;
+  place-items: center;
+  font-size: 13.5px;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar.besar {
+  width: 56px;
+  height: 56px;
+  font-size: 18px;
+}
+
+.avatar.jumbo {
+  width: 96px;
+  height: 96px;
+  font-size: 30px;
 }
 
 /* ── Area utama ──────────────────────────────────────────────────────── */
@@ -247,68 +227,68 @@
   height: var(--tinggi-topbar);
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 0 26px;
-  background: rgb(255 255 255 / 88%);
-  backdrop-filter: blur(10px);
+  gap: 12px;
+  padding: 0 var(--jarak-konten);
+  background: var(--latar-topbar);
   border-bottom: 1px solid var(--garis);
 }
 
+/* Tombol pembuka laci menu; hanya tampil di layar sempit (lihat responsive.css). */
 .mobile-menu {
   display: none;
-  border: 1px solid var(--garis);
-  background: var(--putih);
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--garis-tegas);
   border-radius: var(--lengkung-kecil);
-  padding: 7px;
-  color: var(--tinta-sedang);
+  background: transparent;
+  color: var(--tinta);
+  flex-shrink: 0;
 }
 
-.crumb {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13px;
-  color: var(--redup);
+.topbar-judul {
   min-width: 0;
 }
 
-.crumb strong {
+.topbar-judul small {
+  display: block;
+  font-size: 13px;
   color: var(--tinta);
-  font-weight: 600;
-  font-family: inherit;
-  white-space: nowrap;
+  line-height: 1.3;
 }
 
-.crumb b {
-  font-weight: 400;
-  color: var(--garis-tegas);
+.topbar-judul strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .top-actions {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
 }
 
 .search {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 12px;
-  height: 38px;
-  width: 270px;
-  border: 1px solid var(--garis);
-  border-radius: var(--lengkung-kecil);
-  background: var(--latar-lembut);
-  color: var(--redup);
-  transition: border-color 0.14s ease, background 0.14s ease;
+  padding: 0 14px;
+  height: 36px;
+  width: 260px;
+  border: 1px solid var(--garis-tegas);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--tinta);
 }
 
 .search:focus-within {
-  border-color: var(--biru-terang);
-  background: var(--putih);
-  box-shadow: 0 0 0 3px var(--biru-pucat);
+  border-color: var(--tinta);
+  box-shadow: 0 0 0 2px var(--ketiga);
 }
 
 .search input {
@@ -316,72 +296,84 @@
   background: transparent;
   outline: none;
   width: 100%;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--tinta);
 }
 
 .search input::placeholder {
-  color: var(--redup);
+  color: var(--tinta);
 }
 
 .icon-btn {
   position: relative;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--garis);
-  border-radius: var(--lengkung-kecil);
-  background: var(--putih);
-  color: var(--tinta-sedang);
-  transition: background 0.14s ease, color 0.14s ease;
+  border: 1px solid var(--garis-tegas);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--tinta);
+  transition: background 0.14s ease;
 }
 
 .icon-btn:hover {
-  background: var(--biru-pucat);
-  color: var(--biru-tua);
+  background: var(--latar-sorot);
 }
 
-/* Titik merah penanda notifikasi belum dibaca. */
+/* Lencana jumlah notifikasi belum dibaca. */
 .icon-btn .titik {
   position: absolute;
-  top: 7px;
-  right: 8px;
-  min-width: 15px;
-  height: 15px;
+  top: -3px;
+  right: -3px;
+  min-width: 18px;
+  height: 18px;
   padding: 0 4px;
   border-radius: 99px;
-  background: var(--merah);
-  color: var(--putih);
-  font-size: 9.5px;
+  background: var(--ketiga);
+  color: var(--kedua);
+  font-size: 13px;
   font-weight: 700;
   display: grid;
   place-items: center;
-  border: 2px solid var(--putih);
+  border: 2px solid var(--latar-topbar);
   font-style: normal;
 }
 
 .top-avatar {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
-  background: var(--biru);
-  color: var(--putih);
+  border-radius: 50%;
+  background: var(--tinta);
+  color: var(--latar);
   display: grid;
   place-items: center;
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 700;
-  border: 0;
   padding: 0;
-  cursor: pointer;
   overflow: hidden;
   text-decoration: none;
+  flex-shrink: 0;
 }
 
+.top-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Setiap bagian halaman (judul, ringkasan, bagian) diberi jarak yang sama. */
 .content {
-  padding: 26px;
+  padding: 28px var(--jarak-konten) 48px;
   flex: 1;
   min-width: 0;
-  max-width: 1420px;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Kolom sidebar tetap berwarna walau isi halaman lebih tinggi dari layar. */
+.app {
+  background: linear-gradient(to right, var(--latar-sidebar) var(--lebar-sidebar), var(--latar) 0);
 }

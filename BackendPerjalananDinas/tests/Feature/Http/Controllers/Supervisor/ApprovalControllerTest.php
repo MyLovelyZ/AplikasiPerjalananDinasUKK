@@ -40,6 +40,30 @@ describe('index', function () {
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.id', $decided->id);
     });
+
+    it('narrows decided requests to the ones this supervisor approved or rejected', function () {
+        $supervisor = User::factory()->supervisor()->create();
+        $employee = User::factory()->supervisedBy($supervisor)->create();
+        $approved = TravelRequest::factory()->for($employee, 'user')->supervisorApproved()->create();
+        Approval::factory()->for($approved)->create(['approver_id' => $supervisor->id, 'stage' => ApprovalStage::Supervisor]);
+        $rejected = TravelRequest::factory()->for($employee, 'user')->rejected()->create();
+        Approval::factory()->for($rejected)->rejected()->create(['approver_id' => $supervisor->id, 'stage' => ApprovalStage::Supervisor]);
+        Sanctum::actingAs($supervisor);
+
+        $this->getJson('/api/supervisor/approvals?status=decided&decision=approved')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $approved->id);
+
+        $this->getJson('/api/supervisor/approvals?status=decided&decision=rejected')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $rejected->id);
+
+        $this->getJson('/api/supervisor/approvals?status=decided&decision=maybe')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('decision');
+    });
 });
 
 describe('show', function () {

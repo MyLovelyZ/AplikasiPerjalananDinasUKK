@@ -460,6 +460,49 @@ export interface LaporanKeuangan {
   }>
 }
 
+/** Satu angka pada bulan terpilih dan bulan sebelumnya. Persen null bila bulan lalu nol. */
+export interface Perubahan {
+  current: number
+  previous: number
+  change_amount: number
+  change_percentage: number | null
+}
+
+export type MetrikBulanan =
+  | 'spending'
+  | 'claimed'
+  | 'expense_count'
+  | 'trip_count'
+  | 'average_per_trip'
+  | 'advances_paid'
+  | 'reimbursements_paid'
+
+/** GET /finance/reports/monthly — pengeluaran terverifikasi satu bulan dibanding bulan sebelumnya. */
+export interface AnalisisBulanan {
+  period: { year: number; month: number; label: string; from: string; to: string }
+  previous_period: { year: number; month: number; label: string; from: string; to: string }
+  department: Pick<Departemen, 'id' | 'code' | 'name'> | null
+  generated_at: string
+  summary: Record<MetrikBulanan, Perubahan>
+  /** Hanya ada bila bulan terpilih masih berjalan: pengeluaran bulan lalu sampai tanggal yang sama. */
+  same_day_last_month: { day: number; spending: number } | null
+  by_category: Array<{ category: KategoriBiaya; label: string } & Perubahan>
+  by_department: Array<{ code: string; department: string } & Perubahan>
+  largest_expenses: Array<{
+    id: number
+    expense_date: string
+    request_number: string
+    employee: string
+    department: string
+    destination: string
+    category: KategoriBiaya
+    category_label: string
+    description: string
+    amount: number
+    approved_amount: number
+  }>
+}
+
 // ── Admin ─────────────────────────────────────────────────────────────
 
 export interface OpsiFormPengguna {

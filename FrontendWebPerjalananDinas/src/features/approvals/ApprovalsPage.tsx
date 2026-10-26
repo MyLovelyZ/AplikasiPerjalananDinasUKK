@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { apiAntreanAtasan } from '@/api/endpoint'
-import type { FilterPersetujuan } from '@/api/endpoint'
+import type { FilterPersetujuan, KeputusanSaya } from '@/api/endpoint'
 import type { Perjalanan } from '@/api/tipe'
 import { Icon } from '@/components/ui/Icon'
 import { Kosong, Muatan } from '@/components/ui/Keadaan'
@@ -21,23 +21,33 @@ const TAB: Array<{ nilai: FilterPersetujuan; label: string }> = [
   { nilai: 'all', label: 'Semua pengajuan tim' },
 ]
 
+/** Sub-kategori di dalam tab "Sudah saya putuskan". */
+const SUB_KEPUTUSAN: Array<{ nilai: KeputusanSaya | null; label: string }> = [
+  { nilai: null, label: 'Semua' },
+  { nilai: 'approved', label: 'Disetujui' },
+  { nilai: 'rejected', label: 'Ditolak' },
+]
+
 /** /supervisor/approvals — rincian lengkap di /supervisor/approvals/:id. */
 export function ApprovalsPage() {
   const { pencarian, sukses: onSukses, penandaSegar } = useAplikasi()
   const navigate = useNavigate()
   const [tab, setTab] = useState<FilterPersetujuan>('pending')
-  const [halaman, setHalaman] = useHalaman(tab, pencarian)
+  const [keputusanSaya, setKeputusanSaya] = useState<KeputusanSaya | null>(null)
+  const [halaman, setHalaman] = useHalaman(tab, keputusanSaya, pencarian)
+  // Sub-kategori hanya berlaku di tab "Sudah saya putuskan".
+  const decision = tab === 'decided' ? (keputusanSaya ?? undefined) : undefined
   const [keputusan, setKeputusan] = useState<{ perjalanan: Perjalanan; jenis: Keputusan } | null>(null)
 
   const { data, memuat, galat, muatUlang } = usePermintaan(
-    () => apiAntreanAtasan({ status: tab, search: pencarian, page: halaman, per_page: 12 }),
-    [tab, pencarian, halaman, penandaSegar],
+    () => apiAntreanAtasan({ status: tab, decision, search: pencarian, page: halaman, per_page: 12 }),
+    [tab, decision, pencarian, halaman, penandaSegar],
   )
 
   return (
     <>
       <PageHeader
-        eyebrow="Atasan"
+        eyebrow="Supervisor"
         title="Persetujuan"
         description="Pengajuan perjalanan dinas anggota tim Anda. Pengajuan yang disetujui diteruskan ke Keuangan."
       />
@@ -60,6 +70,21 @@ export function ApprovalsPage() {
         </div>
 
         <div className="bilah-alat">
+          {tab === 'decided' && (
+            <div className="sub-tab" role="group" aria-label="Saring keputusan">
+              {SUB_KEPUTUSAN.map((s) => (
+                <button
+                  key={s.label}
+                  type="button"
+                  aria-pressed={keputusanSaya === s.nilai}
+                  className={keputusanSaya === s.nilai ? 'aktif' : ''}
+                  onClick={() => setKeputusanSaya(s.nilai)}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
           {pencarian && <span className="status biru">Pencarian: “{pencarian}”</span>}
           <button type="button" className="btn kecil dorong" onClick={muatUlang}>
             <Icon name="segarkan" size={15} />
@@ -76,12 +101,16 @@ export function ApprovalsPage() {
                 pesan={
                   tab === 'pending'
                     ? 'Semua pengajuan tim sudah Anda putuskan.'
-                    : 'Pengajuan tim akan muncul di sini setelah diajukan.'
+                    : decision === 'approved'
+                      ? 'Belum ada pengajuan yang Anda setujui.'
+                      : decision === 'rejected'
+                        ? 'Belum ada pengajuan yang Anda tolak.'
+                        : 'Pengajuan tim akan muncul di sini setelah diajukan.'
                 }
               />
             ) : (
               <>
-                <div className="grid-persetujuan" style={{ padding: 16 }}>
+                <div className="grid-persetujuan">
                   {hasil.data.map((p) => (
                     <KartuPersetujuan
                       key={p.id}

@@ -1,5 +1,6 @@
 import { keFormData, minta, mintaData, unduh } from '@/api/klien'
 import type {
+  AnalisisBulanan,
   Anggaran,
   DashboardAdmin,
   DashboardAtasan,
@@ -166,8 +167,17 @@ export const apiHapusPengeluaran = (perjalananId: number, pengeluaranId: number)
 
 export type FilterPersetujuan = 'pending' | 'decided' | 'all'
 
+/** Penyempit tab `decided`: hanya yang disetujui atau ditolak oleh supervisor ini. */
+export type KeputusanSaya = 'approved' | 'rejected'
+
 export const apiAntreanAtasan = (
-  filter: { status?: FilterPersetujuan; search?: string; page?: number; per_page?: number } = {},
+  filter: {
+    status?: FilterPersetujuan
+    decision?: KeputusanSaya
+    search?: string
+    page?: number
+    per_page?: number
+  } = {},
 ) => minta<ResponsHalaman<Perjalanan>>('/supervisor/approvals', { query: { ...filter } })
 
 export const apiDetailPerjalananAtasan = (id: number) =>
@@ -264,6 +274,16 @@ export const apiLaporanKeuangan = (filter: FilterLaporanKeuangan) =>
 
 export const apiUnduhLaporanKeuangan = (filter: FilterLaporanKeuangan, format: 'pdf' | 'xlsx') =>
   unduh('/finance/reports', { ...filter, format }, `laporan-keuangan-${filter.year ?? ''}.${format}`)
+
+/** Tanpa tahun/bulan, backend memakai bulan berjalan. */
+export type FilterAnalisisBulanan = FilterLaporanKeuangan
+
+export const apiAnalisisBulanan = (filter: FilterAnalisisBulanan) =>
+  mintaData<AnalisisBulanan>('/finance/reports/monthly', { query: { ...filter } })
+
+/** Excel berisi perbandingan dan seluruh rincian pengeluaran bulan terpilih serta bulan sebelumnya. */
+export const apiUnduhAnalisisBulanan = (filter: FilterAnalisisBulanan) =>
+  unduh('/finance/reports/monthly', { ...filter, format: 'xlsx' }, `pengeluaran-bulanan-${filter.year ?? ''}-${String(filter.month ?? '').padStart(2, '0')}.xlsx`)
 
 // ── Super admin ───────────────────────────────────────────────────────
 

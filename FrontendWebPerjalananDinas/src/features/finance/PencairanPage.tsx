@@ -8,6 +8,7 @@ import { Icon } from '@/components/ui/Icon'
 import { Kosong, Muatan } from '@/components/ui/Keadaan'
 import { KotakGalat, Modal, PesanKolom } from '@/components/ui/Modal'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Pilihan } from '@/components/ui/Pilihan'
 import { Paginasi } from '@/components/ui/Paginasi'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import {
@@ -39,29 +40,36 @@ export function PencairanPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Keuangan"
+        eyebrow="Manajer Keuangan"
         title="Pencairan"
         description="Uang muka, reimbursement, dan pengembalian kelebihan uang muka. Pembayaran terakhir sebuah perjalanan otomatis menyelesaikannya."
       />
 
       <section className="panel">
         <div className="bilah-alat">
-          <select value={status} onChange={(e) => setStatus(e.target.value as StatusPencairan | '')} aria-label="Status">
-            <option value="">Semua status</option>
-            {Object.entries(RUPA_STATUS_PENCAIRAN).map(([nilai, rupa]) => (
-              <option key={nilai} value={nilai}>
-                {rupa.label}
-              </option>
-            ))}
-          </select>
-          <select value={jenis} onChange={(e) => setJenis(e.target.value as JenisPencairan | '')} aria-label="Jenis">
-            <option value="">Semua jenis</option>
-            {opsiDari(LABEL_JENIS_PENCAIRAN).map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          <Pilihan
+            label="Status"
+            nilai={status}
+            bawaan="pending"
+            onUbah={setStatus}
+            opsi={[
+              { nilai: '', label: 'Semua status' },
+              ...Object.entries(RUPA_STATUS_PENCAIRAN).map(([nilai, rupa]) => ({
+                nilai: nilai as StatusPencairan,
+                label: rupa.label,
+              })),
+            ]}
+          />
+          <Pilihan
+            label="Jenis"
+            nilai={jenis}
+            bawaan=""
+            onUbah={setJenis}
+            opsi={[
+              { nilai: '', label: 'Semua jenis' },
+              ...opsiDari(LABEL_JENIS_PENCAIRAN).map((o) => ({ nilai: o.value, label: o.label })),
+            ]}
+          />
           {pencarian && <span className="status biru">Pencarian: “{pencarian}”</span>}
           <button type="button" className="btn kecil dorong" onClick={muatUlang}>
             <Icon name="segarkan" size={15} />

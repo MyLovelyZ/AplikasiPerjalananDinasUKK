@@ -12,11 +12,13 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { NotifikasiPage } from '@/features/notifications/NotifikasiPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { HalamanGalat } from '@/features/errors/HalamanGalat'
+import { AnalisisBulananPage } from '@/features/finance/AnalisisBulananPage'
 import { AnggaranPage } from '@/features/finance/AnggaranPage'
 import { LaporanKeuanganPage } from '@/features/finance/LaporanKeuanganPage'
 import { PencairanPage } from '@/features/finance/PencairanPage'
 import { VerifikasiPage } from '@/features/finance/VerifikasiPage'
 import { ProfilPage } from '@/features/profile/ProfilPage'
+import { SubmissionPage } from '@/features/submissions/SubmissionPage'
 import {
   HalamanDetailPerjalanan,
   HalamanFormPerjalanan,
@@ -54,7 +56,7 @@ export default function App() {
         <Route path="employee" element={<KhususPeran peran="employee" />}>
           <Route index element={<DashboardPage />} />
           <Route path="requests" element={<TripsPage />} />
-          <Route path="requests/new" element={<HalamanFormPerjalanan />} />
+          <Route path="requests/new" element={<SubmissionPage />} />
           <Route path="requests/:id" element={<HalamanDetailPerjalanan sudut="employee" />} />
           <Route path="requests/:id/edit" element={<HalamanFormPerjalanan />} />
           <Route path="requests/:id/expenses" element={<HalamanLaporanBiaya />} />
@@ -72,6 +74,7 @@ export default function App() {
           <Route path="approvals/:id" element={<HalamanDetailPerjalanan sudut="finance" />} />
           <Route path="budgets" element={<AnggaranPage />} />
           <Route path="disbursements" element={<PencairanPage />} />
+          <Route path="analysis" element={<AnalisisBulananPage />} />
           <Route path="reports" element={<LaporanKeuanganPage />} />
         </Route>
 

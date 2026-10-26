@@ -16,24 +16,25 @@ export const BERANDA_PERAN: Record<Peran, string> = {
 export const MENU_PERAN: Record<Peran, NavItem[]> = {
   employee: [
     { label: 'Dashboard', jalur: '/employee', icon: 'grid' },
-    { label: 'Perjalanan Saya', jalur: '/employee/requests', icon: 'plane' },
+    { label: 'Perjalanan Saya', jalur: '/employee/requests', icon: 'plane', cari: true },
   ],
   supervisor: [
     { label: 'Dashboard', jalur: '/supervisor', icon: 'grid' },
-    { label: 'Persetujuan', jalur: '/supervisor/approvals', icon: 'check', antrean: true },
+    { label: 'Persetujuan', jalur: '/supervisor/approvals', icon: 'check', antrean: true, cari: true },
   ],
   finance: [
     { label: 'Dashboard', jalur: '/finance', icon: 'grid' },
-    { label: 'Verifikasi', jalur: '/finance/approvals', icon: 'check', antrean: true },
+    { label: 'Verifikasi', jalur: '/finance/approvals', icon: 'check', antrean: true, cari: true },
     { label: 'Anggaran', jalur: '/finance/budgets', icon: 'chart' },
-    { label: 'Pencairan', jalur: '/finance/disbursements', icon: 'wallet' },
+    { label: 'Pencairan', jalur: '/finance/disbursements', icon: 'wallet', cari: true },
+    { label: 'Analisis Bulanan', jalur: '/finance/analysis', icon: 'tren' },
     { label: 'Laporan Keuangan', jalur: '/finance/reports', icon: 'file' },
   ],
   super_admin: [
     { label: 'Dashboard', jalur: '/admin', icon: 'grid' },
-    { label: 'Pengguna', jalur: '/admin/users', icon: 'users' },
+    { label: 'Pengguna', jalur: '/admin/users', icon: 'users', cari: true },
     { label: 'Departemen', jalur: '/admin/departments', icon: 'gedung' },
-    { label: 'Log Audit', jalur: '/admin/audit-logs', icon: 'clock' },
+    { label: 'Log Audit', jalur: '/admin/audit-logs', icon: 'clock', cari: true },
   ],
 }
 

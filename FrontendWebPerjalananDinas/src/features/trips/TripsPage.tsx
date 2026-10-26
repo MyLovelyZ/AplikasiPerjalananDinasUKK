@@ -5,6 +5,7 @@ import type { StatusPerjalanan } from '@/api/tipe'
 import { Icon } from '@/components/ui/Icon'
 import { Kosong, Muatan } from '@/components/ui/Keadaan'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Pilihan } from '@/components/ui/Pilihan'
 import { Paginasi } from '@/components/ui/Paginasi'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { RUPA_STATUS_PERJALANAN } from '@/constants/label'
@@ -56,31 +57,26 @@ export function TripsPage() {
 
       <section className="panel">
         <div className="bilah-alat">
-          <select
-            value={status}
-            onChange={(e) => ubahPenyaring('status', e.target.value)}
-            aria-label="Saring berdasarkan status"
-          >
-            <option value="">Semua status</option>
-            {Object.entries(RUPA_STATUS_PERJALANAN).map(([nilai, rupa]) => (
-              <option key={nilai} value={nilai}>
-                {rupa.label}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={tahun ?? ''}
-            onChange={(e) => ubahPenyaring('year', e.target.value)}
-            aria-label="Saring berdasarkan tahun keberangkatan"
-          >
-            <option value="">Semua tahun</option>
-            {PILIHAN_TAHUN.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+          <Pilihan
+            label="Status"
+            nilai={status}
+            bawaan=""
+            onUbah={(nilai) => ubahPenyaring('status', nilai)}
+            opsi={[
+              { nilai: '', label: 'Semua status' },
+              ...Object.entries(RUPA_STATUS_PERJALANAN).map(([nilai, rupa]) => ({
+                nilai: nilai as StatusPerjalanan,
+                label: rupa.label,
+              })),
+            ]}
+          />
+          <Pilihan
+            label="Tahun berangkat"
+            nilai={tahun ?? 0}
+            bawaan={0}
+            onUbah={(nilai) => ubahPenyaring('year', nilai ? String(nilai) : '')}
+            opsi={[{ nilai: 0, label: 'Semua tahun' }, ...PILIHAN_TAHUN.map((t) => ({ nilai: t, label: String(t) }))]}
+          />
 
           {pencarian && <span className="status biru">Pencarian: “{pencarian}”</span>}
 

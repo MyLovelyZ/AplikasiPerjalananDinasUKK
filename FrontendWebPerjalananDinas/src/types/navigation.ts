@@ -7,4 +7,6 @@ export interface NavItem {
   icon: IconName
   /** Menampilkan lencana jumlah antrean. */
   antrean?: boolean
+  /** Halaman daftar ini membaca kolom cari di topbar. */
+  cari?: boolean
 }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/jpeg" href="/logo.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#19273a" />
     <meta
       name="description"
       content="DinasGo — portal internal pengelolaan perjalanan dinas: pengajuan, persetujuan, dan laporan."
@@ -12,10 +12,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <title>Perjalanan Dinas</title>
+    <script>
+      // Pasang tema sebelum halaman digambar agar mode gelap tidak berkedip terang.
+      (function () {
+        var tema = null
+        try {
+          tema = localStorage.getItem('pd.tema')
+        } catch (e) {}
+        if (tema !== 'gelap' && tema !== 'terang') {
+          tema = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'gelap' : 'terang'
+        }
+        document.documentElement.dataset.tema = tema
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

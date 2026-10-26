@@ -1,17 +1,15 @@
 import type { DashboardKeuangan } from '@/api/tipe'
 import { Kosong } from '@/components/ui/Keadaan'
 import { PanelHeader } from '@/components/ui/PanelHeader'
-import { rupiahRingkas } from '@/utils/format'
+import { angka, rupiahRingkas } from '@/utils/format'
 
-const kelasBilah = (persen: number) => (persen >= 100 ? 'lewat' : persen >= 80 ? 'penuh' : '')
-
-/** Serapan anggaran per departemen; batang berubah warna saat mendekati atau melewati pagu. */
+/** Serapan anggaran per departemen; batang berubah oranye saat mencapai 80% pagu. */
 export function PanelSerapan({ anggaran }: { anggaran: DashboardKeuangan['budget'] }) {
   return (
     <section className="panel">
       <PanelHeader
-        title="Serapan Anggaran"
-        subtitle={`Komitmen terhadap pagu tahun ${anggaran.year} · ${anggaran.utilization_percentage}% terpakai`}
+        title="Anggaran per departemen"
+        subtitle={`Berapa yang sudah terpakai dari batas tahun ${anggaran.year}`}
       />
 
       {anggaran.by_department.length === 0 ? (
@@ -21,21 +19,22 @@ export function PanelSerapan({ anggaran }: { anggaran: DashboardKeuangan['budget
           pesan={`Anggaran tahun ${anggaran.year} belum dialokasikan untuk departemen mana pun.`}
         />
       ) : (
-        <div className="serapan">
+        <div className="daftar-batang dua-kolom">
           {anggaran.by_department.map((pos) => (
-            <div className="serapan-item" key={pos.department.id}>
+            <div className="batang-item" key={pos.department.id}>
               <div className="baris-atas">
-                <b>{pos.department.name}</b>
-                <small>
-                  {rupiahRingkas(pos.committed_amount)} / {rupiahRingkas(pos.amount)} · {pos.utilization_percentage}%
-                </small>
+                <span>{pos.department.name}</span>
+                <b className="angka">{angka(pos.utilization_percentage)}%</b>
               </div>
               <div className="bilah">
                 <i
-                  className={kelasBilah(pos.utilization_percentage)}
+                  className={pos.utilization_percentage >= 80 ? 'penuh' : ''}
                   style={{ width: `${Math.min(100, pos.utilization_percentage)}%` }}
                 />
               </div>
+              <small className="angka">
+                {rupiahRingkas(pos.committed_amount)} terpakai dari {rupiahRingkas(pos.amount)}
+              </small>
             </div>
           ))}
         </div>

@@ -9,7 +9,7 @@ import {
 import type { PemeriksaanAnggaran, Perjalanan } from '@/api/tipe'
 import { Icon } from '@/components/ui/Icon'
 import { KotakGalat, PesanKolom } from '@/components/ui/Modal'
-import { LABEL_KATEGORI_BIAYA } from '@/constants/label'
+import { LABEL_KATEGORI_BIAYA, labelPeriode } from '@/constants/label'
 import { useKirim } from '@/hooks/useKirim'
 import { rupiah, tanggalPendek } from '@/utils/format'
 
@@ -66,8 +66,8 @@ export function PanelKeputusanAtasan({ perjalanan, onSelesai }: PanelProps) {
   }
 
   return (
-    <section className="panel" style={{ borderColor: 'var(--biru-terang)' }}>
-      <KepalaPanel judul="Keputusan Atasan" keterangan="Setujui untuk meneruskan ke Keuangan, atau tolak dengan alasan." />
+    <section className="panel sorot">
+      <KepalaPanel judul="Keputusan Supervisor" keterangan="Setujui untuk meneruskan ke Keuangan, atau tolak dengan alasan." />
       <div className="panel-body" style={{ display: 'grid', gap: 12 }}>
         <KotakGalat pesan={galat} />
         <BidangCatatan
@@ -133,7 +133,7 @@ function VerifikasiAnggaran({
   }
 
   return (
-    <section className="panel" style={{ borderColor: 'var(--biru-terang)' }}>
+    <section className="panel sorot">
       <KepalaPanel
         judul="Verifikasi Anggaran"
         keterangan="Menyetujui berarti biaya perjalanan dikomitkan ke anggaran departemen."
@@ -147,7 +147,7 @@ function VerifikasiAnggaran({
             <span>
               <strong>
                 {pemeriksaan.budget
-                  ? `Anggaran ${pemeriksaan.budget.department?.name ?? ''} · ${pemeriksaan.budget.period_label}`
+                  ? `Anggaran ${pemeriksaan.budget.department?.name ?? ''} · ${labelPeriode(pemeriksaan.budget)}`
                   : 'Anggaran belum dialokasikan'}
               </strong>{' '}
               Sisa {rupiah(pemeriksaan.remaining_amount)}, dibutuhkan {rupiah(pemeriksaan.required_amount)}.{' '}
@@ -247,7 +247,7 @@ function VerifikasiLaporan({ perjalanan, onSelesai }: PanelProps) {
   }
 
   return (
-    <section className="panel" style={{ borderColor: 'var(--biru-terang)' }}>
+    <section className="panel sorot">
       <KepalaPanel
         judul="Verifikasi Laporan Biaya"
         keterangan="Setujui tiap pengeluaran penuh, sebagian, atau nol. Selisih dengan uang muka diselesaikan otomatis."
@@ -256,7 +256,7 @@ function VerifikasiLaporan({ perjalanan, onSelesai }: PanelProps) {
       {perjalanan.expense_report?.summary && (
         <div className="panel-body" style={{ paddingBottom: 0 }}>
           <div className="kotak-info">
-            <strong>Ringkasan kegiatan dari pegawai</strong>
+            <strong>Ringkasan kegiatan dari karyawan</strong>
             <span style={{ whiteSpace: 'pre-line' }}>{perjalanan.expense_report.summary}</span>
           </div>
         </div>
@@ -332,7 +332,7 @@ function VerifikasiLaporan({ perjalanan, onSelesai }: PanelProps) {
           <strong>{rupiah(uangMukaDibayar)}</strong>
         </div>
         <div>
-          <span>{selisih > 0 ? 'Perusahaan membayar' : selisih < 0 ? 'Pegawai mengembalikan' : 'Selisih'}</span>
+          <span>{selisih > 0 ? 'Perusahaan membayar' : selisih < 0 ? 'Karyawan mengembalikan' : 'Selisih'}</span>
           <strong>{rupiah(Math.abs(selisih))}</strong>
         </div>
       </div>
@@ -345,7 +345,7 @@ function VerifikasiLaporan({ perjalanan, onSelesai }: PanelProps) {
             <Icon name="peringatan" size={16} />
             <span>
               Uang muka perjalanan ini belum dibayar. Bayar dulu di menu Pencairan agar selisih dihitung
-              dari uang yang benar-benar diterima pegawai.
+              dari uang yang benar-benar diterima karyawan.
             </span>
           </div>
         )}
@@ -353,7 +353,7 @@ function VerifikasiLaporan({ perjalanan, onSelesai }: PanelProps) {
         <BidangCatatan
           nilai={catatan}
           onUbah={setCatatan}
-          petunjuk="Opsional saat memverifikasi; wajib (min. 5 karakter) saat mengembalikan ke pegawai."
+          petunjuk="Opsional saat memverifikasi; wajib (min. 5 karakter) saat mengembalikan ke karyawan."
           galat={galatKolom.note}
         />
 

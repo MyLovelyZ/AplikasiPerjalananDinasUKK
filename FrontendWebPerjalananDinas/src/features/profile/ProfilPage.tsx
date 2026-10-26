@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { apiUbahProfil } from '@/api/endpoint'
+import { Avatar } from '@/components/ui/Avatar'
+import { Icon } from '@/components/ui/Icon'
 import { KotakGalat, PesanKolom } from '@/components/ui/Modal'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { PanelHeader } from '@/components/ui/PanelHeader'
@@ -9,7 +11,11 @@ import { LABEL_PERAN } from '@/constants/label'
 import { useAuth } from '@/auth/useAuth'
 import { useKirim } from '@/hooks/useKirim'
 import { useAplikasi } from '@/layouts/konteksAplikasi'
-import { inisial, waktu } from '@/utils/format'
+import { ukuranBerkas, waktu } from '@/utils/format'
+
+/** Sama dengan aturan backend: image, mimes:jpg,jpeg,png,webp, max:2048 (KB). */
+const JENIS_FOTO = ['image/jpeg', 'image/png', 'image/webp']
+const MAKS_FOTO = 2 * 1024 * 1024
 
 /** /profile — terbuka untuk keempat peran. */
 export function ProfilPage() {
@@ -19,7 +25,11 @@ export function ProfilPage() {
   const [nama, setNama] = useState(pengguna?.name ?? '')
   const [telepon, setTelepon] = useState(pengguna?.phone ?? '')
   const [foto, setFoto] = useState<File | null>(null)
+  // Pratinjau foto baru (data URL) yang tampil sebelum disimpan.
+  const [pratinjau, setPratinjau] = useState<string | null>(null)
+  const [galatFoto, setGalatFoto] = useState<string | null>(null)
   const [kunciFoto, setKunciFoto] = useState(0)
+  const inputFotoRef = useRef<HTMLInputElement>(null)
   const profil = useKirim()
 
   const [sandiLama, setSandiLama] = useState('')
@@ -29,6 +39,34 @@ export function ProfilPage() {
 
   if (!pengguna) return null
 
+  /** Lupakan foto yang dipilih; isian file dikosongkan agar berkas yang sama bisa dipilih lagi. */
+  const batalFoto = () => {
+    setFoto(null)
+    setPratinjau(null)
+    setKunciFoto((k) => k + 1)
+  }
+
+  const pilihFoto = (berkas: File | undefined) => {
+    setGalatFoto(null)
+    if (!berkas) return
+    if (!JENIS_FOTO.includes(berkas.type)) {
+      setGalatFoto('Pilih gambar berformat JPG, PNG, atau WebP.')
+      batalFoto()
+      return
+    }
+    if (berkas.size > MAKS_FOTO) {
+      setGalatFoto(`Ukuran foto ${ukuranBerkas(berkas.size)}; maksimal 2 MB.`)
+      batalFoto()
+      return
+    }
+    const pembaca = new FileReader()
+    pembaca.onload = () => {
+      setFoto(berkas)
+      setPratinjau(String(pembaca.result))
+    }
+    pembaca.readAsDataURL(berkas)
+  }
+
   const simpanProfil = async (peristiwa: FormEvent) => {
     peristiwa.preventDefault()
     const hasil = await profil.jalankan(() =>
@@ -36,8 +74,7 @@ export function ProfilPage() {
     )
     if (!hasil) return
     perbaruiPengguna(hasil.data)
-    setFoto(null)
-    setKunciFoto((k) => k + 1)
+    batalFoto()
     onSukses(hasil.message)
   }
 
@@ -61,29 +98,19 @@ export function ProfilPage() {
         <section className="panel">
           <PanelHeader title="Profil Akun" subtitle="Data organisasi diatur oleh Super Admin" />
           <div className="kartu-profil">
-            <div className="avatar-besar">
-              {pengguna.profile_photo_url ? (
-                <img
-                  src={pengguna.profile_photo_url}
-                  alt=""
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }}
-                />
-              ) : (
-                inisial(pengguna.name)
-              )}
-            </div>
+            <Avatar nama={pengguna.name} foto={pengguna.profile_photo_url} ukuran="besar" />
             <div>
               <h3>{pengguna.name}</h3>
               <p>{pengguna.email}</p>
               <div className="daftar-peran">
-                <span className="status biru">{LABEL_PERAN[pengguna.role]}</span>
+                <span className="status hijau">{LABEL_PERAN[pengguna.role]}</span>
                 {!pengguna.is_active && <span className="status merah">Nonaktif</span>}
               </div>
             </div>
           </div>
           <div className="panel-body" style={{ borderTop: '1px solid var(--garis)', display: 'grid', gap: 9 }}>
             <div className="pasangan">
-              <span>Nomor pegawai</span>
+              <span>Nomor karyawan</span>
               <b className="angka">{pengguna.employee_number ?? '—'}</b>
             </div>
             <div className="pasangan">
@@ -96,7 +123,7 @@ export function ProfilPage() {
             </div>
             {pengguna.role === 'employee' && (
               <div className="pasangan">
-                <span>Atasan</span>
+                <span>Supervisor</span>
                 <b>{pengguna.supervisor?.name ?? 'Belum ditetapkan'}</b>
               </div>
             )}
@@ -132,15 +159,40 @@ export function ProfilPage() {
               </div>
               <div className="bidang">
                 <label htmlFor="foto-profil">Foto profil</label>
-                <input
-                  key={kunciFoto}
-                  id="foto-profil"
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.webp"
-                  onChange={(e) => setFoto(e.target.files?.[0] ?? null)}
-                />
-                <span className="petunjuk">JPG, PNG, atau WebP; maksimal 2 MB.</span>
-                <PesanKolom pesan={profil.galatKolom.photo} />
+                {/* Foto baru langsung tampil sebagai pratinjau; baru tersimpan setelah "Simpan profil". */}
+                <div className={`pilih-foto ${foto ? 'baru' : ''}`}>
+                  <Avatar nama={nama || pengguna.name} foto={pratinjau ?? pengguna.profile_photo_url} ukuran="jumbo" />
+                  <div className="pilih-foto-isi">
+                    <b>{foto ? 'Pratinjau foto baru' : pengguna.profile_photo_url ? 'Foto saat ini' : 'Belum ada foto'}</b>
+                    <small>
+                      {foto
+                        ? `${foto.name} · ${ukuranBerkas(foto.size)}. Belum disimpan — klik "Simpan profil" untuk memakainya.`
+                        : 'JPG, PNG, atau WebP; maksimal 2 MB.'}
+                    </small>
+                    <div className="pilih-foto-aksi">
+                      <button type="button" className="btn kecil" onClick={() => inputFotoRef.current?.click()}>
+                        <Icon name="unggah" size={15} />
+                        {foto || pengguna.profile_photo_url ? 'Ganti foto' : 'Pilih foto'}
+                      </button>
+                      {foto && (
+                        <button type="button" className="btn kecil" onClick={batalFoto}>
+                          <Icon name="x" size={15} />
+                          Batalkan
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <input
+                    ref={inputFotoRef}
+                    key={kunciFoto}
+                    id="foto-profil"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    hidden
+                    onChange={(e) => pilihFoto(e.target.files?.[0])}
+                  />
+                </div>
+                <PesanKolom pesan={galatFoto ?? profil.galatKolom.photo} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button type="submit" className="btn utama" disabled={profil.mengirim || !nama.trim()}>

@@ -21,6 +21,7 @@ import {
   LABEL_PENYELESAIAN,
   LABEL_TAHAP,
   LABEL_TRANSPORTASI,
+  labelPeriode,
   RUPA_STATUS_LAPORAN,
   RUPA_STATUS_PENCAIRAN,
   RUPA_STATUS_PERJALANAN,
@@ -50,7 +51,7 @@ interface DetailPerjalananModalProps {
 
 /** Langkah yang sedang ditunggu, ditampilkan sebagai titik terakhir pada linimasa. */
 function langkahBerikutnya(p: Perjalanan): string | null {
-  if (p.status === 'submitted') return 'Menunggu keputusan atasan'
+  if (p.status === 'submitted') return 'Menunggu keputusan supervisor'
   if (p.status === 'supervisor_approved') return 'Menunggu verifikasi anggaran oleh Keuangan'
   if (p.status === 'approved' && p.expense_report?.status === 'submitted')
     return 'Menunggu verifikasi laporan biaya oleh Keuangan'
@@ -164,7 +165,7 @@ export function DetailPerjalananModal({
               {p.status === 'draft' && !konfirmasiBatal && (
                 <button type="button" className="btn utama" disabled={aksi.mengirim} onClick={() => ajukan(p.id)}>
                   <Icon name="kirim" size={15} />
-                  {aksi.mengirim ? 'Mengirim...' : 'Ajukan ke atasan'}
+                  {aksi.mengirim ? 'Mengirim...' : 'Ajukan ke supervisor'}
                 </button>
               )}
             </>
@@ -243,7 +244,7 @@ function IsiDetail({
           {p.budget && (
             <div className="pasangan">
               <span>Dibebankan ke anggaran</span>
-              <b>{p.budget.period_label}</b>
+              <b>{labelPeriode(p.budget)}</b>
             </div>
           )}
           {p.description && (
@@ -323,7 +324,7 @@ function IsiDetail({
           <div className="panel-head">
             <div>
               <h2>Riwayat Persetujuan</h2>
-              <p>Keputusan atasan dan Keuangan</p>
+              <p>Keputusan supervisor dan Keuangan</p>
             </div>
           </div>
           <div className="linimasa">

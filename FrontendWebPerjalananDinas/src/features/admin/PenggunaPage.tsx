@@ -13,20 +13,22 @@ import {
 } from '@/api/endpoint'
 import type { FormulirPengguna } from '@/api/endpoint'
 import type { OpsiFormPengguna, Pengguna, Peran } from '@/api/tipe'
+import { Avatar } from '@/components/ui/Avatar'
 import { Icon } from '@/components/ui/Icon'
 import { Kosong, Memuat, Muatan } from '@/components/ui/Keadaan'
 import { KotakGalat, Modal, PesanKolom, SebagaiHalaman } from '@/components/ui/Modal'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Pilihan } from '@/components/ui/Pilihan'
 import { Paginasi } from '@/components/ui/Paginasi'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { LABEL_PERAN, opsiDari } from '@/constants/label'
+import { LABEL_PERAN, opsiBerlabel, opsiDari } from '@/constants/label'
 import { useAuth } from '@/auth/useAuth'
 import { useHalaman } from '@/hooks/useHalaman'
 import { useKirim } from '@/hooks/useKirim'
 import { usePermintaan } from '@/hooks/usePermintaan'
 import { HalamanGalat } from '@/features/errors/HalamanGalat'
 import { useAplikasi } from '@/layouts/konteksAplikasi'
-import { inisial, waktu } from '@/utils/format'
+import { waktu } from '@/utils/format'
 
 /** /admin/users — tambah/ubah di halaman sendiri, detail sebagai modal. */
 export function PenggunaPage() {
@@ -53,7 +55,7 @@ export function PenggunaPage() {
       <PageHeader
         eyebrow="Super Admin"
         title="Pengguna"
-        description="Akun seluruh pegawai, atasan, dan tim keuangan. Setiap pegawai wajib memiliki atasan agar dapat mengajukan perjalanan."
+        description="Akun seluruh karyawan, supervisor, dan manajer keuangan. Setiap karyawan wajib memiliki supervisor agar dapat mengajukan perjalanan."
         action={
           <Link className="btn utama" to="/admin/users/new">
             <Icon name="plus" size={17} />
@@ -64,19 +66,27 @@ export function PenggunaPage() {
 
       <section className="panel">
         <div className="bilah-alat">
-          <select value={peran} onChange={(e) => setPeran(e.target.value as Peran | '')} aria-label="Peran">
-            <option value="">Semua peran</option>
-            {opsiDari(LABEL_PERAN).map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <select value={status} onChange={(e) => setStatus(e.target.value as 'active' | 'inactive' | '')} aria-label="Status">
-            <option value="">Semua status</option>
-            <option value="active">Aktif</option>
-            <option value="inactive">Nonaktif</option>
-          </select>
+          <Pilihan
+            label="Peran"
+            nilai={peran}
+            bawaan=""
+            onUbah={setPeran}
+            opsi={[
+              { nilai: '', label: 'Semua peran' },
+              ...opsiDari(LABEL_PERAN).map((o) => ({ nilai: o.value, label: o.label })),
+            ]}
+          />
+          <Pilihan
+            label="Status akun"
+            nilai={status}
+            bawaan=""
+            onUbah={setStatus}
+            opsi={[
+              { nilai: '', label: 'Semua status' },
+              { nilai: 'active', label: 'Aktif' },
+              { nilai: 'inactive', label: 'Nonaktif' },
+            ]}
+          />
           {pencarian && <span className="status biru">Pencarian: “{pencarian}”</span>}
           <button type="button" className="btn kecil dorong" onClick={muatUlang}>
             <Icon name="segarkan" size={15} />
@@ -96,7 +106,7 @@ export function PenggunaPage() {
                       <tr>
                         <th>Nama</th>
                         <th>Peran</th>
-                        <th>Departemen &amp; atasan</th>
+                        <th>Departemen &amp; supervisor</th>
                         <th>Status</th>
                         <th>Terakhir masuk</th>
                         <th />
@@ -106,10 +116,8 @@ export function PenggunaPage() {
                       {hasil.data.map((u) => (
                         <tr key={u.id}>
                           <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <div className="avatar" style={{ width: 32, height: 32, fontSize: 12 }}>
-                                {inisial(u.name)}
-                              </div>
+                            <div className="sel-orang">
+                              <Avatar nama={u.name} foto={u.profile_photo_url} />
                               <div>
                                 <div className="sel-utama">{u.name}</div>
                                 <div className="sel-sekunder">
@@ -125,7 +133,7 @@ export function PenggunaPage() {
                           </td>
                           <td>
                             <div className="sel-utama">{u.department?.name ?? '—'}</div>
-                            <div className="sel-sekunder">{u.supervisor ? `Atasan: ${u.supervisor.name}` : ''}</div>
+                            <div className="sel-sekunder">{u.supervisor ? `Supervisor: ${u.supervisor.name}` : ''}</div>
                           </td>
                           <td>
                             <StatusBadge label={u.is_active ? 'Aktif' : 'Nonaktif'} warna={u.is_active ? 'hijau' : 'netral'} />
@@ -205,13 +213,12 @@ function ModalDetailPengguna({ id, onTutup }: { id: number; onTutup: () => void 
   const baris = (u: Pengguna): Array<[string, string]> => [
     ['Email', u.email],
     ['Peran', LABEL_PERAN[u.role]],
-    ['Nomor pegawai', u.employee_number ?? '—'],
+    ['Nomor karyawan', u.employee_number ?? '—'],
     ['Jabatan', u.position ?? '—'],
     ['Telepon', u.phone ?? '—'],
     ['Departemen', u.department?.name ?? '—'],
-    ['Atasan', u.supervisor?.name ?? '—'],
+    ['Supervisor', u.supervisor?.name ?? '—'],
     ['Jumlah bawahan', String(u.subordinates_count ?? 0)],
-    ['Rekening', u.bank_name ? `${u.bank_name} · ${u.bank_account_number ?? ''} a.n. ${u.bank_account_name ?? ''}` : '—'],
     ['Status', u.is_active ? 'Aktif' : 'Nonaktif'],
     ['Terakhir masuk', waktu(u.last_login_at)],
     ['Dibuat', waktu(u.created_at)],
@@ -236,6 +243,13 @@ function ModalDetailPengguna({ id, onTutup }: { id: number; onTutup: () => void 
       <Muatan data={data} memuat={memuat} galat={galat} onCobaLagi={muatUlang} barisRangka={8}>
         {(u) => (
           <div style={{ display: 'grid', gap: 9 }}>
+            <div className="kartu-profil">
+              <Avatar nama={u.name} foto={u.profile_photo_url} ukuran="besar" />
+              <div>
+                <h3>{u.name}</h3>
+                <p>{u.email}</p>
+              </div>
+            </div>
             {baris(u).map(([label, nilai]) => (
               <div className="pasangan" key={label}>
                 <span>{label}</span>
@@ -419,7 +433,7 @@ function ModalPengguna({
                 Peran<span className="wajib">*</span>
               </label>
               <select id="peran" value={isian.role} onChange={(e) => ubah('role', e.target.value as Peran)}>
-                {opsiDari(LABEL_PERAN).map((o) => (
+                {opsiBerlabel(opsi.data?.roles, LABEL_PERAN).map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>
@@ -448,7 +462,7 @@ function ModalPengguna({
             {isian.role === 'employee' && (
               <div className="bidang">
                 <label htmlFor="atasan">
-                  Atasan<span className="wajib">*</span>
+                  Supervisor<span className="wajib">*</span>
                 </label>
                 <select id="atasan" value={isian.supervisor_id} onChange={(e) => ubah('supervisor_id', e.target.value)}>
                   <option value="">— Pilih —</option>
@@ -465,7 +479,7 @@ function ModalPengguna({
 
           <div className="baris-bidang">
             <div className="bidang">
-              <label htmlFor="nip">Nomor pegawai</label>
+              <label htmlFor="nip">Nomor karyawan</label>
               <input
                 id="nip"
                 value={isian.employee_number}
