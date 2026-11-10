@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
-import { Colors, Radii } from '../theme/colors';
+import { Colors, Radii, LightThemeColors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import {
   apiEmployeeRequestOptions,
   apiEmployeeRequestEdit,
@@ -49,6 +50,9 @@ export const TripRequestScreen: React.FC<TripRequestScreenProps> = ({
   onBack,
   onSuccess,
 }) => {
+  const { theme, isDark, colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   const isEditing = Boolean(editTripId);
   const [langkah, setLangkah] = useState<1 | 2 | 3>(1);
 
@@ -845,11 +849,12 @@ export const TripRequestScreen: React.FC<TripRequestScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.latar,
-  },
+const getStyles = (Colors: typeof LightThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.latar,
+    },
   content: {
     paddingHorizontal: 14,
     paddingTop: 16,

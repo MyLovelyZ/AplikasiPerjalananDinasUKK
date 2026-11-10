@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Colors, Radii } from './src/theme/colors';
+import { Colors, Radii, LightThemeColors } from './src/theme/colors';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthScreen } from './src/screens/AuthScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { TripRequestScreen } from './src/screens/TripRequestScreen';
@@ -26,171 +27,10 @@ import { inisial } from './src/constants/labels';
 const ANDROID_TOP_INSET =
   Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 28) : 0;
 
-const NavTabIcon: React.FC<{
-  type: 'home' | 'trips' | 'notif' | 'profile';
-  active: boolean;
-}> = ({ type, active }) => {
-  const stroke = active ? Colors.ketiga : Colors.utamaRedup;
+function AppContent() {
+  const { theme, isDark, colors, toggleTheme, setTheme } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
-  const renderIcon = () => {
-    if (type === 'home') {
-      // Ikon Rumah (Atap segitiga + badan kotak) sesuai gambar referensi
-      return (
-        <View style={styles.glyphWrap}>
-          <View
-            style={{
-              width: 13,
-              height: 13,
-              borderTopWidth: 2,
-              borderLeftWidth: 2,
-              borderColor: stroke,
-              transform: [{ rotate: '45deg' }],
-              marginBottom: -7,
-              borderTopLeftRadius: 2,
-            }}
-          />
-          <View
-            style={{
-              width: 16,
-              height: 12,
-              borderWidth: 2,
-              borderTopWidth: 0,
-              borderColor: stroke,
-              borderBottomLeftRadius: 3,
-              borderBottomRightRadius: 3,
-            }}
-          />
-        </View>
-      );
-    }
-
-    if (type === 'trips') {
-      // Ikon 2 titik bulat di atas + 2 pil vertikal di bawah sesuai gambar referensi
-      return (
-        <View style={styles.glyphWrap}>
-          <View style={{ flexDirection: 'row', gap: 4, marginBottom: 3 }}>
-            <View
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: stroke,
-              }}
-            />
-            <View
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: stroke,
-              }}
-            />
-          </View>
-          <View style={{ flexDirection: 'row', gap: 4 }}>
-            <View
-              style={{
-                width: 6,
-                height: 9,
-                borderTopLeftRadius: 3,
-                borderTopRightRadius: 3,
-                borderBottomLeftRadius: 1.5,
-                borderBottomRightRadius: 1.5,
-                backgroundColor: stroke,
-              }}
-            />
-            <View
-              style={{
-                width: 6,
-                height: 9,
-                borderTopLeftRadius: 3,
-                borderTopRightRadius: 3,
-                borderBottomLeftRadius: 1.5,
-                borderBottomRightRadius: 1.5,
-                backgroundColor: stroke,
-              }}
-            />
-          </View>
-        </View>
-      );
-    }
-
-    if (type === 'notif') {
-      // Ikon Tetesan dengan tanda + di tengah sesuai gambar referensi
-      return (
-        <View style={styles.glyphWrap}>
-          <View
-            style={{
-              width: 17,
-              height: 19,
-              borderWidth: 2,
-              borderColor: stroke,
-              borderTopLeftRadius: 9,
-              borderTopRightRadius: 9,
-              borderBottomLeftRadius: 9,
-              borderBottomRightRadius: 9,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <View
-              style={{
-                width: 7,
-                height: 1.8,
-                backgroundColor: stroke,
-                borderRadius: 1,
-              }}
-            />
-            <View
-              style={{
-                position: 'absolute',
-                width: 1.8,
-                height: 7,
-                backgroundColor: stroke,
-                borderRadius: 1,
-              }}
-            />
-          </View>
-        </View>
-      );
-    }
-
-    // Ikon Profil (Kepala bulat + bahu lengkung) sesuai gambar referensi
-    return (
-      <View style={styles.glyphWrap}>
-        <View
-          style={{
-            width: 9,
-            height: 9,
-            borderRadius: 5,
-            borderWidth: 2,
-            borderColor: stroke,
-            marginBottom: 2,
-          }}
-        />
-        <View
-          style={{
-            width: 17,
-            height: 7,
-            borderTopLeftRadius: 8,
-            borderTopRightRadius: 8,
-            borderWidth: 2,
-            borderBottomWidth: 0,
-            borderColor: stroke,
-          }}
-        />
-      </View>
-    );
-  };
-
-  return (
-    <View style={styles.iconBox}>
-      {renderIcon()}
-      {active && <View style={styles.activeTabBar} />}
-    </View>
-  );
-};
-
-export default function App() {
   const { width: screenWidth } = useWindowDimensions();
   const isCompact = screenWidth < 370;
 
@@ -243,8 +83,8 @@ export default function App() {
 
   if (!currentUser) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="light" backgroundColor={Colors.kedua} translucent />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.latar }]}>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <AuthScreen onLoginSuccess={handleLoginSuccess} />
       </SafeAreaView>
     );
@@ -383,11 +223,16 @@ export default function App() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="light" backgroundColor={Colors.kedua} translucent />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.latar }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* Top Header semula yang bersih & responsif */}
-      <View style={styles.topHeader}>
+      <View
+        style={[
+          styles.topHeader,
+          { backgroundColor: isDark ? '#101a27' : colors.latarSidebar },
+        ]}
+      >
         <TouchableOpacity
           style={styles.brandLeft}
           onPress={() => setCurrentScreen('Home')}
@@ -407,6 +252,22 @@ export default function App() {
         </TouchableOpacity>
 
         <View style={styles.topRightActions}>
+          {/* Tombol Pengalih Mode Gelap / Terang */}
+          <TouchableOpacity
+            style={[
+              styles.themeToggleBtn,
+              isDark && {
+                borderColor: colors.ketiga,
+                backgroundColor: 'rgba(224, 136, 6, 0.2)',
+              },
+            ]}
+            onPress={toggleTheme}
+            activeOpacity={0.8}
+            accessibilityLabel={isDark ? 'Mode Terang' : 'Mode Gelap'}
+          >
+            <Text style={styles.themeToggleIcon}>{isDark ? '☀️' : '🌙'}</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.notifBellBtn}
             onPress={() => setCurrentScreen('Notifications')}
@@ -434,8 +295,10 @@ export default function App() {
         </View>
       </View>
 
-      {/* Main Content Area (#DFDFDF 60% Primary Surface) */}
-      <View style={styles.body}>{renderScreen()}</View>
+      {/* Main Content Area */}
+      <View style={[styles.body, { backgroundColor: colors.latar }]}>
+        {renderScreen()}
+      </View>
 
       {/* Responsive Curved Floating Bottom Navbar (Sesuai Gambar Referensi) */}
       <View
@@ -444,10 +307,12 @@ export default function App() {
           isCompact && styles.bottomNavWrapperCompact,
         ]}
       >
-        <View style={styles.bottomNavSurface}>
-          {/* Lengkung Arch Halus di Tengah Dock */}
-          <View style={styles.centerArchCradle} />
-
+        <View
+          style={[
+            styles.bottomNavSurface,
+            { backgroundColor: isDark ? '#101a27' : colors.latarSidebar },
+          ]}
+        >
           <View style={styles.bottomNav}>
             {/* Tab 1: Beranda */}
             <TouchableOpacity
@@ -455,10 +320,26 @@ export default function App() {
               onPress={() => setCurrentScreen('Home')}
               activeOpacity={0.75}
             >
-              <NavTabIcon type="home" active={isTabActive('Home')} />
+              <Text
+                style={[
+                  styles.navItemEmoji,
+                  isTabActive('Home') && styles.navItemEmojiActive,
+                ]}
+              >
+                🏠
+              </Text>
+              <Text
+                style={[
+                  styles.navItemLabel,
+                  isTabActive('Home') && styles.navItemLabelActive,
+                ]}
+              >
+                Beranda
+              </Text>
+              {isTabActive('Home') && <View style={styles.activeDot} />}
             </TouchableOpacity>
 
-            {/* Tab 2: Perjalanan (2 Dots + 2 Pills) */}
+            {/* Tab 2: SPPD Saya */}
             <TouchableOpacity
               style={styles.navItem}
               onPress={() => {
@@ -467,10 +348,26 @@ export default function App() {
               }}
               activeOpacity={0.75}
             >
-              <NavTabIcon type="trips" active={isTabActive('TripList')} />
+              <Text
+                style={[
+                  styles.navItemEmoji,
+                  isTabActive('TripList') && styles.navItemEmojiActive,
+                ]}
+              >
+                📋
+              </Text>
+              <Text
+                style={[
+                  styles.navItemLabel,
+                  isTabActive('TripList') && styles.navItemLabelActive,
+                ]}
+              >
+                SPPD Saya
+              </Text>
+              {isTabActive('TripList') && <View style={styles.activeDot} />}
             </TouchableOpacity>
 
-            {/* Tab 3 (Tengah): Tombol Floating Unik (Hexagon/Diamond +) */}
+            {/* Tab 3 (Tengah): Tombol Aksi Bulat "Ajukan" */}
             <View style={styles.navCenterSlot}>
               <TouchableOpacity
                 style={styles.floatingCenterTouch}
@@ -482,15 +379,20 @@ export default function App() {
               >
                 <View
                   style={[
-                    styles.floatingDiamondShape,
-                    isTabActive('TripRequest') &&
-                      styles.floatingDiamondShapeActive,
+                    styles.floatingCircleBtn,
+                    isTabActive('TripRequest') && styles.floatingCircleBtnActive,
                   ]}
-                />
-                <View style={styles.plusCrossWrap}>
-                  <View style={styles.plusHorizontal} />
-                  <View style={styles.plusVertical} />
+                >
+                  <Text style={styles.floatingCircleIcon}>➕</Text>
                 </View>
+                <Text
+                  style={[
+                    styles.floatingCenterLabel,
+                    isTabActive('TripRequest') && styles.floatingCenterLabelActive,
+                  ]}
+                >
+                  Ajukan
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -500,11 +402,15 @@ export default function App() {
               onPress={() => setCurrentScreen('Notifications')}
               activeOpacity={0.75}
             >
-              <View style={{ position: 'relative' }}>
-                <NavTabIcon
-                  type="notif"
-                  active={isTabActive('Notifications')}
-                />
+              <View style={styles.iconNotifWrap}>
+                <Text
+                  style={[
+                    styles.navItemEmoji,
+                    isTabActive('Notifications') && styles.navItemEmojiActive,
+                  ]}
+                >
+                  🔔
+                </Text>
                 {unreadCount > 0 && (
                   <View style={styles.navCountDot}>
                     <Text style={styles.navCountDotText}>
@@ -513,15 +419,40 @@ export default function App() {
                   </View>
                 )}
               </View>
+              <Text
+                style={[
+                  styles.navItemLabel,
+                  isTabActive('Notifications') && styles.navItemLabelActive,
+                ]}
+              >
+                Notifikasi
+              </Text>
+              {isTabActive('Notifications') && <View style={styles.activeDot} />}
             </TouchableOpacity>
 
-            {/* Tab 5: Profil */}
+            {/* Tab 5: Akun */}
             <TouchableOpacity
               style={styles.navItem}
               onPress={() => setCurrentScreen('Profile')}
               activeOpacity={0.75}
             >
-              <NavTabIcon type="profile" active={isTabActive('Profile')} />
+              <Text
+                style={[
+                  styles.navItemEmoji,
+                  isTabActive('Profile') && styles.navItemEmojiActive,
+                ]}
+              >
+                👤
+              </Text>
+              <Text
+                style={[
+                  styles.navItemLabel,
+                  isTabActive('Profile') && styles.navItemLabelActive,
+                ]}
+              >
+                Akun
+              </Text>
+              {isTabActive('Profile') && <View style={styles.activeDot} />}
             </TouchableOpacity>
           </View>
 
@@ -538,11 +469,12 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.latar,
-  },
+const getStyles = (Colors: typeof LightThemeColors) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: Colors.latar,
+    },
   topHeader: {
     backgroundColor: Colors.latarSidebar,
     paddingTop: ANDROID_TOP_INSET + 10,
@@ -589,6 +521,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  themeToggleBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: Radii.md,
+    backgroundColor: Colors.putihTransparan,
+    borderWidth: 1,
+    borderColor: Colors.garisPutih,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  themeToggleIcon: {
+    fontSize: 15,
   },
   notifBellBtn: {
     width: 36,
@@ -653,134 +598,139 @@ const styles = StyleSheet.create({
     maxWidth: 480,
     alignSelf: 'center',
     backgroundColor: Colors.latarSidebar,
-    borderTopLeftRadius: 26,
-    borderTopRightRadius: 26,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    paddingTop: 6,
-    paddingBottom: 9,
-    paddingHorizontal: 6,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingHorizontal: 8,
     alignItems: 'center',
     elevation: 10,
     shadowColor: Colors.kedua,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.garis,
     position: 'relative',
-  },
-  centerArchCradle: {
-    position: 'absolute',
-    top: -10,
-    width: 76,
-    height: 26,
-    borderTopLeftRadius: 38,
-    borderTopRightRadius: 38,
-    backgroundColor: Colors.latarSidebar,
   },
   bottomNav: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    height: 48,
+    height: 52,
   },
   navItem: {
     flex: 1,
-    height: 46,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 2,
   },
-  iconBox: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+  navItemEmoji: {
+    fontSize: 20,
+    marginBottom: 2,
+    opacity: 0.65,
   },
-  glyphWrap: {
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
+  navItemEmojiActive: {
+    opacity: 1,
   },
-  activeTabBar: {
-    position: 'absolute',
-    bottom: 2,
-    width: 14,
-    height: 3,
+  navItemLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: Colors.tintaLembut,
+  },
+  navItemLabelActive: {
+    color: Colors.ketiga,
+    fontWeight: '800',
+  },
+  activeDot: {
+    width: 4,
+    height: 4,
     borderRadius: 2,
     backgroundColor: Colors.ketiga,
+    marginTop: 2,
   },
   navCenterSlot: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 5,
+    zIndex: 10,
   },
   floatingCenterTouch: {
-    width: 56,
-    height: 56,
-    marginTop: -28,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: -20,
   },
-  floatingDiamondShape: {
-    position: 'absolute',
-    width: 46,
-    height: 46,
-    borderRadius: 14,
+  floatingCircleBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: Colors.ketiga,
-    transform: [{ rotate: '45deg' }],
-    borderWidth: 3.5,
-    borderColor: Colors.latar,
-    elevation: 8,
-    shadowColor: Colors.kedua,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  floatingDiamondShapeActive: {
-    borderColor: Colors.utama,
-  },
-  plusCrossWrap: {
-    width: 22,
-    height: 22,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: Colors.latar,
+    elevation: 6,
+    shadowColor: Colors.kedua,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
   },
-  plusHorizontal: {
-    width: 20,
-    height: 2.5,
-    backgroundColor: Colors.kedua,
-    borderRadius: 2,
+  floatingCircleBtnActive: {
+    borderColor: Colors.utama,
+    transform: [{ scale: 1.05 }],
   },
-  plusVertical: {
-    position: 'absolute',
-    width: 2.5,
-    height: 20,
-    backgroundColor: Colors.kedua,
-    borderRadius: 2,
+  floatingCircleIcon: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: Colors.kedua,
+  },
+  floatingCenterLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.tintaLembut,
+    marginTop: 3,
+  },
+  floatingCenterLabelActive: {
+    color: Colors.ketiga,
+    fontWeight: '800',
+  },
+  iconNotifWrap: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   homeIndicatorBar: {
-    height: 4,
+    height: 3.5,
     borderRadius: 2,
     backgroundColor: Colors.utamaRedup,
     marginTop: 6,
   },
   navCountDot: {
     position: 'absolute',
-    top: 2,
-    right: 2,
-    minWidth: 15,
-    height: 15,
-    paddingHorizontal: 3,
+    top: -4,
+    right: -8,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 4,
     borderRadius: 8,
-    backgroundColor: Colors.ketiga,
+    backgroundColor: Colors.kedua,
     alignItems: 'center',
     justifyContent: 'center',
   },
   navCountDotText: {
-    color: Colors.kedua,
+    color: Colors.utama,
     fontSize: 8.5,
     fontWeight: '800',
   },
-});
+  });
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}

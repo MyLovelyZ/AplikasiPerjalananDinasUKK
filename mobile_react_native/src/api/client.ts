@@ -44,7 +44,7 @@ function detectMetroHostIp(): string {
   } catch {
     // Fallback below
   }
-  return '192.168.1.10';
+  return '192.168.137.245';
 }
 
 export const CURRENT_LAN_IP = detectMetroHostIp();

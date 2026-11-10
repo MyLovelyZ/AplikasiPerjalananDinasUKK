@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,8 @@ import {
   StatusBar as RNStatusBar,
   useWindowDimensions,
 } from 'react-native';
-import { Colors, Radii } from '../theme/colors';
+import { Colors, Radii, LightThemeColors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import {
   apiLogin,
   getApiUrl,
@@ -29,16 +30,13 @@ interface AuthScreenProps {
 }
 
 const AKUN_CONTOH = [
-  { peran: 'Super Admin', email: 'admin@citramandiri.test' },
-  { peran: 'Supervisor (IT)', email: 'supervisor@citramandiri.test' },
-  { peran: 'Supervisor (HR)', email: 'supervisor.hr@citramandiri.test' },
-  { peran: 'Supervisor (Marketing)', email: 'supervisor.mkt@citramandiri.test' },
-  { peran: 'Supervisor (Operasional)', email: 'supervisor.ops@citramandiri.test' },
-  { peran: 'Manajer Keuangan', email: 'finance@citramandiri.test' },
-  { peran: 'Karyawan (IT)', email: 'employee@citramandiri.test' },
+  { peran: 'Karyawan', email: 'employee@citramandiri.test' },
 ];
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
+  const { theme, isDark, colors, setTheme } = useTheme();
+  const styles = useMemo(() => getStyles(colors, isDark), [colors, isDark]);
+
   const { width, height } = useWindowDimensions();
   const isWide = width >= 768;
   const isCompactPhone = width < 380 || height < 730;
@@ -65,6 +63,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
     try {
       const data = await apiLogin(email.trim(), password);
+
+      // Validasi: Aplikasi mobile khusus untuk peran Karyawan
+      if (data.user?.role && data.user.role !== 'employee') {
+        setErrorMsg(
+          `Akun terdaftar sebagai ${data.user.role_label || data.user.role}. Aplikasi mobile ini khusus untuk peran Karyawan. Silakan gunakan Portal Web.`
+        );
+        return;
+      }
+
       onLoginSuccess(data.user);
     } catch (err: any) {
       if (err instanceof ApiError) {
@@ -117,13 +124,57 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             isWide && styles.loginKiriWide,
           ]}
         >
-          <View style={styles.loginBrand}>
-            <View style={styles.logoMark}>
-              <Text style={styles.logoMarkText}>TP</Text>
+          {/* Top Brand Bar + Theme Selector Pill */}
+          <View style={styles.brandRow}>
+            <View style={styles.loginBrand}>
+              <View style={styles.logoMark}>
+                <Text style={styles.logoMarkText}>TP</Text>
+              </View>
+              <View>
+                <Text style={styles.brandName}>Travel Portal</Text>
+                <Text style={styles.brandSub}>PT. Citra Mandiri</Text>
+              </View>
             </View>
-            <View>
-              <Text style={styles.brandName}>Travel Portal</Text>
-              <Text style={styles.brandSub}>PT. Citra Mandiri</Text>
+
+            {/* Pilihan Tema (Terang / Gelap) */}
+            <View style={styles.themePillWrap}>
+              <TouchableOpacity
+                style={[
+                  styles.themePillBtn,
+                  !isDark && styles.themePillBtnActive,
+                ]}
+                onPress={() => setTheme('light')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.themePillIcon}>☀️</Text>
+                <Text
+                  style={[
+                    styles.themePillText,
+                    !isDark && styles.themePillTextActive,
+                  ]}
+                >
+                  Terang
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.themePillBtn,
+                  isDark && styles.themePillBtnActive,
+                ]}
+                onPress={() => setTheme('dark')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.themePillIcon}>🌙</Text>
+                <Text
+                  style={[
+                    styles.themePillText,
+                    isDark && styles.themePillTextActive,
+                  ]}
+                >
+                  Gelap
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -156,7 +207,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
           </Text>
         </View>
 
-        {/* Sisi Kanan / Bawah: Form Masuk di atas #DFDFDF (Selaras .login-kanan di LoginPage.tsx) */}
+        {/* Sisi Kanan / Bawah: Form Masuk (Selaras .login-kanan di LoginPage.tsx) */}
         <View
           style={[
             styles.loginKanan,
@@ -165,10 +216,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
           ]}
         >
           <View style={styles.loginKartu}>
-            <Text style={styles.loginTitle}>Masuk</Text>
-            <Text style={styles.loginSub}>
-              Gunakan akun perusahaan Anda untuk melanjutkan.
-            </Text>
+            {/* Header Form Masuk */}
+            <View style={styles.formHeaderRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.loginTitle}>Masuk</Text>
+                <Text style={styles.loginSub}>
+                  Gunakan akun perusahaan Anda untuk melanjutkan.
+                </Text>
+              </View>
+            </View>
 
             {errorMsg ? (
               <View style={styles.kotakGalat}>
@@ -226,22 +282,36 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
             {/* Tombol Masuk (.btn.utama) */}
             <TouchableOpacity
-              style={[styles.btnUtama, loading && styles.btnDisabled]}
+              style={[
+                styles.btnUtama,
+                isDark && styles.btnUtamaDark,
+                loading && styles.btnDisabled,
+              ]}
               onPress={handleLogin}
               disabled={loading}
               activeOpacity={0.85}
             >
               {loading ? (
-                <ActivityIndicator color={Colors.utama} size="small" />
+                <ActivityIndicator
+                  color={isDark ? '#19273A' : Colors.utama}
+                  size="small"
+                />
               ) : (
-                <Text style={styles.btnUtamaText}>Masuk →</Text>
+                <Text
+                  style={[
+                    styles.btnUtamaText,
+                    isDark && styles.btnUtamaTextDark,
+                  ]}
+                >
+                  Masuk →
+                </Text>
               )}
             </TouchableOpacity>
 
-            {/* Akun contoh (.akun-contoh) */}
+            {/* Akun contoh khusus Mobile (Karyawan) */}
             <View style={styles.akunContoh}>
               <View style={styles.akunContohKepala}>
-                <Text style={styles.akunContohLabel}>AKUN CONTOH</Text>
+                <Text style={styles.akunContohLabel}>AKUN CONTOH MOBILE</Text>
                 <Text style={styles.akunContohSandi}>
                   sandi: <Text style={styles.mono}>password</Text>
                 </Text>
@@ -263,12 +333,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                       }}
                       activeOpacity={0.75}
                     >
-                      <Text
-                        style={styles.akunContohPeran}
-                        numberOfLines={1}
-                      >
-                        {a.peran}
-                      </Text>
+                      <View style={styles.akunContohPeranWrap}>
+                        <Text style={styles.akunContohBadge}>👤 KARYAWAN</Text>
+                        <Text style={styles.akunContohSubKet}>
+                          Akses SPPD & LPJ Biaya
+                        </Text>
+                      </View>
                       <Text
                         style={[
                           styles.akunContohEmail,
@@ -283,6 +353,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                   );
                 })}
               </View>
+              <Text style={styles.akunContohInfoRole}>
+                💡 Peran Supervisor, Keuangan, dan Admin diakses via Portal Web.
+              </Text>
             </View>
 
             {/* Pengaturan Host Server API (untuk kemudahan tes di HP/Emulator) */}
@@ -398,43 +471,88 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.latar,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  scrollContentWide: {
-    flexDirection: 'row',
-    minHeight: '100%',
-  },
-  loginKiri: {
-    backgroundColor: Colors.kedua,
-    paddingHorizontal: 18,
-    paddingTop:
-      (Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 28) : 12) + 12,
-    paddingBottom: 16,
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  loginKiriCompact: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    gap: 8,
-  },
-  loginKiriWide: {
-    width: '42%',
-    paddingHorizontal: 32,
-    paddingVertical: 36,
-  },
-  loginBrand: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  logoMark: {
+const getStyles = (Colors: typeof LightThemeColors, isDark: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDark ? '#101a27' : Colors.latar,
+    },
+    scrollContent: {
+      flexGrow: 1,
+    },
+    scrollContentWide: {
+      flexDirection: 'row',
+      minHeight: '100%',
+    },
+    loginKiri: {
+      backgroundColor: '#19273A',
+      paddingHorizontal: 18,
+      paddingTop:
+        (Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 28) : 12) + 12,
+      paddingBottom: 16,
+      justifyContent: 'space-between',
+      gap: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: 'rgba(223, 223, 223, 0.15)',
+    },
+    loginKiriCompact: {
+      paddingHorizontal: 14,
+      paddingBottom: 12,
+      gap: 8,
+    },
+    loginKiriWide: {
+      width: '42%',
+      paddingHorizontal: 32,
+      paddingVertical: 36,
+      borderBottomWidth: 0,
+      borderRightWidth: 1,
+      borderRightColor: 'rgba(223, 223, 223, 0.15)',
+    },
+    brandRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: '100%',
+      gap: 8,
+    },
+    themePillWrap: {
+      flexDirection: 'row',
+      backgroundColor: 'rgba(223, 223, 223, 0.12)',
+      borderRadius: Radii.pill,
+      padding: 3,
+      borderWidth: 1,
+      borderColor: 'rgba(223, 223, 223, 0.22)',
+    },
+    themePillBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: Radii.pill,
+    },
+    themePillBtnActive: {
+      backgroundColor: Colors.ketiga,
+    },
+    themePillIcon: {
+      fontSize: 12,
+    },
+    themePillText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: 'rgba(223, 223, 223, 0.75)',
+    },
+    themePillTextActive: {
+      color: '#19273A',
+      fontWeight: '800',
+    },
+    loginBrand: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      flexShrink: 1,
+    },
+    logoMark: {
     width: 36,
     height: 36,
     borderRadius: Radii.md,
@@ -443,19 +561,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoMarkText: {
-    color: Colors.kedua,
+    color: '#19273A',
     fontWeight: '800',
     fontSize: 14,
     letterSpacing: 0.5,
   },
   brandName: {
-    color: Colors.utama,
+    color: '#DFDFDF',
     fontWeight: '700',
     fontSize: 15,
     letterSpacing: -0.2,
   },
   brandSub: {
-    color: Colors.utamaRedup,
+    color: 'rgba(223, 223, 223, 0.7)',
     fontSize: 12,
   },
   loginIntro: {
@@ -484,7 +602,7 @@ const styles = StyleSheet.create({
     lineHeight: 25,
     fontWeight: '700',
     letterSpacing: -0.4,
-    color: Colors.utama,
+    color: '#DFDFDF',
     marginBottom: 4,
   },
   introHeadlineCompact: {
@@ -502,11 +620,11 @@ const styles = StyleSheet.create({
   },
   loginFoot: {
     fontSize: 11,
-    color: Colors.utamaSamar,
+    color: 'rgba(223, 223, 223, 0.45)',
   },
   loginKanan: {
     flex: 1,
-    backgroundColor: Colors.latar,
+    backgroundColor: isDark ? '#101a27' : Colors.latar,
     paddingHorizontal: 18,
     paddingVertical: 18,
     justifyContent: 'flex-start',
@@ -526,6 +644,32 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     alignSelf: 'center',
   },
+  formHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 14,
+  },
+  formThemeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: Radii.pill,
+    borderWidth: 1.5,
+    borderColor: isDark ? Colors.ketiga : Colors.garisTegas,
+    backgroundColor: isDark ? 'rgba(224, 136, 6, 0.16)' : Colors.latarSorot,
+  },
+  formThemeBtnDark: {
+    borderColor: Colors.ketiga,
+    backgroundColor: 'rgba(224, 136, 6, 0.16)',
+  },
+  formThemeIcon: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: isDark ? Colors.ketiga : Colors.tinta,
+  },
   loginTitle: {
     fontSize: 22,
     fontWeight: '700',
@@ -534,9 +678,8 @@ const styles = StyleSheet.create({
   },
   loginSub: {
     color: Colors.tintaLembut,
-    fontSize: 13.5,
-    marginTop: 4,
-    marginBottom: 16,
+    fontSize: 13,
+    marginTop: 2,
   },
   kotakGalat: {
     backgroundColor: Colors.ketiga,
@@ -572,7 +715,7 @@ const styles = StyleSheet.create({
   tautanKecil: {
     fontSize: 12.5,
     fontWeight: '600',
-    color: Colors.tinta,
+    color: isDark ? Colors.ketiga : Colors.tinta,
     textDecorationLine: 'underline',
   },
   input: {
@@ -581,9 +724,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 14,
     color: Colors.tinta,
-    backgroundColor: Colors.latar,
+    backgroundColor: isDark ? '#152232' : Colors.latar,
     borderWidth: 1.5,
-    borderColor: Colors.garisTegas,
+    borderColor: isDark ? 'rgba(223, 223, 223, 0.28)' : Colors.garisTegas,
     borderRadius: Radii.md,
   },
   inputSandiWrap: {
@@ -606,9 +749,9 @@ const styles = StyleSheet.create({
     color: Colors.tintaLembut,
   },
   btnUtama: {
-    backgroundColor: Colors.tinta,
+    backgroundColor: Colors.kedua,
     borderWidth: 1,
-    borderColor: Colors.tinta,
+    borderColor: Colors.kedua,
     borderRadius: Radii.md,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -616,13 +759,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 4,
   },
+  btnUtamaDark: {
+    backgroundColor: Colors.ketiga,
+    borderColor: Colors.ketiga,
+  },
   btnDisabled: {
     opacity: 0.55,
   },
   btnUtamaText: {
     color: Colors.utama,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  btnUtamaTextDark: {
+    color: '#19273A',
   },
   btnSekunder: {
     backgroundColor: 'transparent',
@@ -673,16 +823,32 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
     borderRadius: Radii.md,
-    backgroundColor: Colors.latar,
+    backgroundColor: isDark ? '#152232' : Colors.latar,
     borderWidth: 1.5,
-    borderColor: Colors.garis,
+    borderColor: isDark ? 'rgba(223, 223, 223, 0.16)' : Colors.garis,
   },
   akunContohItemAktif: {
-    borderColor: Colors.tinta,
-    backgroundColor: Colors.latarSorot,
+    borderColor: Colors.ketiga,
+    borderWidth: 2,
+    backgroundColor: isDark
+      ? 'rgba(224, 136, 6, 0.18)'
+      : 'rgba(224, 136, 6, 0.12)',
+  },
+  akunContohPeranWrap: {
+    gap: 2,
+    flexShrink: 0,
+  },
+  akunContohBadge: {
+    fontWeight: '700',
+    fontSize: 12,
+    color: Colors.tinta,
+  },
+  akunContohSubKet: {
+    fontSize: 10.5,
+    color: Colors.tintaLembut,
   },
   akunContohPeran: {
     fontWeight: '600',
@@ -698,8 +864,15 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   akunContohEmailAktif: {
-    color: Colors.tinta,
+    color: isDark ? Colors.ketiga : Colors.tinta,
     fontWeight: '700',
+  },
+  akunContohInfoRole: {
+    fontSize: 11,
+    color: Colors.tintaLembut,
+    marginTop: 8,
+    lineHeight: 16,
+    fontStyle: 'italic',
   },
   serverBox: {
     marginTop: 18,
@@ -721,7 +894,7 @@ const styles = StyleSheet.create({
   serverToggle: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.tinta,
+    color: isDark ? Colors.ketiga : Colors.tinta,
     textDecorationLine: 'underline',
     marginLeft: 8,
   },
@@ -754,10 +927,10 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalWindow: {
-    backgroundColor: Colors.latar,
+    backgroundColor: isDark ? '#152232' : Colors.latar,
     borderRadius: Radii.lg,
     borderWidth: 2,
-    borderColor: Colors.tinta,
+    borderColor: isDark ? Colors.ketiga : Colors.tinta,
     overflow: 'hidden',
   },
   modalHead: {

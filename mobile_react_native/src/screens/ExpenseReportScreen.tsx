@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { Colors, Radii } from '../theme/colors';
+import { Colors, Radii, LightThemeColors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import {
   apiEmployeeExpenses,
   apiAddExpense,
@@ -45,6 +46,9 @@ export const ExpenseReportScreen: React.FC<ExpenseReportScreenProps> = ({
   tripId,
   onBack,
 }) => {
+  const { theme, isDark, colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   const [ruang, setRuang] = useState<RuangLaporan | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -767,11 +771,12 @@ export const ExpenseReportScreen: React.FC<ExpenseReportScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.latar,
-  },
+const getStyles = (Colors: typeof LightThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.latar,
+    },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',

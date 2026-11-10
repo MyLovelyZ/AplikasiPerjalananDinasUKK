@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { Colors, Radii } from '../theme/colors';
+import { Colors, Radii, LightThemeColors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { apiEmployeeRequests } from '../api/client';
 import { Perjalanan, StatusPerjalanan } from '../api/types';
 import {
@@ -33,6 +34,9 @@ export const TripListScreen: React.FC<TripListScreenProps> = ({
   onNewTrip,
   initialStatus = '',
 }) => {
+  const { theme, isDark, colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   const [trips, setTrips] = useState<Perjalanan[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -120,10 +124,12 @@ export const TripListScreen: React.FC<TripListScreenProps> = ({
       <TouchableOpacity
         style={styles.tableRow}
         onPress={() => onSelectTrip(item.id)}
-        activeOpacity={0.75}
+        activeOpacity={0.7}
       >
         <View style={styles.rowHeader}>
-          <Text style={styles.reqNumber}>{item.request_number}</Text>
+          <View style={styles.reqBadge}>
+            <Text style={styles.reqNumber}>{item.request_number}</Text>
+          </View>
           <View
             style={[
               styles.statusBadge,
@@ -141,17 +147,23 @@ export const TripListScreen: React.FC<TripListScreenProps> = ({
           </View>
         </View>
 
-        <Text style={styles.destination}>{item.destination}</Text>
+        <View style={styles.rowDestWrap}>
+          <Text style={styles.destIcon}>📍</Text>
+          <Text style={styles.destination}>{item.destination}</Text>
+        </View>
         <Text style={styles.purpose} numberOfLines={1}>
           {item.purpose}
         </Text>
 
         <View style={styles.rowFooter}>
-          <View>
-            <Text style={styles.dateText}>
-              {rentangTanggal(item.departure_date, item.return_date)}
-            </Text>
-            <Text style={styles.durationText}>{item.duration_days} hari</Text>
+          <View style={styles.dateBlock}>
+            <View style={styles.dateRow}>
+              <Text style={styles.dateIcon}>📅</Text>
+              <Text style={styles.dateText}>
+                {rentangTanggal(item.departure_date, item.return_date)}
+              </Text>
+            </View>
+            <Text style={styles.durationBadge}>⏱️ {item.duration_days} hari</Text>
           </View>
 
           <View style={{ alignItems: 'flex-end' }}>
@@ -160,7 +172,7 @@ export const TripListScreen: React.FC<TripListScreenProps> = ({
             </Text>
             {item.advance_requested > 0 && (
               <Text style={styles.advanceSub}>
-                Uang muka {formatRupiah(item.advance_requested)}
+                UM {formatRupiah(item.advance_requested)}
               </Text>
             )}
           </View>
@@ -203,15 +215,30 @@ export const TripListScreen: React.FC<TripListScreenProps> = ({
 
       {/* Search Bar */}
       <View style={styles.searchWrap}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Cari nomor, tujuan, keperluan…"
-          placeholderTextColor={Colors.tintaRedup}
-          value={search}
-          onChangeText={setSearch}
-          onSubmitEditing={() => fetchTrips(1)}
-          returnKeyType="search"
-        />
+        <View style={styles.searchInputContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Cari nomor, tujuan, keperluan…"
+            placeholderTextColor={Colors.tintaRedup}
+            value={search}
+            onChangeText={setSearch}
+            onSubmitEditing={() => fetchTrips(1)}
+            returnKeyType="search"
+          />
+          {search ? (
+            <TouchableOpacity
+              style={styles.searchClearBtn}
+              onPress={() => {
+                setSearch('');
+                fetchTrips(1, false, '');
+              }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.searchClearText}>✕</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
         {search || selectedStatus || selectedYear ? (
           <TouchableOpacity
             style={styles.resetBtn}
@@ -359,18 +386,19 @@ export const TripListScreen: React.FC<TripListScreenProps> = ({
                 </TouchableOpacity>
               </View>
             </View>
-          ) : null
+          ) : undefined
         }
       />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.latar,
-  },
+const getStyles = (Colors: typeof LightThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.latar,
+    },
   listContent: {
     paddingHorizontal: 14,
     paddingTop: 16,
@@ -459,16 +487,34 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 10,
   },
-  searchInput: {
+  searchInputContainer: {
     flex: 1,
-    paddingVertical: 9,
-    paddingHorizontal: 12,
-    fontSize: 13.5,
-    color: Colors.tinta,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.latar,
     borderWidth: 1.5,
     borderColor: Colors.garisTegas,
     borderRadius: Radii.md,
+    paddingHorizontal: 10,
+  },
+  searchIcon: {
+    fontSize: 13,
+    marginRight: 6,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 9,
+    fontSize: 13.5,
+    color: Colors.tinta,
+  },
+  searchClearBtn: {
+    padding: 4,
+    borderRadius: Radii.pill,
+  },
+  searchClearText: {
+    fontSize: 13,
+    color: Colors.tintaLembut,
+    fontWeight: '700',
   },
   resetBtn: {
     paddingVertical: 9,
@@ -579,7 +625,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
+  },
+  reqBadge: {
+    backgroundColor: Colors.utama,
+    paddingVertical: 3,
+    paddingHorizontal: 7,
+    borderRadius: Radii.sm,
+    borderWidth: 1,
+    borderColor: Colors.garis,
   },
   reqNumber: {
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
@@ -605,6 +659,15 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     fontWeight: '700',
   },
+  rowDestWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  destIcon: {
+    fontSize: 14,
+  },
   destination: {
     fontSize: 15,
     fontWeight: '700',
@@ -614,20 +677,34 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: Colors.tintaLembut,
     marginTop: 2,
+    paddingLeft: 20,
   },
   rowFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
     marginTop: 8,
+    paddingLeft: 20,
+  },
+  dateBlock: {
+    gap: 2,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  dateIcon: {
+    fontSize: 12,
   },
   dateText: {
-    fontSize: 12.5,
+    fontSize: 12,
     color: Colors.tinta,
   },
-  durationText: {
-    fontSize: 11.5,
+  durationBadge: {
+    fontSize: 11,
     color: Colors.tintaLembut,
+    marginTop: 1,
   },
   costAmount: {
     fontSize: 14,

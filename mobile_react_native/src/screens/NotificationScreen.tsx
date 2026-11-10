@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { Colors, Radii } from '../theme/colors';
+import { Colors, Radii, LightThemeColors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import {
   apiNotifications,
   apiMarkNotificationRead,
@@ -25,6 +26,9 @@ interface NotificationScreenProps {
 export const NotificationScreen: React.FC<NotificationScreenProps> = ({
   onOpenTrip,
 }) => {
+  const { theme, isDark, colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   const [notifications, setNotifications] = useState<Notifikasi[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -230,11 +234,12 @@ export const NotificationScreen: React.FC<NotificationScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.latar,
-  },
+const getStyles = (Colors: typeof LightThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.latar,
+    },
   listContent: {
     paddingHorizontal: 14,
     paddingTop: 16,

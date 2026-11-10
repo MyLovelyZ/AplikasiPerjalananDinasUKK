@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { Colors, Radii } from '../theme/colors';
+import { Colors, Radii, LightThemeColors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import {
   apiEmployeeRequestDetail,
   apiSubmitEmployeeRequest,
@@ -53,6 +54,9 @@ export const TripDetailScreen: React.FC<TripDetailScreenProps> = ({
   onOpenExpenses,
   onRefreshList,
 }) => {
+  const { theme, isDark, colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   const [trip, setTrip] = useState<Perjalanan | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -812,11 +816,12 @@ export const TripDetailScreen: React.FC<TripDetailScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.latar,
-  },
+const getStyles = (Colors: typeof LightThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.latar,
+    },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { Colors, Radii } from '../theme/colors';
+import { Colors, Radii, LightThemeColors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { apiUpdateProfile, apiLogout, ApiError } from '../api/client';
 import { Pengguna } from '../api/types';
 import {
@@ -30,6 +31,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onLogout,
   onProfileUpdated,
 }) => {
+  const { theme, isDark, colors, setTheme } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   const [currentUser, setCurrentUser] = useState<Pengguna>(user);
 
   // Form Ubah Profil (Selaras ProfilPage.tsx)
@@ -234,6 +238,87 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
       </View>
 
+      {/* Panel: Pilihan Tema Tampilan (Mode Gelap / Terang) */}
+      <View style={styles.panel}>
+        <View style={styles.panelHead}>
+          <View>
+            <Text style={styles.panelTitle}>Tema Tampilan</Text>
+            <Text style={styles.panelSub}>
+              Pilih mode tampilan aplikasi sesuai kenyamanan Anda
+            </Text>
+          </View>
+        </View>
+        <View style={styles.panelBody}>
+          <View style={styles.themeOptionsGrid}>
+            {/* Opsi 1: Mode Terang */}
+            <TouchableOpacity
+              style={[
+                styles.themeCard,
+                !isDark && styles.themeCardActive,
+              ]}
+              onPress={() => setTheme('light')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.themeCardHeader}>
+                <View style={styles.themeBadge}>
+                  <Text style={styles.themeBadgeIcon}>☀️</Text>
+                  <Text style={styles.themeBadgeText}>Terang</Text>
+                </View>
+                {!isDark && (
+                  <View style={styles.activeCheckCircle}>
+                    <Text style={styles.activeCheckText}>✓</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Preview UI Box Terang */}
+              <View style={styles.previewBoxLight}>
+                <View style={styles.previewBarLight} />
+                <View style={styles.previewLineLight1} />
+                <View style={styles.previewLineLight2} />
+              </View>
+
+              <Text style={styles.themeCardDesc}>
+                Latar #DFDFDF (60%), Navy #19273A (30%)
+              </Text>
+            </TouchableOpacity>
+
+            {/* Opsi 2: Mode Gelap */}
+            <TouchableOpacity
+              style={[
+                styles.themeCard,
+                isDark && styles.themeCardActive,
+              ]}
+              onPress={() => setTheme('dark')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.themeCardHeader}>
+                <View style={styles.themeBadge}>
+                  <Text style={styles.themeBadgeIcon}>🌙</Text>
+                  <Text style={styles.themeBadgeText}>Gelap</Text>
+                </View>
+                {isDark && (
+                  <View style={styles.activeCheckCircle}>
+                    <Text style={styles.activeCheckText}>✓</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Preview UI Box Gelap */}
+              <View style={styles.previewBoxDark}>
+                <View style={styles.previewBarDark} />
+                <View style={styles.previewLineDark1} />
+                <View style={styles.previewLineDark2} />
+              </View>
+
+              <Text style={styles.themeCardDesc}>
+                Latar Navy #19273A (60%), Aksen #E08806
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
       {/* Panel: Ubah Profil */}
       <View style={styles.panel}>
         <View style={styles.panelHead}>
@@ -400,11 +485,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.latar,
-  },
+const getStyles = (Colors: typeof LightThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.latar,
+    },
   content: {
     paddingHorizontal: 14,
     paddingTop: 16,
@@ -629,6 +715,122 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     borderTopWidth: 1,
     borderTopColor: Colors.garisTegas,
+  },
+  themeOptionsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  themeCard: {
+    flex: 1,
+    padding: 12,
+    borderRadius: Radii.lg,
+    borderWidth: 1.5,
+    borderColor: Colors.garis,
+    backgroundColor: Colors.latar,
+    alignItems: 'center',
+  },
+  themeCardActive: {
+    borderColor: Colors.ketiga,
+    borderWidth: 2,
+    backgroundColor: Colors.latarSorotKuat,
+  },
+  themeCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 10,
+  },
+  themeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  themeBadgeIcon: {
+    fontSize: 16,
+  },
+  themeBadgeText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.tinta,
+  },
+  activeCheckCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: Radii.pill,
+    backgroundColor: Colors.ketiga,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeCheckText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.kedua,
+  },
+  previewBoxLight: {
+    width: '100%',
+    height: 52,
+    borderRadius: Radii.md,
+    backgroundColor: '#DFDFDF',
+    borderWidth: 1.5,
+    borderColor: 'rgba(25, 39, 58, 0.25)',
+    padding: 8,
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  previewBarLight: {
+    width: '60%',
+    height: 7,
+    borderRadius: Radii.sm,
+    backgroundColor: '#19273A',
+  },
+  previewLineLight1: {
+    width: '85%',
+    height: 5,
+    borderRadius: Radii.sm,
+    backgroundColor: 'rgba(25, 39, 58, 0.4)',
+  },
+  previewLineLight2: {
+    width: '40%',
+    height: 5,
+    borderRadius: Radii.sm,
+    backgroundColor: '#E08806',
+  },
+  previewBoxDark: {
+    width: '100%',
+    height: 52,
+    borderRadius: Radii.md,
+    backgroundColor: '#19273A',
+    borderWidth: 1.5,
+    borderColor: 'rgba(223, 223, 223, 0.3)',
+    padding: 8,
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  previewBarDark: {
+    width: '60%',
+    height: 7,
+    borderRadius: Radii.sm,
+    backgroundColor: '#DFDFDF',
+  },
+  previewLineDark1: {
+    width: '85%',
+    height: 5,
+    borderRadius: Radii.sm,
+    backgroundColor: 'rgba(223, 223, 223, 0.4)',
+  },
+  previewLineDark2: {
+    width: '40%',
+    height: 5,
+    borderRadius: Radii.sm,
+    backgroundColor: '#E08806',
+  },
+  themeCardDesc: {
+    fontSize: 11,
+    color: Colors.tintaLembut,
+    textAlign: 'center',
+    lineHeight: 15,
+    marginTop: 2,
   },
 });
 
